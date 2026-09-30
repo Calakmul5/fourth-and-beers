@@ -2,7 +2,7 @@
  "season": 2026,
  "week": 3,
  "weeks": 18,
- "updated": "2026-09-30T22:25:39.904Z",
+ "updated": "2026-09-30T22:32:52.932Z",
  "pays": [
   1050,
   350
@@ -230,5 +230,28 @@
    "dropped": 43
   }
  ],
- "strikes": {}
+ "strikes": {
+  "Silverback": 2,
+  "Rastaman": 2,
+  "Conquistador": 2,
+  "MVP21": 2,
+  "This is our year": 1,
+  "King of The North": 1,
+  "Niners": 1,
+  "Abogado": 1,
+  "KinkyKing": 3,
+  "Steel Man": 1,
+  "Osos de Grayslake": 0,
+  "Chitown’DemBoyz": 1,
+  "Puto el que lo lea": 2,
+  "Cyber70": 0,
+  "Billy Beaner": 2,
+  "Andrea’s Picks": 2,
+  "X-Men Let’s go Boys": 2,
+  "Jorge_B": 0,
+  "Manolito’s winning picks": 2,
+  "Juan1768": 0,
+  "SinCasco": 2,
+  "Mean Machine": 1
+ }
 }
