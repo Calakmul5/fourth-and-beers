@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="dark">
+<meta name="theme-color" content="#0E2620">
+<title>Fourth &amp; Beers 2026: así va la quiniela</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+<style>
+/* Dark is enforced in every mode on purpose. */
+:root{
+  color-scheme:dark;
+  --bg:#0E2620; --surface:#15352C; --surface2:#1B4135; --line:#2B5044;
+  --text:#F2EBDA; --muted:#A7B9AE; --amber:#F2A93B; --amber-soft:#6E5429;
+  --red:#F0605D; --green:#7CD3A0;
+  --display:"Big Shoulders Display","Big Shoulders","Arial Narrow","Roboto Condensed",Impact,sans-serif;
+  --body:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){ color-scheme:dark; --bg:#0E2620; --text:#F2EBDA; } }
+@media (prefers-color-scheme: light){ :root{ color-scheme:dark; --bg:#0E2620; --text:#F2EBDA; } }
+:root[data-theme="dark"], :root[data-theme="light"]{ color-scheme:dark; --bg:#0E2620; --text:#F2EBDA; }
+*,*::before,*::after{box-sizing:inherit}
+html{background:#0E2620;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5}
+.wrap{max-width:760px;margin:0 auto;padding:28px 18px 56px}
+h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1;margin:0;letter-spacing:.01em}
+h1{font-size:clamp(3rem,13vw,5.4rem);font-weight:900;line-height:.88}
+h2{font-size:clamp(2rem,7vw,2.6rem);margin-bottom:6px}
+h3{font-size:1.45rem}
+p{margin:0 0 12px;max-width:62ch}
+.league{font-family:var(--display);font-size:1.3rem;font-weight:600;color:var(--amber);margin-bottom:6px}
+.lede{color:var(--muted);margin-top:14px}
+section{margin-top:52px}
+.note{color:var(--muted);font-size:.9rem}
+.num{font-variant-numeric:tabular-nums}
+
+/* Find yourself */
+.finder{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
+.finder label{display:block;font-weight:700;margin-bottom:8px}
+select{width:100%;font:inherit;font-size:1rem;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 40px 12px 12px;appearance:none;-webkit-appearance:none;
+  background-image:linear-gradient(45deg,transparent 50%,var(--amber) 50%),linear-gradient(135deg,var(--amber) 50%,transparent 50%);
+  background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat}
+select:focus-visible,button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+.me{display:none;margin-top:16px}
+.me.on{display:block}
+.me-top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.me-rank{font-family:var(--display);font-weight:900;font-size:4.2rem;line-height:.85;color:var(--amber)}
+.me-name{font-family:var(--display);font-weight:800;font-size:1.8rem;line-height:1}
+.me-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.me-grid div{background:var(--bg);border-radius:10px;padding:10px 12px}
+.me-grid b{display:block;font-family:var(--display);font-size:1.7rem;font-weight:800;line-height:1.05}
+.me-grid span{color:var(--muted);font-size:.85rem}
+.me-say{margin-top:12px}
+
+/* Standings */
+.board{list-style:none;margin:18px 0 0;padding:0}
+.row{display:grid;grid-template-columns:34px 1fr auto;column-gap:10px;align-items:center;padding:9px 8px;border-radius:10px}
+.row+.row{margin-top:2px}
+.row .rk{font-family:var(--display);font-weight:800;font-size:1.35rem;text-align:right;color:var(--muted)}
+.row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .tt{font-family:var(--display);font-weight:800;font-size:1.35rem;text-align:right}
+.row .gap{color:var(--muted);font-size:.8rem;font-family:var(--body);font-weight:400;margin-left:6px}
+.bar{grid-column:2 / 4;display:flex;height:12px;margin-top:6px;border-radius:3px;overflow:hidden}
+.bar .c{background:var(--amber)}
+.bar .d{background:repeating-linear-gradient(135deg,transparent 0 3px,rgba(242,235,218,.28) 3px 5px);outline:1px solid rgba(242,235,218,.28);outline-offset:-1px}
+.row.sel{background:var(--surface2);box-shadow:inset 3px 0 0 var(--amber)}
+.row.sel .rk{color:var(--amber)}
+.money{display:flex;justify-content:space-between;align-items:center;margin:4px 8px 6px;padding:6px 0;border-bottom:2px dashed var(--amber-soft);color:var(--amber);font-size:.85rem;font-weight:700}
+.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:22px;height:10px;margin-right:6px;vertical-align:middle;border-radius:2px}
+.legend .lc{background:var(--amber)}
+.legend .ld{background:repeating-linear-gradient(135deg,transparent 0 3px,rgba(242,235,218,.35) 3px 5px);outline:1px solid rgba(242,235,218,.35);outline-offset:-1px}
+
+/* Bump chart */
+.toggle{display:inline-flex;background:var(--surface);border-radius:10px;padding:3px;margin-top:12px}
+.toggle button{font:inherit;font-size:.9rem;font-weight:600;color:var(--muted);background:transparent;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
+.toggle button[aria-pressed="true"]{background:var(--amber);color:#1A1407}
+.bumpbox{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:12px;background:var(--surface);border-radius:14px;padding:10px 4px}
+.bumpbox svg{display:block;height:auto}
+.bl{cursor:pointer}
+.bl .ln{fill:none;stroke:rgba(242,235,218,.22);stroke-width:2}
+.bl .hit{fill:none;stroke:transparent;stroke-width:12}
+.bl circle{fill:rgba(242,235,218,.45)}
+.bl text{fill:var(--muted);font-family:var(--body);font-size:11px}
+.bl.up .ln{stroke:var(--green);stroke-width:2.5}.bl.up circle{fill:var(--green)}.bl.up text{fill:var(--green);font-weight:700}
+.bl.down .ln{stroke:var(--red);stroke-width:2.5}.bl.down circle{fill:var(--red)}.bl.down text{fill:var(--red);font-weight:700}
+.bl.sel .ln{stroke:var(--amber);stroke-width:4}.bl.sel circle{fill:var(--amber)}.bl.sel text{fill:var(--amber);font-weight:700}
+.movers{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:.9rem}
+.movers div{background:var(--surface);border-radius:10px;padding:8px 12px}
+.movers .u b{color:var(--green)}.movers .d b{color:var(--red)}
+
+/* Week strips */
+.weeks{margin-top:14px}
+.wk{background:var(--surface);border-radius:14px;padding:14px 14px 10px;margin-top:12px}
+.wk-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+.wk-head .who{font-size:.9rem;color:var(--muted)}
+.wk-head .who b{color:var(--text)}
+.wk svg{display:block;width:100%;height:auto;margin-top:6px}
+
+/* Heatmap */
+.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:14px}
+table{border-collapse:separate;border-spacing:3px;width:100%;min-width:340px}
+th{font-weight:600;font-size:.8rem;color:var(--muted);text-align:center;padding:4px}
+th:first-child{text-align:left}
+td{padding:0}
+td.n{font-size:.9rem;font-weight:600;white-space:nowrap;padding:6px 8px 6px 4px;max-width:180px;overflow:hidden;text-overflow:ellipsis}
+td.h{text-align:center;font-family:var(--display);font-weight:800;font-size:1.15rem;border-radius:6px;padding:6px 4px;width:64px;position:relative}
+td.h.dropped{text-decoration:line-through;text-decoration-thickness:2px}
+td.h .crown{position:absolute;top:-6px;right:-3px;font-size:.8rem}
+tr.sel td.n{color:var(--amber)}
+tr.sel td.h{outline:2px solid var(--text);outline-offset:-2px}
+.scale{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);margin-top:10px}
+.scale .g{flex:0 0 120px;height:10px;border-radius:3px}
+
+/* Awards */
+.awards{margin-top:14px;display:grid;gap:12px}
+.award{border-left:4px solid var(--amber);padding:4px 0 4px 14px}
+.award h3{color:var(--amber)}
+.award .who{font-weight:700;margin:4px 0 2px}
+.award p{color:var(--muted);margin:0}
+
+/* Survivor */
+.surv{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:14px}
+.sv{background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sv .n{font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sv .dots{display:flex;gap:4px;flex:0 0 auto}
+.sv .dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--green)}
+.sv .dots i.x{background:var(--red);border-color:var(--red)}
+.sv.out{opacity:.5}
+.sv.out .n{text-decoration:line-through}
+.sv.sel{outline:2px solid var(--amber)}
+.tally{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.tally div{background:var(--surface);border-radius:10px;padding:8px 12px;font-size:.9rem}
+.tally b{font-family:var(--display);font-size:1.5rem;margin-right:6px}
+
+/* Rules */
+.rules{margin-top:14px;background:var(--surface);border-radius:14px;padding:16px 18px}
+.rules p:last-child{margin-bottom:0}
+.rules b{color:var(--amber)}
+footer{margin-top:48px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);padding-top:14px}
+
+@media (prefers-reduced-motion: no-preference){
+  .bar .c,.bar .d{transform-origin:left;animation:grow .7s ease-out both}
+  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="league">Fourth &amp; Beers 2026</div>
+  <h1 id="t-h1">Así va la quiniela.</h1>
+  <p class="lede" id="t-lede">Cargando la tabla.</p>
+</header>
+
+<div class="finder">
+  <label for="pick">¿Quién eres?</label>
+  <select id="pick"><option value="">Escoge tu nombre de quiniela</option></select>
+  <div class="me" id="me" aria-live="polite"></div>
+</div>
+
+<section id="tabla">
+  <h2>La tabla</h2>
+  <p class="note">Puntos que cuentan y la semana que se te cae. La línea punteada marca hasta dónde se cobra al final de la temporada regular.</p>
+  <div class="legend"><span><i class="lc"></i>Cuenta</span><span><i class="ld"></i>Se cae (tu peor semana)</span></div>
+  <ol class="board" id="board"></ol>
+</section>
+
+<section id="subidas">
+  <h2>Subidas y bajadas</h2>
+  <p class="note">Tu lugar en la tabla al cierre de cada semana. La semana 1 va sin descuento. Desde la semana 2 ya se cae tu peor semana. Toca una línea o un nombre para seguirlo.</p>
+  <div class="toggle" role="group" aria-label="Qué lugar mostrar">
+    <button type="button" data-mode="acum" aria-pressed="true">En la tabla</button>
+    <button type="button" data-mode="sola" aria-pressed="false">Solo esa semana</button>
+  </div>
+  <div class="movers" id="movers"></div>
+  <div class="bumpbox" id="bumpbox"></div>
+</section>
+
+<section id="semanas">
+  <h2>Cada semana, uno por uno</h2>
+  <p class="note">Cada punto es un jugador. La raya vertical es el promedio del grupo. El que queda más a la derecha se lleva los $50.</p>
+  <div class="weeks" id="weeks"></div>
+</section>
+
+<section id="mapa">
+  <h2>Semana por semana</h2>
+  <p class="note">El color dice en qué lugar quedaste esa semana. Tachado es la semana que se te cae.</p>
+  <div class="scroll"><table id="heat"></table></div>
+  <div class="scale"><span>1º</span><span class="g" id="grad"></span><span>22º</span></div>
+</section>
+
+<section id="premios">
+  <h2>Premios que no pagan</h2>
+  <p class="note">Nada de esto da dinero. Da para platicar.</p>
+  <div class="awards" id="awards"></div>
+</section>
+
+<section id="survivor">
+  <h2>Survivor: strikes</h2>
+  <p class="note">Tres strikes y para afuera. Círculo verde es vida, rojo es strike. <span id="t-surv"></span></p>
+  <div class="tally" id="tally"></div>
+  <div class="surv" id="surv"></div>
+</section>
+
+<section id="reglas">
+  <h2>Cómo se cuenta</h2>
+  <div class="rules">
+    <p><b>Se cae una semana.</b> De las 18 semanas, Yahoo te quita la peor del acumulado. <span id="t-drop"></span> Si más adelante tienes una semana todavía peor, esa es la que se cae y la anterior regresa a tu total.</p>
+    <p><b>Si se te olvida mandar picks,</b> esa semana vale 0 y se vuelve la que se cae. Ya no tienes colchón para otra.</p>
+    <p><b>$50 a la mejor semana.</b> Aunque esa semana sea la que se te cae, los $50 son tuyos. <span id="t-paid"></span></p>
+    <p><b>Al final de la temporada regular:</b> 1er lugar $1,050 y 2do lugar $350. Empates se reparten como en el golf.</p>
+  </div>
+</section>
+
+<footer>
+  <span id="t-foot"></span><br>
+  v2.0.0 c1.0.0
+</footer>
+</div>
+
+<script type="application/json" id="seed">{"season": 2026, "week": 3, "weeks": 18, "updated": "2026-09-30T12:00:00Z", "pays": [1050, 350], "weeklyPrize": 50, "pickem": [{"name": "Silverback", "weeks": [57, 76, 101], "total": 177, "dropped": 57}, {"name": "Juan1768", "weeks": [81, 42, 73], "total": 154, "dropped": 42}, {"name": "Billy Beaner", "weeks": [78, 74, 50], "total": 152, "dropped": 50}, {"name": "Cyber70", "weeks": [70, 56, 79], "total": 149, "dropped": 56}, {"name": "Jorge_B", "weeks": [93, 39, 56], "total": 149, "dropped": 39}, {"name": "Mean Machine", "weeks": [92, 40, 52], "total": 144, "dropped": 40}, {"name": "Abogado", "weeks": [63, 52, 75], "total": 138, "dropped": 52}, {"name": "SinCasco", "weeks": [65, 50, 73], "total": 138, "dropped": 50}, {"name": "Osos de Grayslake", "weeks": [69, 69, 48], "total": 138, "dropped": 48}, {"name": "King of The North", "weeks": [66, 68, 49], "total": 134, "dropped": 49}, {"name": "This is our year", "weeks": [57, 65, 65], "total": 130, "dropped": 57}, {"name": "Manolito’s winning picks", "weeks": [72, 49, 54], "total": 126, "dropped": 49}, {"name": "Conquistador", "weeks": [55, 46, 69], "total": 124, "dropped": 46}, {"name": "Chitown’DemBoyz", "weeks": [60, 63, 60], "total": 123, "dropped": 60}, {"name": "Niners", "weeks": [60, 63, 51], "total": 123, "dropped": 51}, {"name": "Rastaman", "weeks": [64, 58, 54], "total": 122, "dropped": 54}, {"name": "X-Men Let’s go Boys", "weeks": [71, 41, 50], "total": 121, "dropped": 41}, {"name": "MVP21", "weeks": [83, 35, 38], "total": 121, "dropped": 35}, {"name": "Andrea’s Picks", "weeks": [61, 54, 39], "total": 115, "dropped": 39}, {"name": "KinkyKing", "weeks": [51, 59, 52], "total": 111, "dropped": 51}, {"name": "Puto el que lo lea", "weeks": [47, 59, 32], "total": 106, "dropped": 32}, {"name": "Steel Man", "weeks": [45, 47, 43], "total": 92, "dropped": 43}], "strikes": {"Silverback": 2, "Juan1768": 0, "Billy Beaner": 2, "Cyber70": 0, "Jorge_B": 0, "Mean Machine": 1, "Abogado": 1, "SinCasco": 2, "Osos de Grayslake": 0, "King of The North": 1, "This is our year": 1, "Manolito’s winning picks": 2, "Conquistador": 2, "Chitown’DemBoyz": 1, "Niners": 1, "Rastaman": 2, "X-Men Let’s go Boys": 2, "MVP21": 2, "Andrea’s Picks": 2, "KinkyKing": 3, "Puto el que lo lea": 2, "Steel Man": 1}}</script>
+<script>
+(function(){
+  // Reads data.json next to this page. If that fails (file opened locally, Claude preview), uses the seed above.
+  function seed(){ return JSON.parse(document.getElementById("seed").textContent); }
+  function boot(D){
+    try { render(D); }
+    catch(e){ document.getElementById("t-lede").textContent = "No se pudo leer la tabla. Recarga la página."; throw e; }
+  }
+  if (window.fetch){
+    fetch("data.json?t="+Date.now(), {cache:"no-store"})
+      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
+      .then(boot)
+      .catch(function(){ boot(seed()); });
+  } else boot(seed());
+
+function render(D){
+  var WEEK = D.week, SEASON_WEEKS = D.weeks || 18, PAYS = D.pays, PRIZE = D.weeklyPrize || 50;
+  var PICKEM = D.pickem;
+  function normName(n){ return String(n).replace(/[\u2018\u2019`\u00b4]/g,"'").trim().toLowerCase(); }
+  var STRIKE_BY = {}; Object.keys(D.strikes||{}).forEach(function(k){ STRIKE_BY[normName(k)] = D.strikes[k]; });
+  function strikeOf(name){ var v = STRIKE_BY[normName(name)]; return (typeof v==="number") ? v : null; }
+
+  var N = PICKEM.length;
+  // Yahoo is canon for totals and the dropped week. Weekly scores come from the same table.
+  var players = PICKEM.map(function(p){
+    var w = p.weeks.slice(0,WEEK);
+    var sum = w.reduce(function(a,b){return a+b},0);
+    var drop = (typeof p.dropped==="number") ? p.dropped : (WEEK>1 ? Math.min.apply(null,w) : 0);
+    var total = (typeof p.total==="number") ? p.total : sum-drop;
+    return {name:p.name, w:w, raw:sum, drop:drop, dropIdx:(WEEK>1 ? w.lastIndexOf(drop) : -1), total:total, worst:Math.min.apply(null,w)};
+  });
+  players.sort(function(a,b){return b.total-a.total});
+  // Official rank (ties share the better rank)
+  players.forEach(function(p){
+    p.rank = 1 + players.filter(function(q){return q.total>p.total}).length;
+    p.tied = players.filter(function(q){return q.total===p.total}).length>1;
+  });
+  // Weekly ranks and winners
+  var weekly = [];
+  for (var k=0;k<WEEK;k++){
+    var scores = players.map(function(p){return p.w[k]});
+    var sorted = scores.slice().sort(function(a,b){return b-a});
+    var avg = scores.reduce(function(a,b){return a+b},0)/N;
+    players.forEach(function(p){ p.wr = p.wr||[]; p.wr[k] = 1 + scores.filter(function(s){return s>p.w[k]}).length; });
+    var winners = players.filter(function(p){return p.w[k]===sorted[0]});
+    var second = sorted.find(function(s){return s<sorted[0]});
+    weekly.push({k:k, avg:avg, max:sorted[0], min:sorted[N-1], second:second, winners:winners});
+  }
+  players.forEach(function(p){
+    p.won = weekly.filter(function(w){return w.winners.indexOf(p)>=0}).map(function(w){return w.k+1});
+    p.best = Math.max.apply(null,p.w); p.bestIdx = p.w.indexOf(p.best);
+  });
+  var leader = players[0];
+  var byName = {}; players.forEach(function(p){byName[p.name]=p});
+
+  function el(tag,cls,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
+  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+  function ord(n){return n+"º"}
+
+  // ---------- Page text that depends on the week ----------
+  function plural(n,one,many){ return n===1 ? one : many; }
+  var left = SEASON_WEEKS-WEEK;
+  document.getElementById("t-h1").textContent = "Así va la quiniela. Semana "+WEEK+".";
+  document.getElementById("t-lede").textContent = N+" jugadores, "+WEEK+" "+plural(WEEK,"semana jugada","semanas jugadas")+", "+(left>0 ? left+" por jugar." : "temporada regular terminada.")+" Tu peor semana no cuenta para el acumulado. Búscate abajo y te digo dónde estás parado.";
+  document.getElementById("t-surv").textContent = "Conteo del comisionado al cierre de la semana "+WEEK+".";
+  document.getElementById("t-drop").textContent = WEEK>1 ? "Hoy, con "+WEEK+" jugadas, se cae la más baja de esas "+WEEK+"." : "Con una sola semana jugada todavía no se cae nada.";
+  var paid = weekly.length*PRIZE;
+  document.getElementById("t-paid").textContent = "Van $"+paid.toLocaleString("en-US")+" repartidos de $"+(SEASON_WEEKS*PRIZE).toLocaleString("en-US")+".";
+  var upd = D.updated ? new Date(D.updated) : null;
+  document.getElementById("t-foot").textContent = "Datos de Yahoo al cierre de la semana "+WEEK+(upd && !isNaN(upd) ? ", actualizado el "+upd.toLocaleDateString("es-MX",{day:"numeric",month:"long"}) : "")+". Survivor según el control del comisionado.";
+  document.title = "Fourth & Beers "+(D.season||"")+": semana "+WEEK;
+
+  // ---------- Standings ----------
+  var board = document.getElementById("board");
+  var maxRaw = Math.max.apply(null,players.map(function(p){return p.raw}));
+  var moneyCut = players.filter(function(p){return p.rank<=2}).length;
+  players.forEach(function(p,i){
+    var li = el("li","row"); li.dataset.name = p.name;
+    var gap = p.rank===1 ? "" : '<span class="gap">−'+(leader.total-p.total)+'</span>';
+    li.innerHTML = '<span class="rk num">'+p.rank+'</span><span class="nm">'+esc(p.name)+'</span><span class="tt num">'+p.total+gap+'</span>'+
+      '<div class="bar" aria-hidden="true"><span class="c" style="width:'+(p.total/maxRaw*100)+'%"></span><span class="d" style="width:'+(p.drop/maxRaw*100)+'%"></span></div>';
+    li.setAttribute("aria-label", p.rank+"º "+p.name+", "+p.total+" puntos, se cae una semana de "+p.drop);
+    board.appendChild(li);
+    if (i+1===moneyCut){
+      var m = el("li","money",'<span>Hasta aquí se cobra</span><span class="num">1º $'+PAYS[0].toLocaleString("en-US")+', 2º $'+PAYS[1]+'</span>');
+      board.appendChild(m);
+    }
+  });
+
+
+  // ---------- Bump chart: ups and downs ----------
+  var bumpMode = "acum", current = "";
+  function colFor(k){
+    var rows = players.map(function(p){
+      var w = p.w.slice(0,k+1), s = w.reduce(function(a,b){return a+b},0);
+      var pts = bumpMode==="acum" ? (k>=1 ? s-Math.min.apply(null,w) : s) : p.w[k];
+      return {p:p, pts:pts};
+    });
+    rows.sort(function(a,b){return b.pts-a.pts || players.indexOf(a.p)-players.indexOf(b.p)});
+    rows.forEach(function(r,i){ r.pos=i; r.rank=1+rows.filter(function(q){return q.pts>r.pts}).length; });
+    var byP = {}; rows.forEach(function(r){byP[r.p.name]=r});
+    return byP;
+  }
+  function drawBump(){
+    var cols=[]; for (var k=0;k<WEEK;k++) cols.push(colFor(k));
+    var rowH=21, top=30, left=30, labelW=170;
+    var colW = WEEK>1 ? Math.max(56, Math.min(110, 200/(WEEK-1))) : 0;
+    var plotW = colW*(WEEK-1), W = left+plotW+labelW, H = top+rowH*(N-1)+20;
+    function X(k){return left+10+k*colW}
+    function Y(pos){return top+pos*rowH}
+    // movers: change in position going into the latest week
+    var up=null, down=null;
+    if (WEEK>1){
+      players.forEach(function(p){
+        var d = cols[WEEK-2][p.name].pos - cols[WEEK-1][p.name].pos;
+        if (!up || d>up.d) up={p:p,d:d};
+        if (!down || d<down.d) down={p:p,d:d};
+      });
+    }
+    var svg = '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="width:'+(W<=460?'100%':W+'px')+'" role="img" aria-label="Lugar de cada jugador semana por semana">';
+    for (var k=0;k<WEEK;k++){
+      svg+='<text x="'+X(k)+'" y="16" text-anchor="middle" fill="#A7B9AE" font-size="11" font-family="Public Sans, sans-serif">Sem '+(k+1)+'</text>';
+      svg+='<line x1="'+X(k)+'" x2="'+X(k)+'" y1="'+(top-8)+'" y2="'+(H-10)+'" stroke="#2B5044" stroke-width="1"/>';
+    }
+    for (var i=0;i<N;i++) svg+='<text x="'+(left-6)+'" y="'+(Y(i)+4)+'" text-anchor="end" fill="#6F877B" font-size="10" font-family="Public Sans, sans-serif">'+(i+1)+'</text>';
+    // money zone after latest week
+    svg+='<line x1="'+(left)+'" x2="'+(W-6)+'" y1="'+(Y(1)+rowH/2)+'" y2="'+(Y(1)+rowH/2)+'" stroke="#6E5429" stroke-width="1.5" stroke-dasharray="4 4"/>';
+    players.forEach(function(p){
+      var d='', dots='';
+      for (var k=0;k<WEEK;k++){
+        var x0=X(k), y0=Y(cols[k][p.name].pos);
+        if (k===0) d+='M'+x0+' '+y0;
+        else { var xp=X(k-1), yp=Y(cols[k-1][p.name].pos), m=(x0-xp)/2; d+=' C'+(xp+m)+' '+yp+' '+(x0-m)+' '+y0+' '+x0+' '+y0; }
+        dots+='<circle cx="'+x0+'" cy="'+y0+'" r="3.5"><title>'+esc(p.name)+', semana '+(k+1)+': '+ord(cols[k][p.name].rank)+' ('+cols[k][p.name].pts+' pts)</title></circle>';
+      }
+      var last = cols[WEEK-1][p.name];
+      var cls = 'bl'+(up&&up.p===p&&up.d>0?' up':'')+(down&&down.p===p&&down.d<0?' down':'');
+      if (WEEK===1) d+=' h0.01';
+      svg+='<g class="'+cls+'" data-name="'+esc(p.name)+'"><path class="hit" d="'+d+'"/><path class="ln" d="'+d+'"/>'+dots+
+           '<text x="'+(X(WEEK-1)+10)+'" y="'+(Y(last.pos)+4)+'">'+last.rank+'  '+esc(p.name)+'</text></g>';
+    });
+    svg+='</svg>';
+    var box = document.getElementById("bumpbox");
+    box.innerHTML = svg;
+    box.querySelectorAll(".bl").forEach(function(g){
+      g.addEventListener("click", function(){ var n=g.dataset.name; if (sel){ sel.value=n; } choose(n,true); });
+    });
+    var mv = document.getElementById("movers");
+    if (up && down){
+      mv.innerHTML = (up.d>0 ? '<div class="u">Subió más en la semana '+WEEK+': <b>'+esc(up.p.name)+'</b> +'+up.d+' lugares</div>' : '')+
+                     (down.d<0 ? '<div class="d">Bajó más: <b>'+esc(down.p.name)+'</b> −'+Math.abs(down.d)+' lugares</div>' : '');
+    }
+    box.scrollLeft = box.scrollWidth;
+    if (current) choose(current,false);
+  }
+  document.querySelectorAll(".toggle button").forEach(function(b){
+    b.addEventListener("click", function(){
+      bumpMode = b.dataset.mode;
+      document.querySelectorAll(".toggle button").forEach(function(o){o.setAttribute("aria-pressed", o===b?"true":"false")});
+      drawBump();
+    });
+  });
+
+  // ---------- Weekly strip plots ----------
+  var weeksBox = document.getElementById("weeks");
+  var allScores = players.reduce(function(a,p){return a.concat(p.w)},[]);
+  var lo = Math.floor((Math.min.apply(null,allScores)-5)/10)*10, hi = Math.ceil((Math.max.apply(null,allScores)+5)/10)*10;
+  var W=340, padL=12, padR=12;
+  function x(v){return padL+(v-lo)/(hi-lo)*(W-padL-padR)}
+  weekly.forEach(function(wk){
+    var box = el("div","wk");
+    var wn = wk.winners.map(function(p){return esc(p.name)}).join(" y ");
+    var margin = wk.max - wk.second;
+    box.innerHTML = '<div class="wk-head"><h3>Semana '+(wk.k+1)+'</h3><span class="who">$50 para <b>'+wn+'</b> con '+wk.max+', por '+margin+(margin===1?' punto':' puntos')+'</span></div>';
+    // stack dots into lanes first, then size the chart to fit
+    var used = {}, dots = [], maxOff = 0;
+    players.slice().sort(function(a,b){return a.w[wk.k]-b.w[wk.k]}).forEach(function(p){
+      var v = p.w[wk.k], cx = x(v), lane = 0;
+      while (used[lane] && used[lane].some(function(u){return Math.abs(u-cx)<10})) lane++;
+      (used[lane]=used[lane]||[]).push(cx);
+      var off = (lane%2?1:-1)*Math.ceil(lane/2)*10;
+      maxOff = Math.max(maxOff, Math.abs(off));
+      dots.push({p:p, v:v, cx:cx, off:off});
+    });
+    var mid = 22 + maxOff, bottom = mid + maxOff + 10, Hh = bottom + 18;
+    var svg = '<svg viewBox="0 0 '+W+' '+Hh+'" role="img" aria-label="Puntos de la semana '+(wk.k+1)+'. Promedio '+wk.avg.toFixed(1)+'">';
+    for (var t=lo;t<=hi;t+=10){ svg+='<line x1="'+x(t)+'" x2="'+x(t)+'" y1="16" y2="'+bottom+'" stroke="#2B5044" stroke-width="1"/><text x="'+x(t)+'" y="'+(bottom+13)+'" fill="#A7B9AE" font-size="10" text-anchor="middle" font-family="Public Sans, sans-serif">'+t+'</text>'; }
+    svg+='<line x1="'+x(wk.avg)+'" x2="'+x(wk.avg)+'" y1="14" y2="'+bottom+'" stroke="#F2EBDA" stroke-width="2"/>';
+    svg+='<text x="'+(x(wk.avg)+4)+'" y="11" fill="#F2EBDA" font-size="10" font-family="Public Sans, sans-serif">promedio '+wk.avg.toFixed(1)+'</text>';
+    dots.forEach(function(d){
+      var win = wk.winners.indexOf(d.p)>=0;
+      svg+='<circle class="dot" data-name="'+esc(d.p.name)+'" cx="'+d.cx+'" cy="'+(mid+d.off)+'" r="4.5" fill="'+(win?'#F2A93B':'rgba(242,235,218,.55)')+'"><title>'+esc(d.p.name)+': '+d.v+'</title></circle>';
+    });
+    svg+='</svg>';
+    box.insertAdjacentHTML("beforeend",svg);
+    weeksBox.appendChild(box);
+  });
+
+  // ---------- Heatmap ----------
+  function heatColor(r){ // 1 = amber, N = deep green
+    var t = (r-1)/(N-1);
+    var a=[242,169,59], b=[27,65,53];
+    var c=a.map(function(v,i){return Math.round(v+(b[i]-v)*t)});
+    return "rgb("+c.join(",")+")";
+  }
+  function heatText(r){ return (r-1)/(N-1) < .45 ? "#1A1407" : "#F2EBDA"; }
+  document.getElementById("grad").style.background="linear-gradient(90deg,"+heatColor(1)+","+heatColor(Math.round(N/2))+","+heatColor(N)+")";
+  var heat = document.getElementById("heat");
+  var hh = '<thead><tr><th>Jugador</th>';
+  for (var k=0;k<WEEK;k++) hh+='<th>Sem '+(k+1)+'</th>';
+  hh+='<th>Total</th></tr></thead><tbody>';
+  players.forEach(function(p){
+    hh+='<tr data-name="'+esc(p.name)+'"><td class="n">'+esc(p.name)+'</td>';
+    for (var k=0;k<WEEK;k++){
+      var r=p.wr[k], d=(k===p.dropIdx), crown=(p.won.indexOf(k+1)>=0)?'<span class="crown" aria-label="ganó la semana">🍺</span>':'';
+      hh+='<td class="h num'+(d?' dropped':'')+'" style="background:'+heatColor(r)+';color:'+heatText(r)+'" title="'+ord(r)+' de la semana">'+p.w[k]+crown+'</td>';
+    }
+    hh+='<td class="h num" style="background:transparent;color:#F2EBDA">'+p.total+'</td></tr>';
+  });
+  heat.innerHTML = hh+'</tbody>';
+
+  // ---------- Awards (computed so they refresh with the data) ----------
+  var aw = [];
+  // Basement to penthouse: biggest improvement in weekly rank, first week vs latest
+  if (WEEK>=2){
+    var climb = players.slice().sort(function(a,b){return (b.wr[0]-b.wr[WEEK-1])-(a.wr[0]-a.wr[WEEK-1])})[0];
+    if (climb.wr[0]-climb.wr[WEEK-1] > 0)
+      aw.push(["Del sótano a la azotea", climb.name, ord(climb.wr[0])+" en la semana 1, "+ord(climb.wr[WEEK-1])+" en la semana "+WEEK+". "+climb.w.join(", ")+" puntos"+(climb.w.every(function(v,i,a){return i===0||v>a[i-1]})?", subiendo cada semana.":".")]);
+    var swing = players.slice().sort(function(a,b){return (b.best-b.worst)-(a.best-a.worst)});
+    aw.push(["Montaña rusa", swing[0].name, "De "+swing[0].best+" a "+swing[0].worst+". "+(swing[0].best-swing[0].worst)+" puntos entre su mejor y su peor semana. Le sigue "+swing[1].name+" con "+(swing[1].best-swing[1].worst)+"."]);
+    var steady = players.slice().sort(function(a,b){return (a.best-a.worst)-(b.best-b.worst) || b.total-a.total});
+    aw.push(["Reloj suizo", steady[0].name, (WEEK<=6 ? steady[0].w.join(", ")+". " : "")+"Solo "+(steady[0].best-steady[0].worst)+" puntos de diferencia en "+WEEK+" semanas."]);
+  }
+  if (WEEK>=3){
+    var fall = players.slice().sort(function(a,b){return (b.wr[WEEK-1]+b.wr[WEEK-2])/2-b.wr[0] - ((a.wr[WEEK-1]+a.wr[WEEK-2])/2-a.wr[0])})[0];
+    aw.push(["La cruda de la semana 1", fall.name, ord(fall.wr[0])+" la primera semana. Sus dos más recientes: "+ord(fall.wr[WEEK-2])+" y "+ord(fall.wr[WEEK-1])+"."]);
+  }
+  var closest = weekly.slice().sort(function(a,b){return (a.max-a.second)-(b.max-b.second)})[0];
+  aw.push(["Foto finish", closest.winners.map(function(p){return p.name}).join(" y "), "Ganó la semana "+(closest.k+1)+" por "+(closest.max-closest.second)+(closest.max-closest.second===1?" punto":" puntos")+". Un pick de confianza 1 y los $50 eran de alguien más."]);
+  var dbl = players.filter(function(p){return p.rank<=10 && strikeOf(p.name)===0});
+  if (dbl.length) aw.push(["Doble amenaza", dbl.map(function(p){return p.name}).join(", "), "Top 10 en la quiniela y sin un solo strike en Survivor."]);
+  var last = players[N-1], bestWeek = Math.max.apply(null,allScores);
+  aw.push(["Nadie está muerto", "Todos", "Del 1º al "+N+"º hay "+(leader.total-last.total)+" puntos. La mejor semana hasta ahora fue de "+bestWeek+". Una semana buena y te metes a la pelea."]);
+  var awBox = document.getElementById("awards");
+  aw.forEach(function(a){ awBox.appendChild(el("div","award",'<h3>'+esc(a[0])+'</h3><div class="who">'+esc(a[1])+'</div><p>'+esc(a[2])+'</p>')); });
+
+  // ---------- Survivor ----------
+  var sv = document.getElementById("surv");
+  var surv = players.map(function(p){return {name:p.name, s:strikeOf(p.name)}}).filter(function(x){return x.s!==null}).sort(function(a,b){return a.s-b.s || a.name.localeCompare(b.name)});
+  var counts=[0,0,0,0]; surv.forEach(function(s){counts[Math.min(s.s,3)]++});
+  document.getElementById("tally").innerHTML =
+    '<div><b class="num">'+(surv.length-counts[3])+'</b>vivos</div><div><b class="num">'+counts[0]+'</b>sin strikes</div><div><b class="num">'+counts[2]+'</b>en la cuerda floja (2)</div><div><b class="num">'+counts[3]+'</b>fuera</div>';
+  surv.forEach(function(s){
+    var d=''; for (var i=0;i<3;i++) d+='<i class="'+(i<s.s?'x':'')+'"></i>';
+    var c = el("div","sv"+(s.s>=3?" out":""),'<span class="n">'+esc(s.name)+'</span><span class="dots" aria-label="'+s.s+' strikes">'+d+'</span>');
+    c.dataset.name = s.name; sv.appendChild(c);
+  });
+
+  // ---------- Find yourself ----------
+  var sel = document.getElementById("pick");
+  players.slice().sort(function(a,b){return a.name.localeCompare(b.name)}).forEach(function(p){
+    var o=document.createElement("option"); o.value=p.name; o.textContent=p.name; sel.appendChild(o);
+  });
+  function meCard(p){
+    var gapL = leader.total-p.total;
+    var second = players.filter(function(q){return q.rank===2})[0] || players[1];
+    var third = players.filter(function(q){return q.rank>2})[0];
+    var line;
+    if (p.rank===1) line = "Vas arriba por "+(p.total-second.total)+" sobre el 2º lugar. "+(SEASON_WEEKS-WEEK>0 ? "Quedan "+(SEASON_WEEKS-WEEK)+" semanas para que te alcancen." : "Se acabó la temporada regular.");
+    else if (p.rank===2) line = "Estás en zona de premio. "+gapL+" del líder y "+(p.total-third.total)+" arriba del 3º.";
+    else line = gapL+" del líder y "+(second.total-p.total)+" del 2º lugar, que también cobra.";
+    var t = p.tied ? " (empatado)" : "";
+    var wonTxt = p.won.length ? "Ganaste la semana "+p.won.join(" y la ")+"." : "Todavía no ganas una semana. Los $50 siguen en la mesa.";
+    var s = strikeOf(p.name);
+    var sTxt = s===null ? "Sin dato" : (s>=3 ? "Fuera" : s+" de 3");
+    return '<div class="me-top"><span class="me-rank num">'+ord(p.rank)+'</span><span class="me-name">'+esc(p.name)+t+'</span></div>'+
+      '<div class="me-grid">'+
+        '<div><b class="num">'+p.total+'</b><span>puntos que cuentan</span></div>'+
+        '<div><b class="num">'+p.best+'</b><span>tu mejor semana (sem '+(p.bestIdx+1)+', '+ord(p.wr[p.bestIdx])+')</span></div>'+
+        (p.dropIdx>=0 ? '<div><b class="num">'+p.drop+'</b><span>se te cae (sem '+(p.dropIdx+1)+')</span></div>' : '')+
+        '<div><b>'+sTxt+'</b><span>strikes en Survivor</span></div>'+
+      '</div>'+
+      '<p class="me-say">'+esc(line)+' '+esc(wonTxt)+(p.dropIdx<0 || SEASON_WEEKS-WEEK<=0 ? '' : (p.drop===0 ? ' Ya usaste tu semana que se cae: la semana '+(p.dropIdx+1)+' en ceros. Si se te olvida otra, esa sí cuenta.' : ' Tu piso es '+p.drop+': cualquier semana abajo de eso se vuelve la que se cae y tus '+p.drop+' regresan al total.'))+'</p>';
+  }
+  function choose(name, save){
+    var p = byName[name];
+    current = p ? name : "";
+    var me = document.getElementById("me");
+    document.querySelectorAll("[data-name]").forEach(function(n){
+      var on = n.dataset.name===name;
+      if (n.tagName.toLowerCase()==="circle"){
+        n.setAttribute("stroke", on?"#F2EBDA":"none"); n.setAttribute("stroke-width", on?"3":"0");
+        if (on){ n.setAttribute("r","6.5"); n.parentNode.appendChild(n); } else n.setAttribute("r","4.5");
+      } else {
+        n.classList.toggle("sel", on);
+        if (on && n.classList.contains("bl")) n.parentNode.appendChild(n);
+      }
+    });
+    if (!p){ me.classList.remove("on"); me.innerHTML=""; return; }
+    me.innerHTML = meCard(p); me.classList.add("on");
+    if (save){ try{ localStorage.setItem("fab-me", name); }catch(e){} }
+  }
+  drawBump();
+  sel.addEventListener("change", function(){ choose(sel.value, true); });
+  var start = "";
+  try{
+    var q = new URLSearchParams(location.search).get("yo");
+    if (q) start = q; else if (location.hash) start = decodeURIComponent(location.hash.slice(1));
+  }catch(e){}
+  if (!byName[start]){ try{ start = localStorage.getItem("fab-me") || ""; }catch(e){ start=""; } }
+  if (byName[start]){ sel.value = start; choose(start, false); }
+  // Apps Script web app: the page runs in an iframe, so read ?yo=Name (or #Name) from the parent URL
+  try{
+    if (window.google && google.script && google.script.url){
+      google.script.url.getLocation(function(loc){
+        var y = (loc.parameter && loc.parameter.yo) || (loc.hash ? decodeURIComponent(loc.hash) : "");
+        if (byName[y]){ sel.value = y; choose(y, false); }
+      });
+    }
+  }catch(e){}
+}
+})();
+</script>
+</body>
+</html>

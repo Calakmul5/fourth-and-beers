@@ -1,0 +1,257 @@
+{
+ "season": 2026,
+ "week": 3,
+ "weeks": 18,
+ "updated": "2026-09-30T12:00:00Z",
+ "pays": [
+  1050,
+  350
+ ],
+ "weeklyPrize": 50,
+ "pickem": [
+  {
+   "name": "Silverback",
+   "weeks": [
+    57,
+    76,
+    101
+   ],
+   "total": 177,
+   "dropped": 57
+  },
+  {
+   "name": "Juan1768",
+   "weeks": [
+    81,
+    42,
+    73
+   ],
+   "total": 154,
+   "dropped": 42
+  },
+  {
+   "name": "Billy Beaner",
+   "weeks": [
+    78,
+    74,
+    50
+   ],
+   "total": 152,
+   "dropped": 50
+  },
+  {
+   "name": "Cyber70",
+   "weeks": [
+    70,
+    56,
+    79
+   ],
+   "total": 149,
+   "dropped": 56
+  },
+  {
+   "name": "Jorge_B",
+   "weeks": [
+    93,
+    39,
+    56
+   ],
+   "total": 149,
+   "dropped": 39
+  },
+  {
+   "name": "Mean Machine",
+   "weeks": [
+    92,
+    40,
+    52
+   ],
+   "total": 144,
+   "dropped": 40
+  },
+  {
+   "name": "Abogado",
+   "weeks": [
+    63,
+    52,
+    75
+   ],
+   "total": 138,
+   "dropped": 52
+  },
+  {
+   "name": "SinCasco",
+   "weeks": [
+    65,
+    50,
+    73
+   ],
+   "total": 138,
+   "dropped": 50
+  },
+  {
+   "name": "Osos de Grayslake",
+   "weeks": [
+    69,
+    69,
+    48
+   ],
+   "total": 138,
+   "dropped": 48
+  },
+  {
+   "name": "King of The North",
+   "weeks": [
+    66,
+    68,
+    49
+   ],
+   "total": 134,
+   "dropped": 49
+  },
+  {
+   "name": "This is our year",
+   "weeks": [
+    57,
+    65,
+    65
+   ],
+   "total": 130,
+   "dropped": 57
+  },
+  {
+   "name": "Manolito’s winning picks",
+   "weeks": [
+    72,
+    49,
+    54
+   ],
+   "total": 126,
+   "dropped": 49
+  },
+  {
+   "name": "Conquistador",
+   "weeks": [
+    55,
+    46,
+    69
+   ],
+   "total": 124,
+   "dropped": 46
+  },
+  {
+   "name": "Chitown’DemBoyz",
+   "weeks": [
+    60,
+    63,
+    60
+   ],
+   "total": 123,
+   "dropped": 60
+  },
+  {
+   "name": "Niners",
+   "weeks": [
+    60,
+    63,
+    51
+   ],
+   "total": 123,
+   "dropped": 51
+  },
+  {
+   "name": "Rastaman",
+   "weeks": [
+    64,
+    58,
+    54
+   ],
+   "total": 122,
+   "dropped": 54
+  },
+  {
+   "name": "X-Men Let’s go Boys",
+   "weeks": [
+    71,
+    41,
+    50
+   ],
+   "total": 121,
+   "dropped": 41
+  },
+  {
+   "name": "MVP21",
+   "weeks": [
+    83,
+    35,
+    38
+   ],
+   "total": 121,
+   "dropped": 35
+  },
+  {
+   "name": "Andrea’s Picks",
+   "weeks": [
+    61,
+    54,
+    39
+   ],
+   "total": 115,
+   "dropped": 39
+  },
+  {
+   "name": "KinkyKing",
+   "weeks": [
+    51,
+    59,
+    52
+   ],
+   "total": 111,
+   "dropped": 51
+  },
+  {
+   "name": "Puto el que lo lea",
+   "weeks": [
+    47,
+    59,
+    32
+   ],
+   "total": 106,
+   "dropped": 32
+  },
+  {
+   "name": "Steel Man",
+   "weeks": [
+    45,
+    47,
+    43
+   ],
+   "total": 92,
+   "dropped": 43
+  }
+ ],
+ "strikes": {
+  "Silverback": 2,
+  "Juan1768": 0,
+  "Billy Beaner": 2,
+  "Cyber70": 0,
+  "Jorge_B": 0,
+  "Mean Machine": 1,
+  "Abogado": 1,
+  "SinCasco": 2,
+  "Osos de Grayslake": 0,
+  "King of The North": 1,
+  "This is our year": 1,
+  "Manolito’s winning picks": 2,
+  "Conquistador": 2,
+  "Chitown’DemBoyz": 1,
+  "Niners": 1,
+  "Rastaman": 2,
+  "X-Men Let’s go Boys": 2,
+  "MVP21": 2,
+  "Andrea’s Picks": 2,
+  "KinkyKing": 3,
+  "Puto el que lo lea": 2,
+  "Steel Man": 1
+ }
+}
