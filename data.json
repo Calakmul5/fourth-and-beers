@@ -24,6 +24,9 @@
   "Niners": {
    "nfl": "SF"
   },
+  "Abogado": {
+   "nfl": "SF"
+  },
   "Steel Man": {
    "nfl": "PIT"
   },
@@ -36,12 +39,21 @@
   "Chitown’DemBoyz": {
    "nfl": "DAL"
   },
+  "Puto el que lo lea": {
+   "nfl": "CHI"
+  },
+  "Cyber70": {
+   "nfl": "DAL"
+  },
   "Billy Beaner": {
-   "nfl": "DAL",
+   "nfl": "CHI",
    "ncaa": "Michigan"
   },
   "Mean Machine": {
    "nfl": "DAL"
+  },
+  "Manolito’s winning picks": {
+   "nfl": "CHI"
   },
   "Jorge_B": {
    "random": true,
@@ -94,7 +106,7 @@
  "season": 2026,
  "week": 3,
  "weeks": 18,
- "updated": "2026-10-01T00:27:10.173Z",
+ "updated": "2026-10-01T12:48:39.438Z",
  "pays": [
   1050,
   350
