@@ -61,11 +61,24 @@
    "nfl": "DAL"
   }
  },
- "comments": [],
+ "comments": [
+  {
+   "para": "",
+   "texto": "Semana 3: el comisionado hizo 101. Ya se revisó y no hubo trampa. Bueno, eso dice el comisionado."
+  },
+  {
+   "para": "Silverback",
+   "texto": "17º en la semana 1 y ahora líder. Hasta el comisionado sospecha del comisionado."
+  },
+  {
+   "para": "KinkyKing",
+   "texto": "Tres strikes en tres semanas. El asador ya está avisado."
+  }
+ ],
  "season": 2026,
  "week": 3,
  "weeks": 18,
- "updated": "2026-10-01T00:26:26.734Z",
+ "updated": "2026-10-01T00:26:39.034Z",
  "pays": [
   1050,
   350
