@@ -1,8 +1,71 @@
 {
+ "survivorOut": [
+  {
+   "name": "KinkyKing",
+   "week": 3
+  }
+ ],
+ "fans": {
+  "Rastaman": {
+   "nfl": "DAL"
+  },
+  "Conquistador": {
+   "nfl": "DAL"
+  },
+  "MVP21": {
+   "nfl": "PIT"
+  },
+  "This is our year": {
+   "nfl": "DAL"
+  },
+  "King of The North": {
+   "nfl": "CHI"
+  },
+  "Niners": {
+   "nfl": "SF"
+  },
+  "Steel Man": {
+   "nfl": "PIT"
+  },
+  "Silverback": {
+   "nfl": "PIT"
+  },
+  "Osos de Grayslake": {
+   "nfl": "CHI"
+  },
+  "Chitown’DemBoyz": {
+   "nfl": "DAL"
+  },
+  "Billy Beaner": {
+   "nfl": "DAL",
+   "ncaa": "Michigan"
+  },
+  "Mean Machine": {
+   "nfl": "DAL"
+  },
+  "Jorge_B": {
+   "random": true,
+   "other": "League of Legends"
+  },
+  "Andrea’s Picks": {
+   "nfl": "CHI",
+   "ncaa": "Wisconsin"
+  },
+  "Juan1768": {
+   "nfl": "CHI"
+  },
+  "SinCasco": {
+   "nfl": "DAL"
+  },
+  "X-Men Let’s go Boys": {
+   "nfl": "DAL"
+  }
+ },
+ "comments": [],
  "season": 2026,
  "week": 3,
  "weeks": 18,
- "updated": "2026-09-30T22:32:52.932Z",
+ "updated": "2026-10-01T00:26:26.734Z",
  "pays": [
   1050,
   350
