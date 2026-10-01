@@ -1,0 +1,12 @@
+{
+  "name": "fourth-and-beers-leaderboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Tests for the Fourth and Beers leaderboard page and publisher",
+  "scripts": {
+    "test": "node test/run_all.js"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}
