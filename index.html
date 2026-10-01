@@ -130,6 +130,16 @@ tr.sel td.h{outline:2px solid var(--text);outline-offset:-2px}
 .award.grill{border-left-color:var(--red)}
 .award.grill h3{color:var(--red)}
 
+.quotes{margin-top:16px;display:grid;gap:10px}
+.quote{background:var(--surface);border-radius:12px;padding:12px 14px}
+.quote .to{display:block;color:var(--amber);font-size:.8rem;font-weight:700;margin-bottom:2px}
+.quote p{margin:0;font-size:1.02rem}
+.q-h{font-size:1.5rem;margin-top:18px}
+.me-q{margin-top:10px;background:var(--bg);border-radius:10px;padding:10px 12px}
+.me-q b{color:var(--amber);font-weight:700}
+.fanplot{margin-top:14px;background:var(--surface);border-radius:14px;padding:10px 6px}
+.fanplot svg{display:block;width:100%;height:auto}
+
 /* Survivor */
 .surv{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:14px}
 .sv{background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -199,16 +209,27 @@ footer{margin-top:48px;color:var(--muted);font-size:.8rem;border-top:1px solid v
   <h2>Semana por semana</h2>
   <p class="note">El color dice en qué lugar quedaste esa semana. Tachado es la semana que se te cae.</p>
   <div class="scroll"><table id="heat"></table></div>
-  <div class="scale"><span>1º</span><span class="g" id="grad"></span><span>22º</span></div>
+  <div class="scale"><span>1º</span><span class="g" id="grad"></span><span id="grad-last">22º</span></div>
 </section>
 
 <section id="premios">
   <h2>Premios que no pagan</h2>
   <p class="note">Nada de esto da dinero. Da para platicar.</p>
+  <div id="quotes-box" hidden>
+    <h3 class="q-h">Palabras del comisionado</h3>
+    <div class="quotes" id="quotes"></div>
+  </div>
   <div class="awards" id="awards"></div>
   <h3 class="grill-h" id="grill-h" hidden>Castigos que sí duelen</h3>
   <p class="note" id="grill-note" hidden>Estos sí cuestan. El primer eliminado de Survivor organiza la carne asada. El último de la quiniela regular paga las pizzas del Super Bowl para todos, familias incluidas.</p>
   <div class="awards" id="grill"></div>
+</section>
+
+<section id="aficiones" hidden>
+  <h2>La tabla de las aficiones</h2>
+  <p class="note">Promedio de puntos en la tabla según el equipo al que le van. La raya es el promedio de toda la liga.</p>
+  <div class="fanplot" id="fanplot"></div>
+  <div class="awards" id="fanawards"></div>
 </section>
 
 <section id="survivor">
@@ -231,11 +252,11 @@ footer{margin-top:48px;color:var(--muted);font-size:.8rem;border-top:1px solid v
 
 <footer>
   <span id="t-foot"></span><br>
-  v2.1.0 c1.2.0
+  v2.2.0 c1.3.0
 </footer>
 </div>
 
-<script type="application/json" id="seed">{"season": 2026, "week": 3, "weeks": 18, "updated": "2026-09-30T12:00:00Z", "pays": [1050, 350], "weeklyPrize": 50, "pickem": [{"name": "Silverback", "weeks": [57, 76, 101], "total": 177, "dropped": 57}, {"name": "Juan1768", "weeks": [81, 42, 73], "total": 154, "dropped": 42}, {"name": "Billy Beaner", "weeks": [78, 74, 50], "total": 152, "dropped": 50}, {"name": "Cyber70", "weeks": [70, 56, 79], "total": 149, "dropped": 56}, {"name": "Jorge_B", "weeks": [93, 39, 56], "total": 149, "dropped": 39}, {"name": "Mean Machine", "weeks": [92, 40, 52], "total": 144, "dropped": 40}, {"name": "Abogado", "weeks": [63, 52, 75], "total": 138, "dropped": 52}, {"name": "SinCasco", "weeks": [65, 50, 73], "total": 138, "dropped": 50}, {"name": "Osos de Grayslake", "weeks": [69, 69, 48], "total": 138, "dropped": 48}, {"name": "King of The North", "weeks": [66, 68, 49], "total": 134, "dropped": 49}, {"name": "This is our year", "weeks": [57, 65, 65], "total": 130, "dropped": 57}, {"name": "Manolito’s winning picks", "weeks": [72, 49, 54], "total": 126, "dropped": 49}, {"name": "Conquistador", "weeks": [55, 46, 69], "total": 124, "dropped": 46}, {"name": "Chitown’DemBoyz", "weeks": [60, 63, 60], "total": 123, "dropped": 60}, {"name": "Niners", "weeks": [60, 63, 51], "total": 123, "dropped": 51}, {"name": "Rastaman", "weeks": [64, 58, 54], "total": 122, "dropped": 54}, {"name": "X-Men Let’s go Boys", "weeks": [71, 41, 50], "total": 121, "dropped": 41}, {"name": "MVP21", "weeks": [83, 35, 38], "total": 121, "dropped": 35}, {"name": "Andrea’s Picks", "weeks": [61, 54, 39], "total": 115, "dropped": 39}, {"name": "KinkyKing", "weeks": [51, 59, 52], "total": 111, "dropped": 51}, {"name": "Puto el que lo lea", "weeks": [47, 59, 32], "total": 106, "dropped": 32}, {"name": "Steel Man", "weeks": [45, 47, 43], "total": 92, "dropped": 43}], "strikes": {"Silverback": 2, "Juan1768": 0, "Billy Beaner": 2, "Cyber70": 0, "Jorge_B": 0, "Mean Machine": 1, "Abogado": 1, "SinCasco": 2, "Osos de Grayslake": 0, "King of The North": 1, "This is our year": 1, "Manolito’s winning picks": 2, "Conquistador": 2, "Chitown’DemBoyz": 1, "Niners": 1, "Rastaman": 2, "X-Men Let’s go Boys": 2, "MVP21": 2, "Andrea’s Picks": 2, "KinkyKing": 3, "Puto el que lo lea": 2, "Steel Man": 1}, "survivorOut": [{"name": "KinkyKing", "week": 3}]}</script>
+<script type="application/json" id="seed">{"season": 2026, "week": 3, "weeks": 18, "updated": "2026-09-30T12:00:00Z", "pays": [1050, 350], "weeklyPrize": 50, "pickem": [{"name": "Silverback", "weeks": [57, 76, 101], "total": 177, "dropped": 57}, {"name": "Juan1768", "weeks": [81, 42, 73], "total": 154, "dropped": 42}, {"name": "Billy Beaner", "weeks": [78, 74, 50], "total": 152, "dropped": 50}, {"name": "Cyber70", "weeks": [70, 56, 79], "total": 149, "dropped": 56}, {"name": "Jorge_B", "weeks": [93, 39, 56], "total": 149, "dropped": 39}, {"name": "Mean Machine", "weeks": [92, 40, 52], "total": 144, "dropped": 40}, {"name": "Abogado", "weeks": [63, 52, 75], "total": 138, "dropped": 52}, {"name": "SinCasco", "weeks": [65, 50, 73], "total": 138, "dropped": 50}, {"name": "Osos de Grayslake", "weeks": [69, 69, 48], "total": 138, "dropped": 48}, {"name": "King of The North", "weeks": [66, 68, 49], "total": 134, "dropped": 49}, {"name": "This is our year", "weeks": [57, 65, 65], "total": 130, "dropped": 57}, {"name": "Manolito’s winning picks", "weeks": [72, 49, 54], "total": 126, "dropped": 49}, {"name": "Conquistador", "weeks": [55, 46, 69], "total": 124, "dropped": 46}, {"name": "Chitown’DemBoyz", "weeks": [60, 63, 60], "total": 123, "dropped": 60}, {"name": "Niners", "weeks": [60, 63, 51], "total": 123, "dropped": 51}, {"name": "Rastaman", "weeks": [64, 58, 54], "total": 122, "dropped": 54}, {"name": "X-Men Let’s go Boys", "weeks": [71, 41, 50], "total": 121, "dropped": 41}, {"name": "MVP21", "weeks": [83, 35, 38], "total": 121, "dropped": 35}, {"name": "Andrea’s Picks", "weeks": [61, 54, 39], "total": 115, "dropped": 39}, {"name": "KinkyKing", "weeks": [51, 59, 52], "total": 111, "dropped": 51}, {"name": "Puto el que lo lea", "weeks": [47, 59, 32], "total": 106, "dropped": 32}, {"name": "Steel Man", "weeks": [45, 47, 43], "total": 92, "dropped": 43}], "strikes": {"Silverback": 2, "Juan1768": 0, "Billy Beaner": 2, "Cyber70": 0, "Jorge_B": 0, "Mean Machine": 1, "Abogado": 1, "SinCasco": 2, "Osos de Grayslake": 0, "King of The North": 1, "This is our year": 1, "Manolito’s winning picks": 2, "Conquistador": 2, "Chitown’DemBoyz": 1, "Niners": 1, "Rastaman": 2, "X-Men Let’s go Boys": 2, "MVP21": 2, "Andrea’s Picks": 2, "KinkyKing": 3, "Puto el que lo lea": 2, "Steel Man": 1}, "survivorOut": [{"name": "KinkyKing", "week": 3}], "fans": {"Rastaman": {"nfl": "DAL"}, "Conquistador": {"nfl": "DAL"}, "MVP21": {"nfl": "PIT"}, "This is our year": {"nfl": "DAL"}, "King of The North": {"nfl": "CHI"}, "Niners": {"nfl": "SF"}, "Steel Man": {"nfl": "PIT"}, "Silverback": {"nfl": "PIT"}, "Osos de Grayslake": {"nfl": "CHI"}, "Chitown’DemBoyz": {"nfl": "DAL"}, "Billy Beaner": {"nfl": "DAL", "ncaa": "Michigan"}, "Mean Machine": {"nfl": "DAL"}, "Jorge_B": {"random": true, "other": "League of Legends"}, "Andrea’s Picks": {"nfl": "CHI", "ncaa": "Wisconsin"}, "Juan1768": {"nfl": "CHI"}, "SinCasco": {"nfl": "DAL"}, "X-Men Let’s go Boys": {"nfl": "DAL"}}, "comments": []}</script>
 <script>
 (function(){
   // Reads data.json next to this page. If that fails (file opened locally, Claude preview), uses the seed above.
@@ -442,6 +463,7 @@ function render(D){
     return "rgb("+c.join(",")+")";
   }
   function heatText(r){ return (r-1)/(N-1) < .45 ? "#1A1407" : "#F2EBDA"; }
+  document.getElementById("grad-last").textContent = N+"º";
   document.getElementById("grad").style.background="linear-gradient(90deg,"+heatColor(1)+","+heatColor(Math.round(N/2))+","+heatColor(N)+")";
   var heat = document.getElementById("heat");
   var hh = '<thead><tr><th>Jugador</th>';
@@ -457,30 +479,223 @@ function render(D){
   });
   heat.innerHTML = hh+'</tbody>';
 
-  // ---------- Awards (computed so they refresh with the data) ----------
+  // ---------- Jokes: the winner comes from the data, the line rotates every week ----------
+  // Each award has its own offset so they don't all change in lockstep.
+  function rot(pool, salt){ return pool[(WEEK - 1 + (salt||0)) % pool.length]; }
+  function fillT(t, v){ return t.replace(/\{(\w+)\}/g, function(_,k){ return v[k]!=null ? v[k] : ""; }); }
+  function fmt1(x){ return (Math.round(x*10)/10).toFixed(1); }
+  var JOKES = {
+    climb: [
+      "Del elevador de servicio al penthouse, sin escalas.",
+      "Arrancó de visita y ya se siente dueño de la casa.",
+      "Hay quien empieza lento y hay quien empieza dormido. Este ya despertó.",
+      "Si sigue así, va a querer cobrarle renta a los de abajo.",
+      "Subió más rápido que el precio de la cerveza en el estadio."
+    ],
+    swing: [
+      "Una semana es Nostradamus y la otra no le atina ni a la moneda.",
+      "Sus picks tienen más cambios de humor que el clima de Chicago.",
+      "Nadie sabe qué versión va a llegar el domingo. Ni él.",
+      "Abróchense el cinturón, este juego mecánico no tiene frenos.",
+      "Si lo graficas parece electrocardiograma en tiempo extra."
+    ],
+    steady: [
+      "Sin sustos, sin sorpresas, sin emociones. La quiniela en modo crucero.",
+      "Su gráfica parece línea recta. Para bien o para mal.",
+      "Consistencia de reloj suizo. Ahora falta que el reloj se adelante tantito.",
+      "Mismos puntos cada semana. Como la carne asada del domingo: nunca falla.",
+      "Ni muy muy, ni tan tan. Puntual como la cobranza del comisionado."
+    ],
+    fall: [
+      "La semana 1 prometía mucho. Las siguientes no firmaron el contrato.",
+      "Llegó con todo a la fiesta y se fue antes del pastel.",
+      "El que madruga no siempre llega primero, pero sí se cansa primero.",
+      "Arrancó como caballo de carreras. Ahora va al paso, pero con dignidad."
+    ],
+    photo: [
+      "Ganó por un pelito. De esos que saben más rico.",
+      "Al segundo lugar le dolió más que un strike en Survivor.",
+      "Así se ganan las semanas: sufriendo hasta el lunes en la noche.",
+      "Más cerrado que la hielera cuando ya se acabaron las chelas."
+    ],
+    double: [
+      "Quiniela y Survivor al mismo tiempo. Sospechoso.",
+      "Que alguien revise que no tenga{n} los resultados del lunes desde el domingo.",
+      "A este ritmo, que inviten las chelas. Con su dinero, no con el bote.",
+      "Los demás ya andan copiando picks. Ni así."
+    ],
+    alive: [
+      "Una semana buena y te metes a la pelea.",
+      "La tabla está más apretada que el pantalón después de la carne asada.",
+      "Aquí nadie tira la toalla antes de Thanksgiving.",
+      "Todavía hay tiempo de remontar. O de seguir sufriendo, también se vale."
+    ],
+    apart: [
+      "Al de hasta abajo ya le hacen falta milagros. Y pizzas.",
+      "La tabla ya se estiró. Unos pelean por la lana y otros por no pagar las pizzas.",
+      "Matemáticamente vivos. Anímicamente, quién sabe."
+    ],
+    lolWin: [
+      "Cero partidos vistos, cero jerseys comprados. Ustedes sigan con sus podcasts.",
+      "Llevan años estudiando lesionados. Él escoge con los ojos cerrados. Mismo resultado, menos estrés.",
+      "Él no sabe qué es un down. Ustedes no saben cómo ganarle.",
+      "Cada domingo que pierden con él, un aficionado de los {bigTeam} se pregunta para qué paga el Sunday Ticket.",
+      "Pónganle pausa a ESPN y aprendan League of Legends. Les va a ir mejor."
+    ],
+    lolLose: [
+      "Por fin los que sí ven fútbol le ganan al que escoge con los ojos cerrados. La vara estaba baja, pero ahí va.",
+      "La moneda se cansó. Esta semana la ciencia gana.",
+      "El de League of Legends va abajo. Dice que fue lag.",
+      "Los aficionados respiran tantito. Que no se acostumbren."
+    ],
+    bigUp: [
+      "Son muchos y además saben. Qué coraje.",
+      "La mayoría manda, y esta vez también atina.",
+      "Tantos jerseys de los {team} en la fiesta y encima con puntos."
+    ],
+    bigTie: [
+      "Pegaditos al promedio. Lo van a vender como Super Bowl.",
+      "Justo en el promedio. Muy de su equipo.",
+      "Tanta gente para quedar justo en el promedio."
+    ],
+    bigDown: [
+      "Mucha camiseta, poca quiniela.",
+      "Hacen más ruido en el WhatsApp que en la tabla.",
+      "Cantidad sí hay. Calidad, la seguimos esperando.",
+      "Son muchos pero en la tabla no se nota. Como en enero."
+    ],
+    bestFan: [
+      "Sufren los domingos, pero en la quiniela la rompen.",
+      "Por fin una alegría que no depende de su equipo.",
+      "Lo que no ganan en el campo lo ganan aquí.",
+      "De su equipo no decimos nada. De sus picks, puros aplausos."
+    ],
+    swiss: [
+      "No le van a nadie. Así no sufren los lunes.",
+      "Sin camiseta, sin drama, sin excusas.",
+      "Sospechosamente neutrales. El comisionado los está vigilando.",
+      "Todavía están a tiempo de declarar equipo. Hay 32 para escoger y la mitad ni duele."
+    ],
+    twoShirts: [
+      "Dos equipos, el doble de corajes.",
+      "Sábado y domingo sufriendo. Eso es compromiso.",
+      "Si un equipo falla, siempre hay otro para sufrir.",
+      "El fin de semana completo con el Jesús en la boca."
+    ]
+  };
+  function add(list, title, who, fact, pool, salt, vars){
+    list.push([title, who, fact + (pool ? " " + fillT(rot(pool, salt), vars||{}) : "")]);
+  }
+  function names(arr){ return arr.map(function(p){return p.name}).join(", "); }
+
+  // ---------- Awards ----------
   var aw = [];
-  // Basement to penthouse: biggest improvement in weekly rank, first week vs latest
   if (WEEK>=2){
     var climb = players.slice().sort(function(a,b){return (b.wr[0]-b.wr[WEEK-1])-(a.wr[0]-a.wr[WEEK-1])})[0];
     if (climb.wr[0]-climb.wr[WEEK-1] > 0)
-      aw.push(["Del sótano a la azotea", climb.name, ord(climb.wr[0])+" en la semana 1, "+ord(climb.wr[WEEK-1])+" en la semana "+WEEK+". "+climb.w.join(", ")+" puntos"+(climb.w.every(function(v,i,a){return i===0||v>a[i-1]})?", subiendo cada semana.":".")]);
+      add(aw, "Del sótano a la azotea", climb.name, ord(climb.wr[0])+" en la semana 1, "+ord(climb.wr[WEEK-1])+" en la semana "+WEEK+".", JOKES.climb, 0);
     var swing = players.slice().sort(function(a,b){return (b.best-b.worst)-(a.best-a.worst)});
-    aw.push(["Montaña rusa", swing[0].name, "De "+swing[0].best+" a "+swing[0].worst+". "+(swing[0].best-swing[0].worst)+" puntos entre su mejor y su peor semana. Le sigue "+swing[1].name+" con "+(swing[1].best-swing[1].worst)+"."]);
+    add(aw, "Montaña rusa", swing[0].name, "De "+swing[0].best+" a "+swing[0].worst+". "+(swing[0].best-swing[0].worst)+" puntos entre su mejor y su peor semana.", JOKES.swing, 1);
     var steady = players.slice().sort(function(a,b){return (a.best-a.worst)-(b.best-b.worst) || b.total-a.total});
-    aw.push(["Reloj suizo", steady[0].name, (WEEK<=6 ? steady[0].w.join(", ")+". " : "")+"Solo "+(steady[0].best-steady[0].worst)+" puntos de diferencia en "+WEEK+" semanas."]);
+    add(aw, "Reloj suizo", steady[0].name, (WEEK<=6 ? steady[0].w.join(", ")+". " : "")+"Solo "+(steady[0].best-steady[0].worst)+" puntos de diferencia en "+WEEK+" semanas.", JOKES.steady, 2);
   }
   if (WEEK>=3){
     var fall = players.slice().sort(function(a,b){return (b.wr[WEEK-1]+b.wr[WEEK-2])/2-b.wr[0] - ((a.wr[WEEK-1]+a.wr[WEEK-2])/2-a.wr[0])})[0];
-    aw.push(["La cruda de la semana 1", fall.name, ord(fall.wr[0])+" la primera semana. Sus dos más recientes: "+ord(fall.wr[WEEK-2])+" y "+ord(fall.wr[WEEK-1])+"."]);
+    add(aw, "La cruda de la semana 1", fall.name, ord(fall.wr[0])+" la primera semana. Sus dos más recientes: "+ord(fall.wr[WEEK-2])+" y "+ord(fall.wr[WEEK-1])+".", JOKES.fall, 3);
   }
   var closest = weekly.slice().sort(function(a,b){return (a.max-a.second)-(b.max-b.second)})[0];
-  aw.push(["Foto finish", closest.winners.map(function(p){return p.name}).join(" y "), "Ganó la semana "+(closest.k+1)+" por "+(closest.max-closest.second)+(closest.max-closest.second===1?" punto":" puntos")+". Un pick de confianza 1 y los $50 eran de alguien más."]);
+  var cm = closest.max-closest.second;
+  add(aw, "Foto finish", closest.winners.map(function(p){return p.name}).join(" y "),
+    "Ganó la semana "+(closest.k+1)+" por "+cm+(cm===1?" punto. Un pick de confianza 1 y los $"+PRIZE+" eran de alguien más.":" puntos."), JOKES.photo, 0);
   var dbl = players.filter(function(p){return p.rank<=10 && strikeOf(p.name)===0});
-  if (dbl.length) aw.push(["Doble amenaza", dbl.map(function(p){return p.name}).join(", "), "Top 10 en la quiniela y sin un solo strike en Survivor."]);
-  var last = players[N-1], bestWeek = Math.max.apply(null,allScores);
-  aw.push(["Nadie está muerto", "Todos", "Del 1º al "+N+"º hay "+(leader.total-last.total)+" puntos. La mejor semana hasta ahora fue de "+bestWeek+". Una semana buena y te metes a la pelea."]);
+  if (dbl.length) add(aw, "Doble amenaza", names(dbl), "Top 10 en la quiniela y sin un solo strike en Survivor.", JOKES.double, 1, {n: dbl.length>1?"n":""});
+  var last = players[N-1], bestWeek = Math.max.apply(null,allScores), spread = leader.total-last.total;
+  if (spread <= bestWeek)
+    add(aw, "Nadie está muerto", "Todos", "Del 1º al "+N+"º hay "+spread+" puntos. La mejor semana hasta ahora fue de "+bestWeek+".", JOKES.alive, 2);
+  else
+    add(aw, "Se empieza a estirar", "Todos", "Del 1º al "+N+"º ya hay "+spread+" puntos, más que la mejor semana del año ("+bestWeek+").", JOKES.apart, 0);
   var awBox = document.getElementById("awards");
   aw.forEach(function(a){ awBox.appendChild(el("div","award",'<h3>'+esc(a[0])+'</h3><div class="who">'+esc(a[1])+'</div><p>'+esc(a[2])+'</p>')); });
+
+  // ---------- Commissioner's comments (checked rows in the Comentarios tab) ----------
+  var COMMENTS = (D.comments||[]).filter(function(c){return c && c.texto});
+  function commentsFor(name){ return COMMENTS.filter(function(c){return c.para && normName(c.para)===normName(name)}); }
+  if (COMMENTS.length){
+    var qb = document.getElementById("quotes");
+    COMMENTS.forEach(function(c){
+      var to = c.para ? '<span class="to">Para '+esc(c.para)+'</span>' : '';
+      qb.appendChild(el("div","quote",to+'<p>'+esc(c.texto)+'</p>'));
+    });
+    document.getElementById("quotes-box").hidden = false;
+  }
+
+  // ---------- Fan bases ----------
+  var NFL = {ARI:"Cardinals",ATL:"Falcons",BAL:"Ravens",BUF:"Bills",CAR:"Panthers",CHI:"Bears",CIN:"Bengals",CLE:"Browns",DAL:"Cowboys",DEN:"Broncos",DET:"Lions",GB:"Packers",HOU:"Texans",IND:"Colts",JAX:"Jaguars",KC:"Chiefs",LV:"Raiders",LAC:"Chargers",LAR:"Rams",MIA:"Dolphins",MIN:"Vikings",NE:"Patriots",NO:"Saints",NYG:"Giants",NYJ:"Jets",PHI:"Eagles",PIT:"Steelers",SF:"49ers",SEA:"Seahawks",TB:"Buccaneers",TEN:"Titans",WAS:"Commanders"};
+  var FAN_BY = {}; Object.keys(D.fans||{}).forEach(function(k){ FAN_BY[normName(k)] = D.fans[k]; });
+  var hasFans = Object.keys(FAN_BY).length > 0;
+  var leagueAvg = players.reduce(function(a,p){return a+p.total},0)/N;
+  var groups = {};
+  players.forEach(function(p){
+    var f = FAN_BY[normName(p.name)] || null;
+    p.fan = f;
+    var key = !f ? "suiza" : f.random ? "azar" : f.nfl ? f.nfl : f.ncaa ? "ncaa" : "suiza";
+    var label = key==="suiza" ? "Suiza (sin equipo)" : key==="azar" ? "Al azar"+(f.other?" ("+f.other+")":"") : key==="ncaa" ? "Solo college" : (NFL[key]||key);
+    var short = key==="suiza" ? "Suiza" : key==="azar" ? "Al azar" : key==="ncaa" ? "College" : (NFL[key]||key);
+    p.group = key;
+    (groups[key] = groups[key] || {key:key, label:label, short:short, members:[]}).members.push(p);
+  });
+  var G = Object.keys(groups).map(function(k){ var g=groups[k]; g.n=g.members.length; g.avg=g.members.reduce(function(a,p){return a+p.total},0)/g.n; return g; })
+    .sort(function(a,b){return b.avg-a.avg});
+  G.forEach(function(g,i){ g.rank=i+1; });
+
+  if (hasFans){
+    document.getElementById("aficiones").hidden = false;
+    // dot plot: one row per fan base
+    var fw=340, labelW=104, rowH=30, padT=26, fh=padT+rowH*G.length+8;
+    var mn=Math.min.apply(null,G.map(function(g){return g.avg}).concat([leagueAvg])), mx=Math.max.apply(null,G.map(function(g){return g.avg}).concat([leagueAvg]));
+    var lo2=Math.floor((mn-4)/5)*5, hi2=Math.ceil((mx+4)/5)*5;
+    function fx(v){ return labelW+8+(v-lo2)/(hi2-lo2)*(fw-labelW-34); }
+    var fsvg='<svg viewBox="0 0 '+fw+' '+fh+'" role="img" aria-label="Promedio de puntos por afición">';
+    fsvg+='<line x1="'+fx(leagueAvg)+'" x2="'+fx(leagueAvg)+'" y1="14" y2="'+(fh-4)+'" stroke="#F2EBDA" stroke-width="1.5" stroke-dasharray="3 3"/>';
+    fsvg+='<text x="'+fx(leagueAvg)+'" y="10" text-anchor="middle" fill="#F2EBDA" font-size="10" font-family="Public Sans, sans-serif">liga '+fmt1(leagueAvg)+'</text>';
+    G.forEach(function(g,i){
+      var y=padT+i*rowH+rowH/2, col = g.key==="azar" ? "#F2A93B" : g.key==="suiza" ? "#A7B9AE" : "#F2EBDA";
+      fsvg+='<text x="'+labelW+'" y="'+(y+4)+'" text-anchor="end" fill="'+col+'" font-size="12" font-weight="600" font-family="Public Sans, sans-serif">'+esc(g.short)+' · '+g.n+'</text>';
+      fsvg+='<line x1="'+(labelW+8)+'" x2="'+fx(g.avg)+'" y1="'+y+'" y2="'+y+'" stroke="'+col+'" stroke-opacity=".35" stroke-width="2"/>';
+      fsvg+='<circle cx="'+fx(g.avg)+'" cy="'+y+'" r="6" fill="'+col+'"><title>'+esc(g.label)+': '+fmt1(g.avg)+'</title></circle>';
+      fsvg+='<text x="'+(fx(g.avg)+10)+'" y="'+(y+4)+'" fill="'+col+'" font-size="11" font-family="Public Sans, sans-serif">'+fmt1(g.avg)+'</text>';
+    });
+    fsvg+='</svg>';
+    document.getElementById("fanplot").innerHTML = fsvg;
+
+    var fa = [];
+    var teamGroups = G.filter(function(g){return g.key!=="azar" && g.key!=="suiza" && g.key!=="ncaa"});
+    var big = teamGroups.slice().sort(function(a,b){return b.n-a.n || b.avg-a.avg})[0];
+    var withTeam = players.filter(function(p){return p.group!=="azar" && p.group!=="suiza"});
+    if (groups.azar){
+      var rAvg = groups.azar.avg;
+      var below = withTeam.filter(function(p){return p.total < rAvg}).length;
+      add(fa, "Índice League of Legends", names(groups.azar.members),
+        below+" de "+withTeam.length+" aficionados con equipo van abajo de alguien que escoge al azar.",
+        below*2 > withTeam.length ? JOKES.lolWin : JOKES.lolLose, 0, {bigTeam: big ? NFL[big.key] : "Cowboys"});
+    }
+    if (big && big.n>=3){
+      var diff = big.avg-leagueAvg;
+      add(fa, "La afición más numerosa", "Los "+NFL[big.key]+" ("+big.n+")",
+        "Promedian "+fmt1(big.avg)+" puntos. La liga promedia "+fmt1(leagueAvg)+".",
+        Math.abs(diff)<2 ? JOKES.bigTie : diff>0 ? JOKES.bigUp : JOKES.bigDown, 1, {team: NFL[big.key]});
+    }
+    var bestG = teamGroups.filter(function(g){return g.n>=2})[0];
+    if (bestG && (!big || bestG.key!==big.key || big.n<3))
+      add(fa, "La mejor afición", "Los "+NFL[bestG.key], "Promedian "+fmt1(bestG.avg)+" con "+bestG.n+" aficionados. Ninguna afición de dos o más promedia más.", JOKES.bestFan, 2, {team: NFL[bestG.key]});
+    if (groups.suiza)
+      add(fa, "Suiza", names(groups.suiza.members), "Sin equipo declarado. Promedian "+fmt1(groups.suiza.avg)+".", JOKES.swiss, 3);
+    var two = players.filter(function(p){return p.fan && p.fan.nfl && p.fan.ncaa});
+    if (two.length)
+      add(fa, "Doble camiseta", names(two), two.map(function(p){return p.name+": "+(NFL[p.fan.nfl]||p.fan.nfl)+" y "+p.fan.ncaa+"."}).join(" "), JOKES.twoShirts, 0);
+    var faBox = document.getElementById("fanawards");
+    fa.forEach(function(a){ faBox.appendChild(el("div","award",'<h3>'+esc(a[0])+'</h3><div class="who">'+esc(a[1])+'</div><p>'+esc(a[2])+'</p>')); });
+  }
 
   // ---------- La carne asada: last places. Wording rotates each week. ----------
   var FIRST_OUT_LINES = [
@@ -497,7 +712,6 @@ function render(D){
   ];
   var LAST_FINAL = "Temporada terminada. Ni modo: las pizzas del Super Bowl van por su cuenta, familias incluidas.";
   function pickLine(pool){ return pool[(WEEK-1) % pool.length]; }
-  function fillT(t, v){ return t.replace(/\{(\w+)\}/g, function(_,k){ return v[k]!=null ? v[k] : ""; }); }
   var grill = [];
   var outList = (D.survivorOut && D.survivorOut.length) ? D.survivorOut :
     players.filter(function(p){return strikeOf(p.name)>=3}).map(function(p){return {name:p.name, week:null}});
@@ -554,6 +768,8 @@ function render(D){
         (p.dropIdx>=0 ? '<div><b class="num">'+p.drop+'</b><span>se te cae (sem '+(p.dropIdx+1)+')</span></div>' : '')+
         '<div><b>'+sTxt+'</b><span>strikes en Survivor</span></div>'+
       '</div>'+
+      (p.fan || hasFans ? '<p class="me-say">Afición: <b>'+esc(groups[p.group].label)+'</b>, '+ord(groups[p.group].rank)+' de '+G.length+' en la tabla de aficiones.</p>' : '')+
+      commentsFor(p.name).map(function(c){ return '<p class="me-q"><b>El comisionado dice:</b> '+esc(c.texto)+'</p>'; }).join('')+
       '<p class="me-say">'+esc(line)+' '+esc(wonTxt)+(p.dropIdx<0 || SEASON_WEEKS-WEEK<=0 ? '' : (p.drop===0 ? ' Ya usaste tu semana que se cae: la semana '+(p.dropIdx+1)+' en ceros. Si se te olvida otra, esa sí cuenta.' : ' Tu piso es '+p.drop+': cualquier semana abajo de eso se vuelve la que se cae y tus '+p.drop+' regresan al total.'))+'</p>';
   }
   function choose(name, save){
