@@ -110,10 +110,37 @@
    "texto": "Los Cowboys son mayoría y van justo en el promedio. Muy Cowboys."
   }
  ],
+ "awards": [
+  {
+   "titulo": "Montaña rusa",
+   "para": "Jorge_B",
+   "texto": "De 93 a 39. 54 puntos entre su mejor y su peor semana. Abróchense el cinturón, este juego mecánico no tiene frenos."
+  },
+  {
+   "titulo": "Reloj suizo",
+   "para": "Chitown’DemBoyz",
+   "texto": "60, 63, 60. Solo 3 puntos de diferencia en 3 semanas. Ni muy muy, ni tan tan. Puntual como la cobranza del Comish."
+  },
+  {
+   "titulo": "Foto finish",
+   "para": "Jorge_B",
+   "texto": "Ganó la semana 1 por 1 punto. Un pick de confianza 1 y los $50 eran de alguien más. Así se ganan las semanas: sufriendo hasta el lunes en la noche."
+  },
+  {
+   "titulo": "Doble amenaza",
+   "para": "Juan1768, Cyber70, Jorge_B, Osos de Grayslake",
+   "texto": "Top 10 en la quiniela y sin un solo strike en Survivor. Los demás ya andan copiando picks. Ni así."
+  },
+  {
+   "titulo": "Nadie está muerto",
+   "para": "Todos",
+   "texto": "Del 1º al 22º hay 85 puntos. La mejor semana hasta ahora fue de 101. Una semana buena y te metes a la pelea."
+  }
+ ],
  "season": 2026,
  "week": 3,
  "weeks": 18,
- "updated": "2026-10-02T01:02:53.423Z",
+ "updated": "2026-10-02T03:51:29.242Z",
  "pays": [
   1050,
   350
