@@ -10,11 +10,42 @@ function pad(rows) {
   return rows.map(r => { const o = r.slice(); while (o.length < w) o.push(''); return o; });
 }
 
+/** A sheet backed by a plain array of rows. Writes are kept, formatting calls are recorded on sheet.log. */
 function makeSheet(name, rows) {
-  return {
+  const data = rows.map(r => r.slice());
+  const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [] };
+  function range(row, col, nr, nc) {
+    const self = {
+      setValues(vals) {
+        for (let i = 0; i < vals.length; i++) {
+          while (data.length < row + i) data.push([]);
+          const line = data[row + i - 1];
+          for (let j = 0; j < vals[i].length; j++) { while (line.length < col + j) line.push(''); line[col + j - 1] = vals[i][j]; }
+        }
+        return self;
+      },
+      setFontWeight(w) { log.bold.push([row, col, nr, nc, w]); return self; },
+      insertCheckboxes() { log.checkboxes.push('r' + row + 'c' + col); return self; },
+      setWrap() { log.wrap.push('r' + row + 'c' + col); return self; },
+    };
+    return self;
+  }
+  const sheet = {
+    log,
     getName: () => name,
-    getDataRange: () => ({ getDisplayValues: () => pad(rows).map(r => r.map(String)) }),
+    getDataRange: () => ({
+      getDisplayValues: () => pad(data).map(r => r.map(String)),
+      getValues: () => pad(data),
+    }),
+    getRange(a, b, c, d) {
+      if (typeof a === 'string') { const m = /^([A-Z])(\d+)/.exec(a); return range(Number(m[2]), m[1].charCodeAt(0) - 64, 1, 1); }
+      return range(a, b, c || 1, d || 1);
+    },
+    setFrozenRows(n) { log.frozen = n; },
+    setColumnWidth(c, w) { log.widths[c] = w; },
+    rows: () => data,
   };
+  return sheet;
 }
 
 function makeWorkbook(name, sheets) {
@@ -22,6 +53,7 @@ function makeWorkbook(name, sheets) {
     getName: () => name,
     getUrl: () => 'https://example.test/' + name,
     getSheets: () => sheets,
+    insertSheet(n) { const sh = makeSheet(n, []); sheets.push(sh); return sh; },
   };
 }
 

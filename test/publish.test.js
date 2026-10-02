@@ -76,11 +76,27 @@ const COMMENTS = [
   ['3', 'Jorge_B', '', 'TRUE'],
 ];
 
+// Premios: Semana | Titulo | Para | Texto | Publicar
+const STRAIGHT_1 = CURLY_1.replace('\u2019', "'");
+const PREMIOS = [
+  ['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'],
+  ['3', 'Premio uno', 'Silverback', 'Texto del premio uno.', 'TRUE'],
+  ['3', 'Premio dos', 'Jorge_B, ' + STRAIGHT_1 + ',  Silverback', 'Varios ganadores.', 'TRUE'],
+  ['3', 'Premio tres', 'Todos', 'Para todos.', 'TRUE'],
+  ['3', 'Premio cuatro', '', 'Sin Para, es para todos.', 'TRUE'],
+  ['3', 'Premio cinco', 'Jorge_B, Fulano Desconocido', 'Un nombre que no existe.', 'TRUE'],
+  ['3', 'Premio seis', 'Jorge_B', 'No marcado.', 'FALSE'],
+  ['2', 'Premio siete', 'Jorge_B', 'Semana vieja.', 'TRUE'],
+  ['3', '', 'Jorge_B', 'Sin titulo.', 'TRUE'],
+  ['3', 'Premio nueve', 'Jorge_B', '', 'TRUE'],
+];
+
 function participants(boardRows, extra) {
   return makeWorkbook('participants', [
     makeSheet('PickEm_Board', boardRows || boardGrid()),
     makeSheet('Comentarios', (extra && extra.comments) || COMMENTS),
     makeSheet('Sheet1', (extra && extra.fans) || FANS),
+    makeSheet('Premios', (extra && extra.premios) || PREMIOS),
   ]);
 }
 const model = (rows) => makeWorkbook('model', [makeSheet('Field', rows || FIELD)]);
@@ -119,7 +135,7 @@ A.run('Publish.js', [
     A.deep(grid.pickem[2].weeks, [78, 0, 50], 'a missed week stays a zero in the middle');
     A.equal(grid.pickem[2].dropped, 0, 'Yahoo dropped is canon');
     A.deep(Object.keys(grid).sort(),
-      ['comments', 'fans', 'pays', 'pickem', 'season', 'strikes', 'survivorOut', 'updated', 'week', 'weeklyPrize', 'weeks'], 'fields');
+      ['awards', 'comments', 'fans', 'pays', 'pickem', 'season', 'strikes', 'survivorOut', 'updated', 'week', 'weeklyPrize', 'weeks'], 'fields');
   }],
 
   ['display values with a header only (no scores) throw a clear error', () => {
@@ -279,16 +295,123 @@ A.run('Publish.js', [
     A.match(msg, /GitHub write failed \(409\)/);
   }],
 
-  ['onBoardEdit ignores other tabs and publishes for the two input tabs', () => {
+  ['onBoardEdit ignores other tabs and publishes for the three input tabs', () => {
     const { ctx, github } = setup();
     const ev = name => ({ range: { getSheet: () => ({ getName: () => name }) } });
     ctx.onBoardEdit(ev('Sheet1'));
-    A.equal(github.state.puts.length, 0, 'edit in Sheet1');
+    A.equal(github.state.gets, 0, 'edit in Sheet1 never reaches the publisher');
     ctx.onBoardEdit(ev('Comentarios'));
     A.equal(github.state.puts.length, 1, 'edit in Comentarios');
     ctx.onBoardEdit(ev(' pickem_board '));
-    A.equal(github.state.puts.length, 1, 'edit in PickEm_Board, nothing new to commit');
+    A.equal(github.state.gets, 2, 'edit in PickEm_Board reaches the publisher');
+    ctx.onBoardEdit(ev('Premios'));
+    A.equal(github.state.gets, 3, 'edit in Premios reaches the publisher');
+    ctx.onBoardEdit(ev('premios '));
+    A.equal(github.state.gets, 4, 'tab name match ignores case and stray spaces');
+    ctx.onBoardEdit(ev('Field'));
+    A.equal(github.state.gets, 4, 'edit in another tab is ignored');
     ctx.onBoardEdit(undefined);
+    A.equal(github.state.gets, 4, 'no event, no run');
+  }],
+
+  ['Premios: only checked rows for the current week, in sheet order', () => {
+    const a = build().d.awards;
+    A.deep(a.map(x => x.titulo), ['Premio uno', 'Premio dos', 'Premio tres', 'Premio cuatro', 'Premio cinco'], 'titles, in sheet order');
+    A.deep(a.map(x => x.texto), ['Texto del premio uno.', 'Varios ganadores.', 'Para todos.', 'Sin Para, es para todos.', 'Un nombre que no existe.']);
+  }],
+
+  ['Premios: Para is one or several call signs, or Todos', () => {
+    const a = build().d.awards;
+    A.equal(a[0].para, 'Silverback', 'one name');
+    A.equal(a[1].para, 'Jorge_B, ' + CURLY_1 + ', Silverback', 'several names, apostrophes normalized, spaces trimmed');
+    A.equal(a[2].para, 'Todos', 'Todos');
+    A.equal(a[3].para, 'Todos', 'blank means everyone');
+  }],
+
+  ['Premios: an unknown name is logged but the row still publishes', () => {
+    const { d, ctx } = build();
+    A.equal(d.awards[4].para, 'Jorge_B, Fulano Desconocido');
+    A.ok(ctx._logs.some(l => /Fulano Desconocido/.test(l)), 'warning logged');
+  }],
+
+  ['Premios: a checked row with no Titulo or no Texto is skipped and logged', () => {
+    const { d, ctx } = build();
+    A.ok(!d.awards.some(x => x.titulo === 'Premio nueve' || x.texto === 'Sin titulo.'));
+    A.ok(ctx._logs.some(l => /Premios row 9 .*no Titulo or no Texto/.test(l)), 'row 9 logged');
+    A.ok(ctx._logs.some(l => /Premios row 10 .*no Titulo or no Texto/.test(l)), 'row 10 logged');
+  }],
+
+  ['Premios: checkbox spellings and a missing tab', () => {
+    const rows = [['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'],
+      ['3', 'A', 'Todos', 'a', 'true'], ['3', 'B', 'Todos', 'b', 'x'], ['3', 'C', 'Todos', 'c', 'Sí'], ['3', 'D', 'Todos', 'd', 'no'], ['3', 'E', 'Todos', 'e', '']];
+    A.deep(build({ premios: rows }).d.awards.map(x => x.titulo), ['A', 'B', 'C']);
+    const bare = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Sheet1', FANS)]);
+    A.deep(build({ participants: bare }).d.awards, [], 'no Premios tab, empty awards, no failure');
+  }],
+
+  ['Premios: checking a box republishes, an unrelated rerun does not', () => {
+    const { ctx, github } = setup();
+    ctx.publishLeaderboard();
+    A.equal(github.state.puts.length, 1);
+    A.match(ctx.publishLeaderboard(), /No changes/);
+    A.equal(github.state.puts.length, 1, 'same awards, no commit');
+    const rows = PREMIOS.map(r => r[1] === 'Premio seis' ? [r[0], r[1], r[2], r[3], 'TRUE'] : r);
+    const ctx2 = loadPublisher({ participants: participants(null, { premios: rows }), model: model(), github });
+    A.match(ctx2.publishLeaderboard(), /Committed/);
+    A.equal(github.state.puts.length, 2, 'a newly checked award commits');
+    A.ok(JSON.parse(github.state.file.text).awards.some(x => x.titulo === 'Premio seis'), 'it is in data.json');
+    const rows2 = rows.map(r => r[1] === 'Premio uno' ? [r[0], r[1], r[2], 'Texto cambiado.', r[4]] : r);
+    const ctx3 = loadPublisher({ participants: participants(null, { premios: rows2 }), model: model(), github });
+    A.match(ctx3.publishLeaderboard(), /Committed/);
+    A.equal(github.state.puts.length, 3, 'an edited Texto commits');
+  }],
+
+  ['setupPremios: creates the tab with a header and checkboxes, seeds the week 3 awards', () => {
+    const ws = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid())]);
+    const { ctx } = setup({ participants: ws });
+    ctx.setupPremios();
+    const sh = ws.getSheets().find(t => t.getName() === 'Premios');
+    A.ok(sh, 'tab created');
+    const rows = sh.rows();
+    A.deep(rows[0], ['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'], 'header');
+    A.deep(sh.log.bold[0].slice(0, 4), [1, 1, 1, 5], 'bold header row');
+    A.equal(sh.log.frozen, 1, 'frozen header');
+    A.ok(sh.log.checkboxes.indexOf('r2c5') >= 0, 'checkboxes start at E2');
+    A.deep(rows.slice(1).map(r => r[1]), ['Montaña rusa', 'Reloj suizo', 'Foto finish', 'Doble amenaza', 'Nadie está muerto'], 'the five awards, in order');
+    A.ok(rows.slice(1).every(r => r[0] === 3 && r[4] === true), 'Semana 3, Publicar checked');
+    A.equal(rows[4][2], 'Juan1768, Cyber70, Jorge_B, Osos de Grayslake', 'Para keeps the winners as rendered');
+    A.equal(rows[5][2], 'Todos');
+    A.match(rows[1][3], /^De 93 a 39\. 54 puntos .* Abróchense el cinturón/, 'Texto is the fact plus the joke');
+  }],
+
+  ['setupPremios: seeded rows publish in week 3 as the page showed them', () => {
+    const ws = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Premios', [])]);
+    const { ctx } = setup({ participants: ws });
+    ctx.setupPremios();
+    const d = JSON.parse(JSON.stringify(ctx.buildData_(ws, ctx.SpreadsheetApp.openById('model'), null)));
+    A.equal(d.week, 3);
+    A.deep(d.awards.map(x => x.titulo), ['Montaña rusa', 'Reloj suizo', 'Foto finish', 'Doble amenaza', 'Nadie está muerto']);
+  }],
+
+  ['setupPremios: seeds only an empty tab, and only once', () => {
+    const ws = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid())]);
+    const { ctx } = setup({ participants: ws });
+    ctx.setupPremios();
+    ctx.setupPremios();
+    const sh = ws.getSheets().find(t => t.getName() === 'Premios');
+    A.equal(sh.rows().length, 6, 'header plus five rows, not ten');
+    // A tab that already has rows is left alone.
+    const mine = [['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'], ['4', 'Mi premio', 'Todos', 'Mío.', true]];
+    const ws2 = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Premios', mine)]);
+    const c2 = setup({ participants: ws2 }).ctx;
+    c2.setupPremios();
+    const sh2 = ws2.getSheets().find(t => t.getName() === 'Premios');
+    A.equal(sh2.rows().length, 2, 'existing rows, nothing seeded');
+    A.equal(sh2.rows()[1][1], 'Mi premio', 'my row untouched');
+    // A header-only tab counts as empty.
+    const ws3 = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Premios', [mine[0]])]);
+    setup({ participants: ws3 }).ctx.setupPremios();
+    A.equal(ws3.getSheets().find(t => t.getName() === 'Premios').rows().length, 6, 'header only, seeded');
   }],
 
   ['published data carries no email addresses or tokens', () => {

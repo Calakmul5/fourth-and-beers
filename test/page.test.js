@@ -73,6 +73,51 @@ function common(ctx, data, label) {
   A.noMatch(doc.body.textContent, /comisionado/i, label + ': it is the Comish, not the comisionado');
 }
 
+// ---- Previous-week awards helpers -----------------------------------------------
+
+/** Data from an explicit table: one array of weekly scores per name in NAMES, same length. */
+function fromRows(rows, extra) {
+  const week = rows[0].length;
+  const d = make({ week });
+  d.pickem = NAMES.map((name, i) => {
+    const w = rows[i].slice();
+    const dropped = week > 1 ? Math.min.apply(null, w) : 0;
+    return { name, weeks: w, total: w.reduce((a, b) => a + b, 0) - dropped, dropped };
+  });
+  return Object.assign(d, extra || {});
+}
+
+/** Independent oracle. Standings after k weeks: sum minus the worst week (none with one week), ties share the better rank. */
+function ranksAfter(rows, k) {
+  const tot = rows.map(w => { const x = w.slice(0, k); return x.reduce((a, b) => a + b, 0) - (k > 1 ? Math.min.apply(null, x) : 0); });
+  return tot.map(t => 1 + tot.filter(u => u > t).length);
+}
+function oracle(rows) {
+  const week = rows[0].length;
+  const prev = ranksAfter(rows, week - 1), now = ranksAfter(rows, week);
+  const moves = prev.map((p, i) => p - now[i]);
+  const up = Math.max.apply(null, [0].concat(moves)), down = Math.max.apply(null, [0].concat(moves.map(m => -m)));
+  return {
+    ups: up > 0 ? NAMES.filter((n, i) => moves[i] === up) : [],
+    downs: down > 0 ? NAMES.filter((n, i) => moves[i] === -down) : [],
+  };
+}
+
+const CLIMB = 'Del sótano a la azotea', DROP = 'La cruda de la semana';
+const REMOVED = ['Montaña rusa', 'Reloj suizo', 'Foto finish', 'Doble amenaza', 'Nadie está muerto', 'Se empieza a estirar', 'La cruda de la semana 1'];
+
+function awardsOf(doc) {
+  return [].map.call(doc.querySelectorAll('#awards .award'), a => ({
+    titulo: a.querySelector('h3').textContent, para: a.querySelector('.who').textContent, texto: a.querySelector('p').textContent,
+  }));
+}
+const byTitle = (list, t) => list.find(a => a.titulo === t);
+
+// Deterministic table generator for the oracle comparison.
+function genRows(seed, weeks) {
+  return NAMES.map((n, i) => { const w = []; for (let k = 0; k < weeks; k++) w.push(30 + ((i * (seed + 3) + k * 13 + i * k * seed + seed * 7) % 60)); return w; });
+}
+
 // ---- Cases ------------------------------------------------------------------
 
 A.run('index.html', [
@@ -150,6 +195,8 @@ A.run('index.html', [
     A.equal(c.doc.getElementById('aficiones').hidden, false);
     A.match(text(c.doc, '#fanplot'), /Al azar/);
     A.match(text(c.doc, '#fanplot'), /Cowboys/);
+    A.ok(c.doc.querySelectorAll('#fanawards .award').length > 0, 'fan awards still computed by the page');
+    A.match(text(c.doc, '#fanawards'), /League of Legends|Al azar|Jorge_B/, 'Jorge_B is still teased in the fan awards');
   }],
 
   ['comments: shown, addressed, and escaped', async () => {
@@ -230,16 +277,157 @@ A.run('index.html', [
     A.equal(c.doc.querySelector('meta[name="theme-color"]').getAttribute('content').toLowerCase(), tok('bg'), 'theme-color follows --bg');
   }],
 
+  ['climb and drop compare with the PREVIOUS week, one player each', async () => {
+    // Week 1: 100, 95, 90 ... 45. Week 2: Delta Dash (index 5) scores 82 and passes Charlie Chain (index 4, 80).
+    const w1 = NAMES.map((n, i) => 100 - 5 * i);
+    const rows = w1.map((v, i) => [v, i === 5 ? 82 : 40]);
+    const c = await load(fromRows(rows));
+    common(c, fromRows(rows), 'one climber');
+    const aw = awardsOf(c.doc);
+    const up = byTitle(aw, CLIMB), down = byTitle(aw, DROP);
+    A.equal(up.para, 'Delta Dash');
+    A.match(up.texto, /^Era 6º la semana pasada, hoy es 5º\. \S/, 'fact line, then a joke');
+    A.equal(down.para, 'Charlie Chain');
+    A.match(down.texto, /^Era 5º la semana pasada, hoy es 6º\. \S/);
+    A.deep(aw.map(a => a.titulo).slice(0, 2), [CLIMB, DROP], 'fixed awards come first');
+    A.equal(aw.length, 2, 'nothing else computed by the page');
+  }],
+
+  ['ties for the biggest move list everyone', async () => {
+    // Week 1: 100, 95 ... 45. Week 2: India Ink (10) scores 101, Juliet Jam (11) scores 100.
+    // India Ink goes 11º to 1º, Juliet Jam 12º to 2º (tied with Silverback on 100). Both climb 10.
+    // Everyone from Jorge_B to Hotel Huddle falls 2 places.
+    const w1 = NAMES.map((n, i) => 100 - 5 * i);
+    const rows = w1.map((v, i) => [v, i === 10 ? 101 : i === 11 ? 100 : i === 0 ? 60 : 40]);
+    const data = fromRows(rows);
+    const c = await load(data);
+    common(c, data, 'ties');
+    const aw = awardsOf(c.doc);
+    const up = byTitle(aw, CLIMB), down = byTitle(aw, DROP);
+    A.equal(up.para, 'India Ink, Juliet Jam');
+    A.match(up.texto, /^Subieron 10 lugares cada uno: India Ink del 11º al 1º, Juliet Jam del 12º al 2º\./);
+    A.equal(down.para, NAMES.slice(1, 10).join(', '), 'all nine who fell two places');
+    A.match(down.texto, /^Bajaron 2 lugares cada uno: Jorge_B del 2º al 4º, /);
+    const o = oracle(rows);
+    A.deep(up.para.split(', ').sort(), o.ups.slice().sort(), 'matches the oracle');
+    A.deep(down.para.split(', ').sort(), o.downs.slice().sort(), 'matches the oracle');
+  }],
+
+  ['nobody moved: neither fixed award shows', async () => {
+    const w1 = NAMES.map((n, i) => 100 - 5 * i);
+    const rows = w1.map(v => [v, v - 1]);   // week 2 never beats week 1, totals stay the week 1 order
+    A.deep(oracle(rows), { ups: [], downs: [] }, 'fixture really has no movers');
+    const data = fromRows(rows);
+    const c = await load(data);
+    common(c, data, 'nobody moved');
+    A.equal(awardsOf(c.doc).length, 0, 'no award cards at all');
+    A.equal(c.doc.querySelectorAll('#awards .award').length, 0);
+  }],
+
+  ['week 1: no fixed awards', async () => {
+    const data = make({ week: 1 });
+    const c = await load(data);
+    common(c, data, 'week 1 awards');
+    A.equal(awardsOf(c.doc).length, 0);
+  }],
+
+  ['week 2 compares week 2 with week 1 only', async () => {
+    const rows = genRows(5, 2);
+    const o = oracle(rows);
+    const data = fromRows(rows);
+    const c = await load(data);
+    common(c, data, 'week 2');
+    const aw = awardsOf(c.doc);
+    const up = byTitle(aw, CLIMB), down = byTitle(aw, DROP);
+    if (o.ups.length) A.deep(up.para.split(', ').sort(), o.ups.slice().sort(), 'climbers'); else A.equal(up, undefined, 'no climber award');
+    if (o.downs.length) A.deep(down.para.split(', ').sort(), o.downs.slice().sort(), 'fallers'); else A.equal(down, undefined, 'no faller award');
+  }],
+
+  ['weeks 3 and 4 match the oracle across many tables, ties included', async () => {
+    let withTies = 0, withBoth = 0;
+    for (const weeks of [3, 4]) {
+      for (let seed = 1; seed <= 6; seed++) {
+        const rows = genRows(seed, weeks), o = oracle(rows);
+        const c = await load(fromRows(rows));
+        const aw = awardsOf(c.doc);
+        const up = byTitle(aw, CLIMB), down = byTitle(aw, DROP);
+        A.deep(up ? up.para.split(', ').sort() : [], o.ups.slice().sort(), 'climbers, week ' + weeks + ' seed ' + seed);
+        A.deep(down ? down.para.split(', ').sort() : [], o.downs.slice().sort(), 'fallers, week ' + weeks + ' seed ' + seed);
+        A.deep(c.errors, [], 'no script errors, week ' + weeks + ' seed ' + seed);
+        if (o.ups.length > 1 || o.downs.length > 1) withTies++;
+        if (o.ups.length && o.downs.length) withBoth++;
+      }
+    }
+    A.ok(withTies > 0, 'the generated tables include at least one tie');
+    A.ok(withBoth > 0, 'and at least one table with both awards');
+  }],
+
+  ['the six retired awards are gone from the page', async () => {
+    const data = make({ week: 3 });
+    const c = await load(data);
+    common(c, data, 'retired awards');
+    const titles = awardsOf(c.doc).map(a => a.titulo);
+    REMOVED.forEach(t => A.ok(titles.indexOf(t) < 0, t + ' must not be computed any more'));
+    A.ok(!/Montaña rusa|Reloj suizo|Foto finish|Doble amenaza|Nadie está muerto|Se empieza a estirar/.test(HTML.replace(/<script type="application\/json" id="seed">[\s\S]*?<\/script>/, '')), 'no leftover code or jokes');
+  }],
+
+  ['sheet awards render after the fixed ones, escaped, in sheet order', async () => {
+    const rows = genRows(2, 3);
+    const data = fromRows(rows, { awards: [
+      { titulo: 'Premio <b>uno</b>', para: 'Silverback, Jorge_B', texto: 'Texto & más <i>x</i>.' },
+      { titulo: 'Premio dos', para: '', texto: 'Sin Para.' },
+      { titulo: 'Sin texto', para: 'Todos', texto: '' },
+      null,
+    ] });
+    const c = await load(data);
+    common(c, data, 'sheet awards');
+    const aw = awardsOf(c.doc);
+    const fixed = aw.filter(a => a.titulo === CLIMB || a.titulo === DROP).length;
+    A.equal(aw.length, fixed + 2, 'fixed awards plus the two valid sheet awards');
+    const sheet = aw.slice(fixed);
+    A.deep(aw.slice(0, fixed).map(a => a.titulo).filter(t => t !== CLIMB && t !== DROP), [], 'fixed awards first');
+    A.equal(sheet[0].titulo, 'Premio <b>uno</b>', 'title shown as text');
+    A.equal(sheet[0].para, 'Silverback, Jorge_B');
+    A.equal(sheet[0].texto, 'Texto & más <i>x</i>.');
+    A.equal(c.doc.querySelector('#awards h3 b'), null, 'title is not parsed as HTML');
+    A.equal(c.doc.querySelector('#awards p i'), null, 'texto is not parsed as HTML');
+    A.equal(sheet[1].titulo, 'Premio dos');
+    A.equal(sheet[1].para, 'Todos', 'blank Para reads as Todos');
+  }],
+
+  ['empty or missing awards: only the fixed ones, no errors', async () => {
+    const rows = genRows(2, 3);
+    const o = oracle(rows);
+    for (const extra of [{ awards: [] }, {}, { awards: null }]) {
+      const data = fromRows(rows, extra);
+      if (!('awards' in extra)) delete data.awards;
+      const c = await load(data);
+      common(c, data, 'awards ' + JSON.stringify(extra));
+      A.equal(awardsOf(c.doc).length, (o.ups.length ? 1 : 0) + (o.downs.length ? 1 : 0), 'only the fixed awards');
+    }
+  }],
+
+  ['week 1 still shows the sheet awards', async () => {
+    const data = make({ week: 1 });
+    data.awards = [{ titulo: 'Premio de arranque', para: 'Todos', texto: 'Hola.' }];
+    const c = await load(data);
+    common(c, data, 'week 1 sheet award');
+    A.deep(awardsOf(c.doc), [{ titulo: 'Premio de arranque', para: 'Todos', texto: 'Hola.' }]);
+  }],
+
   ['data.json unreachable: the page falls back to its embedded seed', async () => {
     const c = await load(null, { failFetch: true });
     A.deep(c.errors, [], 'no script errors');
     A.deep(rowNames(c.doc).sort(), SEED.pickem.map(p => p.name).sort(), 'seed names');
     A.match(text(c.doc, '#t-h1'), new RegExp('Semana ' + SEED.week + '\\.'));
+    A.deep(awardsOf(c.doc).filter(a => a.titulo !== CLIMB && a.titulo !== DROP).map(a => a.titulo), SEED.awards.map(a => a.titulo), 'the seed carries awards[] too');
   }],
 
   ['the embedded seed is valid current data', () => {
     A.equal(SEED.pickem.length, 22);
     A.ok(SEED.pickem.every(p => p.weeks.length === SEED.week), 'every player has one score per played week');
     A.equal(typeof SEED.pays[0], 'number');
+    A.ok(Array.isArray(SEED.awards) && SEED.awards.length > 0, 'seed has the awards field');
+    A.ok(SEED.awards.every(a => a.titulo && a.para && a.texto), 'each seed award has titulo, para and texto');
   }],
 ]);

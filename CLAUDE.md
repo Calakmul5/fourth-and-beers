@@ -13,12 +13,12 @@ Participants' leaderboard for the 2026 Fourth and Beers league: 22 players, Yaho
 
 ## How it runs
 
-- Inputs, participants workbook: `PickEm_Board` (Yahoo weekly performance table pasted at A1), `Comentarios` (Semana, Para, Texto, Publicar checkbox), `Sheet1` (only the columns Call Sign PickEm and Fan of).
+- Inputs, participants workbook: `PickEm_Board` (Yahoo weekly performance table pasted at A1), `Comentarios` (Semana, Para, Texto, Publicar checkbox), `Premios` (Semana, Titulo, Para, Texto, Publicar checkbox), `Sheet1` (only the columns Call Sign PickEm and Fan of).
 - Input, model workbook: `Field` (Entrant, Strikes). Read only.
 - Script properties: `GITHUB_TOKEN`, `GITHUB_REPO`, `SHEET_ID` (participants), `MODEL_SHEET_ID` (model).
-- Triggers: installable onEdit on the participants workbook (PickEm_Board and Comentarios) and a daily 7am `publishLeaderboard`. Runs are serialized with a script lock.
+- Triggers: installable onEdit on the participants workbook (PickEm_Board, Comentarios and Premios) and a daily 7am `publishLeaderboard`. Runs are serialized with a script lock.
 - `publishLeaderboard` reads the live data.json first (for `survivorOut` and the sha), builds a new one, and commits only when something other than `updated` changed.
-- data.json fields: `season`, `week`, `weeks`, `updated`, `pays`, `weeklyPrize`, `pickem[] {name, weeks[], total, dropped}`, `strikes {name: n}`, `survivorOut[] {name, week}`, `fans {name: {nfl, ncaa} | {random, other}}`, `comments[] {para, texto}`. Yahoo's Total and Dropped are canon.
+- data.json fields: `season`, `week`, `weeks`, `updated`, `pays`, `weeklyPrize`, `pickem[] {name, weeks[], total, dropped}`, `strikes {name: n}`, `survivorOut[] {name, week}`, `fans {name: {nfl, ncaa} | {random, other}}`, `comments[] {para, texto}`, `awards[] {titulo, para, texto}`. Yahoo's Total and Dropped are canon.
 - `SURVIVOR_TO_PICKEM` in Publish.js maps Survivor call signs to Pick'em call signs. Apostrophes are normalized (Yahoo uses curly ones).
 
 ## Rules
@@ -33,12 +33,13 @@ Participants' leaderboard for the 2026 Fourth and Beers league: 22 players, Yaho
 - Privacy: this repo is public. Only call signs, points, strikes, fan teams and published comments belong here. Never put emails, real names, money details, workbook IDs or tokens in code, tests, docs or commit messages.
 - Yahoo is behind the commissioner's login. No scraping, no stored Yahoo credentials.
 - Weekly comments, when asked: read the current data.json and draft 6 to 8 lines as TSV (Semana, Para, Texto). Para is an exact Pick'em call sign or Todos. Include at least one self-roast of the commissioner (Silverback).
+- Weekly awards, when asked: read the current data.json and draft 4 to 6 lines as TSV (Semana, Titulo, Para, Texto). Para is an exact Pick'em call sign, a comma separated list of them, or Todos. Same voice rules as the comments. The page computes only Del sótano a la azotea and La cruda de la semana by itself, so do not repeat those two.
 
 ## Current versions
 
-- index.html v2.4.0 c1.5.0
-- Publish.js v1.3.1 c1.0.0
-- docs/LEADERBOARD_ARCHITECTURE.html v2.0.0 c2.2.1
+- index.html v2.5.0 c1.6.0
+- Publish.js v1.4.0 c1.1.0
+- docs/LEADERBOARD_ARCHITECTURE.html v2.1.0 c2.3.0
 
 ## Roadmap
 

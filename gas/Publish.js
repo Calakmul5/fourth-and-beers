@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the leaderboard page data to GitHub Pages
-// v1.3.1 c1.0.0
+// v1.4.0 c1.1.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the model workbook.
@@ -8,6 +8,7 @@
 //   4. Keeps the Survivor elimination order (who went out, which week) by carrying it over from the last data.json.
 //   5. Reads the "Fan of" column from the participants list (call signs only, never emails).
 //   6. Reads the Comentarios tab and publishes the rows checked for the current week.
+//   7. Reads the Premios tab and publishes the awards checked for the current week.
 //   It only commits when the numbers changed, so running it often is harmless.
 //
 // One-time setup (Project Settings > Script properties)
@@ -17,10 +18,12 @@
 //   MODEL_SHEET_ID  model workbook that holds the Field tab (Survivor strikes). Optional, defaults to SHEET_ID.
 // Then run installTriggers() once from the editor and approve the permissions.
 // Run setupComentarios() once to create the Comentarios tab with checkboxes.
+// Run setupPremios() once to create the Premios tab with checkboxes and the week 3 examples.
 
 var CFG = {
   boardTab: 'PickEm_Board',   // paste Yahoo's weekly performance table here, header row included
   commentsTab: 'Comentarios', // Semana | Para | Texto | Publicar (checkbox), in the participants workbook
+  awardsTab: 'Premios',       // Semana | Titulo | Para | Texto | Publicar (checkbox), in the participants workbook
   fieldTab: 'Field',          // model tab with Entrant / Strikes columns
   path: 'data.json',
   branch: 'main',
@@ -72,11 +75,11 @@ function publishLeaderboard_() {
   return result;
 }
 
-/** Installable onEdit: publishes after a paste into PickEm_Board or a change in Comentarios. */
+/** Installable onEdit: publishes after a paste into PickEm_Board or a change in Comentarios or Premios. */
 function onBoardEdit(e) {
   if (!e || !e.range) return;
   var name = e.range.getSheet().getName().trim().toLowerCase();
-  if (name !== CFG.boardTab.toLowerCase() && name !== CFG.commentsTab.toLowerCase()) return;
+  if (name !== CFG.boardTab.toLowerCase() && name !== CFG.commentsTab.toLowerCase() && name !== CFG.awardsTab.toLowerCase()) return;
   Utilities.sleep(5000); // let a large paste or a few quick checkbox clicks land
   publishLeaderboard();
 }
@@ -92,6 +95,40 @@ function setupComentarios() {
   sh.getRange('C2:C1000').setWrap(true);
   Logger.log('Comentarios tab ready in ' + ss.getName());
 }
+
+/**
+ * Run once. Creates the Premios tab in the participants workbook with a checkbox column.
+ * An empty tab also gets the week 3 awards the page used to compute, checked, as examples.
+ * A tab that already has rows is left alone.
+ */
+function setupPremios() {
+  var ss = SpreadsheetApp.openById(String(PropertiesService.getScriptProperties().getProperty('SHEET_ID')).trim());
+  var sh = findTab_(ss, CFG.awardsTab) || ss.insertSheet(CFG.awardsTab);
+  var hasRows = sh.getDataRange().getValues().slice(1).some(function (r) {
+    return r.some(function (c) { return String(c).trim() !== ''; });
+  });
+  sh.getRange(1, 1, 1, 5).setValues([['Semana', 'Titulo', 'Para', 'Texto', 'Publicar']]).setFontWeight('bold');
+  sh.setFrozenRows(1);
+  sh.getRange('E2:E1000').insertCheckboxes();
+  sh.setColumnWidth(1, 70); sh.setColumnWidth(2, 170); sh.setColumnWidth(3, 170); sh.setColumnWidth(4, 520); sh.setColumnWidth(5, 80);
+  sh.getRange('D2:D1000').setWrap(true);
+  if (!hasRows) {
+    sh.getRange(2, 1, PREMIOS_SEED.length, 5).setValues(PREMIOS_SEED.map(function (r) { return r.concat([true]); }));
+    Logger.log('Premios tab ready in ' + ss.getName() + ', seeded with ' + PREMIOS_SEED.length + ' week 3 awards.');
+  } else {
+    Logger.log('Premios tab ready in ' + ss.getName() + ', it already has rows so nothing was seeded.');
+  }
+}
+
+// The five awards the page used to compute, exactly as it rendered them in week 3.
+// setupPremios() writes them to an empty Premios tab so the commissioner has examples to copy.
+var PREMIOS_SEED = [
+  [3, "Montaña rusa", "Jorge_B", "De 93 a 39. 54 puntos entre su mejor y su peor semana. Abróchense el cinturón, este juego mecánico no tiene frenos."],
+  [3, "Reloj suizo", "Chitown’DemBoyz", "60, 63, 60. Solo 3 puntos de diferencia en 3 semanas. Ni muy muy, ni tan tan. Puntual como la cobranza del Comish."],
+  [3, "Foto finish", "Jorge_B", "Ganó la semana 1 por 1 punto. Un pick de confianza 1 y los $50 eran de alguien más. Así se ganan las semanas: sufriendo hasta el lunes en la noche."],
+  [3, "Doble amenaza", "Juan1768, Cyber70, Jorge_B, Osos de Grayslake", "Top 10 en la quiniela y sin un solo strike en Survivor. Los demás ya andan copiando picks. Ni así."],
+  [3, "Nadie está muerto", "Todos", "Del 1º al 22º hay 85 puntos. La mejor semana hasta ahora fue de 101. Una semana buena y te metes a la pelea."]
+];
 
 /** Run once. Replaces any earlier triggers from this project. */
 function installTriggers() {
@@ -116,6 +153,7 @@ function buildData_(ss, model, prev) {
     survivorOut: survivorOut_(prev, strikes, board.week),
     fans: readFans_(ss, board.names),
     comments: readComments_(ss, board.week, board.names),
+    awards: readAwards_(ss, board.week, board.names),
     season: CFG.season,
     week: board.week,
     weeks: CFG.weeks,
@@ -303,6 +341,34 @@ function readComments_(ss, week, pickemNames) {
     var who = byNorm[norm_(para)] || '';
     if (para && !who && !/^todos$/i.test(para)) Logger.log('Comentarios: "' + para + '" is not a Pick\'em name, showing it to everyone.');
     out.push({ para: who, texto: texto });
+  }
+  return out;
+}
+
+/**
+ * Checked rows in Premios for this week, in sheet order. Para is one or several Pick'em call signs
+ * separated by commas, or blank / Todos for everyone. An unknown name is logged and published as typed.
+ */
+function readAwards_(ss, week, pickemNames) {
+  var sh = findTab_(ss, CFG.awardsTab);
+  if (!sh) return [];
+  var byNorm = {};
+  pickemNames.forEach(function (n) { byNorm[norm_(n)] = n; });
+  var values = sh.getDataRange().getDisplayValues();
+  var out = [];
+  for (var r = 1; r < values.length; r++) {
+    var v = values[r];
+    var wk = toNum_(v[0]), titulo = String(v[1] || '').trim(), para = String(v[2] || '').trim(), texto = String(v[3] || '').trim();
+    var ok = /^(true|x|s[ií]|yes)$/i.test(String(v[4] || '').trim());
+    if (!ok || wk !== week) continue;
+    if (!titulo || !texto) { Logger.log('Premios row ' + (r + 1) + ' is checked but has no Titulo or no Texto, skipping it.'); continue; }
+    var who = para.split(',').map(function (t) { return t.trim(); }).filter(function (t) { return t; }).map(function (t) {
+      if (/^todos$/i.test(t)) return 'Todos';
+      var hit = byNorm[norm_(t)];
+      if (!hit) Logger.log('Premios: "' + t + "\" is not a Pick'em name, publishing it as typed.");
+      return hit || t;
+    });
+    out.push({ titulo: titulo, para: (who.length && !who.every(function (t) { return t === 'Todos'; })) ? who.join(', ') : 'Todos', texto: texto });
   }
   return out;
 }
