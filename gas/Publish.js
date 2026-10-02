@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the leaderboard page data to GitHub Pages
-// v1.3.0 c1.0.0
+// v1.3.1 c1.0.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the model workbook.
