@@ -7,6 +7,7 @@ const path = require('path');
 
 const STATIC_CHECKS = [
   ['Version stamps', 'check_versions.js'],
+  ['Palette tokens and contrast', 'check_palette.js'],
 ];
 
 const TEST_SCRIPTS = [

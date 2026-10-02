@@ -70,6 +70,7 @@ function common(ctx, data, label) {
   A.match(text(doc, '#t-h1'), new RegExp('Semana ' + data.week + '\\.'), label + ': headline week');
   A.noMatch(doc.body.textContent, /\bNaN\b|\bundefined\b|\bInfinity\b|\[object/, label + ': no broken numbers or text');
   A.noMatch(doc.body.textContent, /—/, label + ': no em dashes in page text');
+  A.noMatch(doc.body.textContent, /comisionado/i, label + ': it is the Comish, not the comisionado');
 }
 
 // ---- Cases ------------------------------------------------------------------
@@ -162,6 +163,10 @@ A.run('index.html', [
     const c = await load(data);
     common(c, data, 'comments');
     A.equal(c.doc.getElementById('quotes-box').hidden, false);
+    A.equal(c.doc.getElementById('quotes-box').tagName, 'SECTION', 'the Comish has a section of their own');
+    A.equal(c.doc.querySelector('#premios #quotes-box'), null, 'not nested in Premios que no pagan');
+    A.equal(text(c.doc, '#quotes-box h2'), 'Palabras del Comish');
+    A.equal(text(c.doc, '#premios h2'), 'Premios que no pagan');
     const q = c.doc.querySelectorAll('#quotes .quote');
     A.equal(q.length, 2);
     A.match(q[0].textContent, /Para Silverback/);
@@ -201,6 +206,28 @@ A.run('index.html', [
     A.equal(c.win.localStorage.getItem('fab-me'), 'Jorge_B');
     const again = await load(data, { storage: { 'fab-me': 'Jorge_B' } });
     A.ok(again.doc.getElementById('me').classList.contains('on'), 'remembered on the next visit');
+  }],
+
+  ['colors come from the :root tokens: SVG and heat map are painted, not blank', async () => {
+    const data = make({ week: 3 });
+    const c = await load(data);
+    common(c, data, 'tokens');
+    const html = c.doc.getElementById('bumpbox') ? c.doc.getElementById('bumpbox').innerHTML : c.doc.querySelector('.bumpbox').innerHTML;
+    const all = html + c.doc.getElementById('heat').innerHTML + c.doc.querySelector('#weeks').innerHTML;
+    A.noMatch(all, /(fill|stroke)="(undefined|null)?"/, 'no empty or undefined paint');
+    A.noMatch(all, /(fill|stroke)="[^"#a-z]/i, 'paint values are colors');
+    const css = HTML.slice(HTML.indexOf(':root{'));
+    const tok = n => new RegExp('--' + n + ':\s*(#[0-9A-Fa-f]{6})').exec(css)[1].toLowerCase();
+    const cells = c.doc.querySelectorAll('#heat td.h[style*="background:#"]');
+    A.ok(cells.length > 0, 'heat cells carry hex backgrounds');
+    const bgOf = el => /background:\s*(#[0-9a-f]{6})/i.exec(el.getAttribute('style'))[1].toLowerCase();
+    const best = [].filter.call(cells, el => /title="1º/.test(el.outerHTML.replace(/\u00ba/g, 'º')));
+    A.ok(best.length > 0, 'someone finished 1st in a week');
+    A.equal(bgOf(best[0]), tok('accent'), '1st is --accent');
+    const last = [].filter.call(cells, el => el.getAttribute('title') === '' + (NAMES.length) + 'º de la semana');
+    A.ok(last.length > 0, 'someone finished last in a week');
+    A.equal(bgOf(last[0]), tok('surface'), 'last is --surface');
+    A.equal(c.doc.querySelector('meta[name="theme-color"]').getAttribute('content').toLowerCase(), tok('bg'), 'theme-color follows --bg');
   }],
 
   ['data.json unreachable: the page falls back to its embedded seed', async () => {
