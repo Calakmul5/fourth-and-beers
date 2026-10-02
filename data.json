@@ -27,6 +27,9 @@
   "Abogado": {
    "nfl": "SF"
   },
+  "KinkyKing": {
+   "nfl": "GB"
+  },
   "Steel Man": {
    "nfl": "PIT"
   },
@@ -83,6 +86,10 @@
    "texto": "17º en la semana 1 y ahora líder. Hasta el comisionado sospecha del comisionado."
   },
   {
+   "para": "Steel Man",
+   "texto": "45, 47, 43. Consistente, eso sí. La pizzería ya le guardó el número."
+  },
+  {
    "para": "KinkyKing",
    "texto": "Tres strikes en tres semanas. El asador ya está avisado."
   },
@@ -106,7 +113,7 @@
  "season": 2026,
  "week": 3,
  "weeks": 18,
- "updated": "2026-10-01T12:48:39.438Z",
+ "updated": "2026-10-02T01:02:53.423Z",
  "pays": [
   1050,
   350
