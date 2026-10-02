@@ -6,7 +6,7 @@ Participants' leaderboard for the 2026 Fourth and Beers league: 22 players, Yaho
 
 - `index.html`: the page. GitHub Pages serves the repo root from `main`. It fetches `data.json` and falls back to a seed copy embedded in the page.
 - `data.json`: written ONLY by Publish.gs through the GitHub Contents API. Never edit, regenerate or commit it locally. Always take the remote version.
-- `gas/`: the Apps Script project, managed with clasp. `Publish.js` is `Publish.gs` in the editor. `Code.js` + `index.html` in `gas/` are a retired web app host.
+- `gas/`: the Apps Script project, managed with clasp. `Publish.js` is `Publish.gs` in the editor. The project holds only `Publish.js` and `appsscript.json`. History: the old web app host was undeployed and deleted on 2026-10-01.
 - `docs/LEADERBOARD_ARCHITECTURE.html`: architecture doc. Same layout and diagram conventions as the model's `ARCHITECTURE.html` in `..\Model`.
 - `test/`: Node tests. No live Google or GitHub access.
 - `..\Model`: the separate model repo. Read it for patterns (`deploy.bat`, `test.bat`, `test/`). Never change it from this repo.
@@ -38,7 +38,7 @@ Participants' leaderboard for the 2026 Fourth and Beers league: 22 players, Yaho
 
 - index.html v2.4.0 c1.5.0
 - Publish.js v1.3.0 c1.0.0
-- docs/LEADERBOARD_ARCHITECTURE.html v2.0.0 c2.1.0
+- docs/LEADERBOARD_ARCHITECTURE.html v2.0.0 c2.2.0
 
 ## Roadmap
 
