@@ -78,69 +78,42 @@
  },
  "comments": [
   {
-   "para": "",
-   "texto": "Semana 3: el comisionado hizo 101. Ya se revisó y no hubo trampa. Bueno, eso dice el comisionado."
+   "para": "King of The North",
+   "texto": "90 puntos en la semana 4, el mejor número del fin de semana, y ya es 2º con 224. Hace una semana iba 10º con 134. Nadie lo vio venir y el Comish menos que nadie."
   },
   {
-   "para": "Silverback",
-   "texto": "17º en la semana 1 y ahora líder. Hasta el comisionado sospecha del comisionado."
+   "para": "",
+   "texto": "Junta de la liga por Zoom. Comish: 247 y seguimos / King of The North: hice 90 y nadie aplaude / Billy Beaner: 78, 74, 50, 50, mi salto fue para abajo / KinkyKing: ya no tengo Survivor, solo rencor / Steel Man: ¿se oye? / Todos: no, nunca se oye."
+  },
+  {
+   "para": "",
+   "texto": "Los tres Salto llevan dos strikes cada uno en Survivor. Tres apellidos que prometen avance y ninguno ha despegado. Un strike más y el único salto va a ser hacia la banca."
   },
   {
    "para": "Steel Man",
-   "texto": "45, 47, 43. Consistente, eso sí. La pizzería ya le guardó el número."
-  },
-  {
-   "para": "KinkyKing",
-   "texto": "Tres strikes en tres semanas. El asador ya está avisado."
-  },
-  {
-   "para": "MVP21",
-   "texto": "Del 3º al 21º en dos semanas. Ni los Steelers en diciembre."
-  },
-  {
-   "para": "Jorge_B",
-   "texto": "Escoge al azar y va 4º. Los aficionados ya pidieron antidoping."
-  },
-  {
-   "para": "Puto el que lo lea",
-   "texto": "32 puntos en la semana 3. El nombre ya avisaba, pero nadie lo leyó."
+   "texto": "136 puntos y último general, pero en Survivor sigue vivo con un solo strike. Pierde la quiniela y sobrevive. Un día de estos nos va a explicar cómo le hace."
   },
   {
    "para": "",
-   "texto": "Los Cowboys son mayoría y van justo en el promedio. Muy Cowboys."
+   "texto": "Los 49ers son uno de los tres invictos que quedan y en este grupo solo tienen dos aficionados. Niners va 8º con 200 y Abogado 12º con 195. Tienen la información y no la usan."
   }
  ],
  "awards": [
   {
-   "titulo": "Montaña rusa",
-   "para": "Jorge_B",
-   "texto": "De 93 a 39. 54 puntos entre su mejor y su peor semana. Abróchense el cinturón, este juego mecánico no tiene frenos."
+   "titulo": "Despertó el Norte",
+   "para": "King of The North",
+   "texto": "De 10º a 2º en una sola semana. 90 puntos, el mejor número del fin de semana, y 224 acumulados. El que iba a media tabla ahora le pisa los talones al Comish."
   },
   {
-   "titulo": "Reloj suizo",
-   "para": "Chitown’DemBoyz",
-   "texto": "60, 63, 60. Solo 3 puntos de diferencia en 3 semanas. Ni muy muy, ni tan tan. Puntual como la cobranza del Comish."
-  },
-  {
-   "titulo": "Foto finish",
-   "para": "Jorge_B",
-   "texto": "Ganó la semana 1 por 1 punto. Un pick de confianza 1 y los $50 eran de alguien más. Así se ganan las semanas: sufriendo hasta el lunes en la noche."
-  },
-  {
-   "titulo": "Doble amenaza",
-   "para": "Juan1768, Cyber70, Jorge_B, Osos de Grayslake",
-   "texto": "Top 10 en la quiniela y sin un solo strike en Survivor. Los demás ya andan copiando picks. Ni así."
-  },
-  {
-   "titulo": "Nadie está muerto",
-   "para": "Todos",
-   "texto": "Del 1º al 22º hay 85 puntos. La mejor semana hasta ahora fue de 101. Una semana buena y te metes a la pelea."
+   "titulo": "Empate perfecto",
+   "para": "Chitown’DemBoyz, Niners",
+   "texto": "77 puntos cada uno en la semana 4 y 200 exactos en la general. Dos listas distintas y el mismo resultado. Para qué pensarle tanto."
   }
  ],
  "season": 2026,
- "week": 3,
+ "week": 4,
  "weeks": 18,
- "updated": "2026-10-06T12:48:39.108Z",
+ "updated": "2026-10-06T21:02:50.855Z",
  "pays": [
   1050,
   350
@@ -152,49 +125,32 @@
    "weeks": [
     57,
     76,
-    101
+    101,
+    70
    ],
-   "total": 177,
+   "total": 247,
    "dropped": 57
   },
   {
-   "name": "Juan1768",
+   "name": "King of The North",
    "weeks": [
-    81,
-    42,
-    73
+    66,
+    68,
+    49,
+    90
    ],
-   "total": 154,
-   "dropped": 42
-  },
-  {
-   "name": "Billy Beaner",
-   "weeks": [
-    78,
-    74,
-    50
-   ],
-   "total": 152,
-   "dropped": 50
-  },
-  {
-   "name": "Cyber70",
-   "weeks": [
-    70,
-    56,
-    79
-   ],
-   "total": 149,
-   "dropped": 56
+   "total": 224,
+   "dropped": 49
   },
   {
    "name": "Jorge_B",
    "weeks": [
     93,
     39,
-    56
+    56,
+    69
    ],
-   "total": 149,
+   "total": 218,
    "dropped": 39
   },
   {
@@ -202,89 +158,43 @@
    "weeks": [
     92,
     40,
-    52
+    52,
+    70
    ],
-   "total": 144,
+   "total": 214,
    "dropped": 40
   },
   {
-   "name": "Abogado",
+   "name": "Cyber70",
    "weeks": [
-    63,
-    52,
-    75
+    70,
+    56,
+    79,
+    60
    ],
-   "total": 138,
-   "dropped": 52
+   "total": 209,
+   "dropped": 56
   },
   {
-   "name": "SinCasco",
+   "name": "Billy Beaner",
    "weeks": [
-    65,
+    78,
+    74,
     50,
-    73
+    50
    ],
-   "total": 138,
+   "total": 202,
    "dropped": 50
-  },
-  {
-   "name": "Osos de Grayslake",
-   "weeks": [
-    69,
-    69,
-    48
-   ],
-   "total": 138,
-   "dropped": 48
-  },
-  {
-   "name": "King of The North",
-   "weeks": [
-    66,
-    68,
-    49
-   ],
-   "total": 134,
-   "dropped": 49
-  },
-  {
-   "name": "This is our year",
-   "weeks": [
-    57,
-    65,
-    65
-   ],
-   "total": 130,
-   "dropped": 57
-  },
-  {
-   "name": "Manolito’s winning picks",
-   "weeks": [
-    72,
-    49,
-    54
-   ],
-   "total": 126,
-   "dropped": 49
-  },
-  {
-   "name": "Conquistador",
-   "weeks": [
-    55,
-    46,
-    69
-   ],
-   "total": 124,
-   "dropped": 46
   },
   {
    "name": "Chitown’DemBoyz",
    "weeks": [
     60,
     63,
-    60
+    60,
+    77
    ],
-   "total": 123,
+   "total": 200,
    "dropped": 60
   },
   {
@@ -292,79 +202,164 @@
    "weeks": [
     60,
     63,
-    51
+    51,
+    77
    ],
-   "total": 123,
+   "total": 200,
    "dropped": 51
+  },
+  {
+   "name": "Osos de Grayslake",
+   "weeks": [
+    69,
+    69,
+    48,
+    61
+   ],
+   "total": 199,
+   "dropped": 48
+  },
+  {
+   "name": "Juan1768",
+   "weeks": [
+    81,
+    42,
+    73,
+    34
+   ],
+   "total": 196,
+   "dropped": 34
+  },
+  {
+   "name": "This is our year",
+   "weeks": [
+    57,
+    65,
+    65,
+    65
+   ],
+   "total": 195,
+   "dropped": 57
+  },
+  {
+   "name": "Abogado",
+   "weeks": [
+    63,
+    52,
+    75,
+    57
+   ],
+   "total": 195,
+   "dropped": 52
+  },
+  {
+   "name": "SinCasco",
+   "weeks": [
+    65,
+    50,
+    73,
+    36
+   ],
+   "total": 188,
+   "dropped": 36
   },
   {
    "name": "Rastaman",
    "weeks": [
     64,
     58,
-    54
+    54,
+    56
    ],
-   "total": 122,
+   "total": 178,
    "dropped": 54
   },
   {
-   "name": "X-Men Let’s go Boys",
+   "name": "Manolito’s winning picks",
    "weeks": [
-    71,
-    41,
-    50
+    72,
+    49,
+    54,
+    51
    ],
-   "total": 121,
-   "dropped": 41
+   "total": 177,
+   "dropped": 49
   },
   {
    "name": "MVP21",
    "weeks": [
     83,
     35,
-    38
+    38,
+    53
    ],
-   "total": 121,
+   "total": 174,
    "dropped": 35
   },
   {
-   "name": "Andrea’s Picks",
+   "name": "Conquistador",
    "weeks": [
-    61,
-    54,
-    39
+    55,
+    46,
+    69,
+    41
    ],
-   "total": 115,
-   "dropped": 39
+   "total": 170,
+   "dropped": 41
   },
   {
-   "name": "KinkyKing",
+   "name": "X-Men Let’s go Boys",
    "weeks": [
-    51,
-    59,
-    52
+    71,
+    41,
+    50,
+    47
    ],
-   "total": 111,
-   "dropped": 51
+   "total": 168,
+   "dropped": 41
   },
   {
    "name": "Puto el que lo lea",
    "weeks": [
     47,
     59,
-    32
+    32,
+    58
    ],
-   "total": 106,
+   "total": 164,
    "dropped": 32
+  },
+  {
+   "name": "KinkyKing",
+   "weeks": [
+    51,
+    59,
+    52,
+    23
+   ],
+   "total": 162,
+   "dropped": 23
+  },
+  {
+   "name": "Andrea’s Picks",
+   "weeks": [
+    61,
+    54,
+    39,
+    30
+   ],
+   "total": 154,
+   "dropped": 30
   },
   {
    "name": "Steel Man",
    "weeks": [
     45,
     47,
-    43
+    43,
+    44
    ],
-   "total": 92,
+   "total": 136,
    "dropped": 43
   }
  ],
