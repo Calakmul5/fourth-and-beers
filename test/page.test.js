@@ -193,10 +193,10 @@ A.run('index.html', [
     const c = await load(data);
     common(c, data, 'fans');
     A.equal(c.doc.getElementById('aficiones').hidden, false);
-    A.match(text(c.doc, '#fanplot'), /Al azar/);
+    A.match(text(c.doc, '#fanplot'), /Video Juegos/);
     A.match(text(c.doc, '#fanplot'), /Cowboys/);
     A.ok(c.doc.querySelectorAll('#fanawards .award').length > 0, 'fan awards still computed by the page');
-    A.match(text(c.doc, '#fanawards'), /League of Legends|Al azar|Jorge_B/, 'Jorge_B is still teased in the fan awards');
+    A.match(text(c.doc, '#fanawards'), /League of Legends|Video Juegos|Jorge_B/, 'Jorge_B is still teased in the fan awards');
   }],
 
   ['comments: shown, addressed, and escaped', async () => {

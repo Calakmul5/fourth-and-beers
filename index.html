@@ -184,6 +184,11 @@ footer{margin-top:48px;color:var(--muted);font-size:.8rem;border-top:1px solid v
   <div class="me" id="me" aria-live="polite"></div>
 </div>
 
+<section id="quotes-box" hidden>
+  <h2>Palabras del Comish</h2>
+  <div class="quotes" id="quotes"></div>
+</section>
+
 <section id="tabla">
   <h2>La tabla</h2>
   <p class="note">Puntos que cuentan y la semana que se te cae. La línea punteada marca hasta dónde se cobra al final de la temporada regular.</p>
@@ -213,11 +218,6 @@ footer{margin-top:48px;color:var(--muted);font-size:.8rem;border-top:1px solid v
   <p class="note">El color dice en qué lugar quedaste esa semana. Tachado es la semana que se te cae.</p>
   <div class="scroll"><table id="heat"></table></div>
   <div class="scale"><span>1º</span><span class="g" id="grad"></span><span id="grad-last">22º</span></div>
-</section>
-
-<section id="quotes-box" hidden>
-  <h2>Palabras del Comish</h2>
-  <div class="quotes" id="quotes"></div>
 </section>
 
 <section id="premios">
@@ -256,7 +256,7 @@ footer{margin-top:48px;color:var(--muted);font-size:.8rem;border-top:1px solid v
 
 <footer>
   <span id="t-foot"></span><br>
-  v2.5.0 c1.6.0
+  v2.6.0 c1.6.0
 </footer>
 </div>
 
@@ -634,6 +634,12 @@ function render(D){
   // ---------- Fan bases ----------
   var NFL = {ARI:"Cardinals",ATL:"Falcons",BAL:"Ravens",BUF:"Bills",CAR:"Panthers",CHI:"Bears",CIN:"Bengals",CLE:"Browns",DAL:"Cowboys",DEN:"Broncos",DET:"Lions",GB:"Packers",HOU:"Texans",IND:"Colts",JAX:"Jaguars",KC:"Chiefs",LV:"Raiders",LAC:"Chargers",LAR:"Rams",MIA:"Dolphins",MIN:"Vikings",NE:"Patriots",NO:"Saints",NYG:"Giants",NYJ:"Jets",PHI:"Eagles",PIT:"Steelers",SF:"49ers",SEA:"Seahawks",TB:"Buccaneers",TEN:"Titans",WAS:"Commanders"};
   var FAN_BY = {}; Object.keys(D.fans||{}).forEach(function(k){ FAN_BY[normName(k)] = D.fans[k]; });
+  var HELM = {ARI:["97233F","FFB612"],ATL:["A71930","000000"],BAL:["241773","9E7C0C"],BUF:["00338D","C60C30"],CAR:["0085CA","101820"],CHI:["0B162A","C83803"],CIN:["FB4F14","000000"],CLE:["311D00","FF3C00"],DAL:["B0B7BC","003594"],DEN:["FB4F14","002244"],DET:["0076B6","B0B7BC"],GB:["203731","FFB612"],HOU:["03202F","A71930"],IND:["002C5F","A2AAAD"],JAX:["006778","D7A22A"],KC:["E31837","FFB81C"],LV:["A5ACAF","000000"],LAC:["0080C6","FFC20E"],LAR:["003594","FFA300"],MIA:["008E97","FC4C02"],MIN:["4F2683","FFC62F"],NE:["002244","C60C30"],NO:["D3BC8D","101820"],NYG:["0B2265","A71930"],NYJ:["125740","FFFFFF"],PHI:["004C54","A5ACAF"],PIT:["FFB612","101820"],SF:["AA0000","B3995D"],SEA:["002244","69BE28"],TB:["D50A0A","34302B"],TEN:["4B92DB","0C2340"],WAS:["5A1414","FFB612"]};
+  function helmet(key, x, y){
+    var h = HELM[key];
+    if (!h) return '<text x="'+(x+12)+'" y="'+(y+15)+'" text-anchor="middle" font-size="15">'+(key==="azar" ? "🎮" : key==="ncaa" ? "🎓" : "🏳️")+'</text>';
+    return '<g transform="translate('+x+','+y+')"><path d="M3 12C3 5 8 2 13 2C19 2 22 6 22 11L22 13L18 13L18 16L15 16L15 14C12 15 9 17 6 17C4 17 3 15 3 12Z" fill="#'+h[0]+'" stroke="'+C.text+'" stroke-opacity=".35" stroke-width=".8"/><path d="M7 3.5C10 2.5 15 2.5 18 5" fill="none" stroke="#'+h[1]+'" stroke-width="2"/><path d="M22 10L19 10L19 15" fill="none" stroke="'+C.muted+'" stroke-width="1.2"/></g>';
+  }
   var hasFans = Object.keys(FAN_BY).length > 0;
   var leagueAvg = players.reduce(function(a,p){return a+p.total},0)/N;
   var groups = {};
@@ -641,8 +647,8 @@ function render(D){
     var f = FAN_BY[normName(p.name)] || null;
     p.fan = f;
     var key = !f ? "suiza" : f.random ? "azar" : f.nfl ? f.nfl : f.ncaa ? "ncaa" : "suiza";
-    var label = key==="suiza" ? "Suiza (sin equipo)" : key==="azar" ? "Al azar"+(f.other?" ("+f.other+")":"") : key==="ncaa" ? "Solo college" : (NFL[key]||key);
-    var short = key==="suiza" ? "Suiza" : key==="azar" ? "Al azar" : key==="ncaa" ? "College" : (NFL[key]||key);
+    var label = key==="suiza" ? "Suiza (sin equipo)" : key==="azar" ? "Video Juegos"+(f.other?" ("+f.other+")":"") : key==="ncaa" ? "Solo college" : (NFL[key]||key);
+    var short = key==="suiza" ? "Suiza" : key==="azar" ? "Video Juegos" : key==="ncaa" ? "College" : (NFL[key]||key);
     p.group = key;
     (groups[key] = groups[key] || {key:key, label:label, short:short, members:[]}).members.push(p);
   });
@@ -653,7 +659,7 @@ function render(D){
   if (hasFans){
     document.getElementById("aficiones").hidden = false;
     // dot plot: one row per fan base
-    var fw=340, labelW=104, rowH=30, padT=26, fh=padT+rowH*G.length+8;
+    var fw=360, labelW=132, rowH=30, padT=26, fh=padT+rowH*G.length+8;
     var mn=Math.min.apply(null,G.map(function(g){return g.avg}).concat([leagueAvg])), mx=Math.max.apply(null,G.map(function(g){return g.avg}).concat([leagueAvg]));
     var lo2=Math.floor((mn-4)/5)*5, hi2=Math.ceil((mx+4)/5)*5;
     function fx(v){ return labelW+8+(v-lo2)/(hi2-lo2)*(fw-labelW-34); }
@@ -662,6 +668,7 @@ function render(D){
     fsvg+='<text x="'+fx(leagueAvg)+'" y="10" text-anchor="middle" fill="'+C.text+'" font-size="10" font-family="Public Sans, sans-serif">liga '+fmt1(leagueAvg)+'</text>';
     G.forEach(function(g,i){
       var y=padT+i*rowH+rowH/2, col = g.key==="azar" ? C.accent : g.key==="suiza" ? C.muted : C.text;
+      fsvg+=helmet(g.key, 0, y-10);
       fsvg+='<text x="'+labelW+'" y="'+(y+4)+'" text-anchor="end" fill="'+col+'" font-size="12" font-weight="600" font-family="Public Sans, sans-serif">'+esc(g.short)+' · '+g.n+'</text>';
       fsvg+='<line x1="'+(labelW+8)+'" x2="'+fx(g.avg)+'" y1="'+y+'" y2="'+y+'" stroke="'+col+'" stroke-opacity=".35" stroke-width="2"/>';
       fsvg+='<circle cx="'+fx(g.avg)+'" cy="'+y+'" r="6" fill="'+col+'"><title>'+esc(g.label)+': '+fmt1(g.avg)+'</title></circle>';
