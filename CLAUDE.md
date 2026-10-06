@@ -37,9 +37,9 @@ Participants' leaderboard for the 2026 Fourth and Beers league: 22 players, Yaho
 
 ## Current versions
 
-- index.html v2.7.0 c1.6.0
+- index.html v2.7.1 c1.6.0
 - Publish.js v1.4.0 c1.1.0
-- docs/LEADERBOARD_ARCHITECTURE.html v2.1.3 c2.6.0
+- docs/LEADERBOARD_ARCHITECTURE.html v2.1.4 c2.6.0
 
 ## Roadmap
 
