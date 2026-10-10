@@ -3,6 +3,22 @@
   {
    "name": "KinkyKing",
    "week": 3
+  },
+  {
+   "name": "Rastaman",
+   "week": 4
+  },
+  {
+   "name": "Billy Beaner",
+   "week": 4
+  },
+  {
+   "name": "Andrea’s Picks",
+   "week": 4
+  },
+  {
+   "name": "Manolito’s winning picks",
+   "week": 4
   }
  ],
  "fans": {
@@ -109,7 +125,7 @@
  "season": 2026,
  "week": 4,
  "weeks": 18,
- "updated": "2026-10-06T21:14:45.870Z",
+ "updated": "2026-10-10T12:48:42.771Z",
  "pays": [
   1050,
   350
@@ -361,26 +377,26 @@
  ],
  "strikes": {
   "Silverback": 2,
-  "Rastaman": 2,
+  "Rastaman": 3,
   "Conquistador": 2,
   "MVP21": 2,
   "This is our year": 1,
-  "King of The North": 1,
+  "King of The North": 2,
   "Niners": 1,
-  "Abogado": 1,
+  "Abogado": 2,
   "KinkyKing": 3,
-  "Steel Man": 1,
-  "Osos de Grayslake": 0,
-  "Chitown’DemBoyz": 1,
+  "Steel Man": 2,
+  "Osos de Grayslake": 1,
+  "Chitown’DemBoyz": 2,
   "Puto el que lo lea": 2,
-  "Cyber70": 0,
-  "Billy Beaner": 2,
-  "Andrea’s Picks": 2,
+  "Cyber70": 1,
+  "Billy Beaner": 3,
+  "Andrea’s Picks": 3,
   "X-Men Let’s go Boys": 2,
   "Jorge_B": 1,
-  "Manolito’s winning picks": 2,
+  "Manolito’s winning picks": 3,
   "Juan1768": 0,
   "SinCasco": 2,
-  "Mean Machine": 1
+  "Mean Machine": 2
  }
 }
