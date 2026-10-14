@@ -93,11 +93,27 @@
   }
  },
  "comments": [],
- "awards": [],
+ "awards": [
+  {
+   "titulo": "Fotocopia",
+   "para": "Osos de Grayslake, Mean Machine, Jorge_B",
+   "texto": "281, 281 y 281. Tres listas distintas y el mismo total."
+  },
+  {
+   "titulo": "Disco rayado",
+   "para": "This is our year",
+   "texto": "65, 65 y 65. Dice que este es su año. Parece la misma semana."
+  },
+  {
+   "titulo": "Lo que da, quita",
+   "para": "Andrea’s Picks",
+   "texto": "Su mejor semana, 73. Esa misma semana Dallas la sacó de Survivor."
+  }
+ ],
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-14T07:13:52.810Z",
+ "updated": "2026-10-14T07:18:52.265Z",
  "pays": [
   1050,
   350
