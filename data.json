@@ -92,40 +92,12 @@
    "nfl": "DAL"
   }
  },
- "comments": [
-  {
-   "para": "",
-   "texto": "Junta de la liga por Zoom. Comish: 247 y seguimos / King of The North: hice 90 y nadie aplaude / Billy Beaner: 78, 74, 50, 50, mi salto fue para abajo / KinkyKing: ya no tengo Survivor, solo rencor / Steel Man: ¿se oye? / Todos: no, nunca se oye."
-  },
-  {
-   "para": "",
-   "texto": "Los tres Salto llevan dos strikes cada uno en Survivor. Tres apellidos que prometen avance y ninguno ha despegado. Un strike más y el único salto va a ser hacia la banca."
-  },
-  {
-   "para": "Steel Man",
-   "texto": "136 puntos y último general, pero en Survivor sigue vivo con un solo strike. Pierde la quiniela y sobrevive. Un día de estos nos va a explicar cómo le hace."
-  },
-  {
-   "para": "",
-   "texto": "Los 49ers son uno de los tres invictos que quedan y en este grupo solo tienen dos aficionados. Niners va 8º con 200 y Abogado 12º con 195. Tienen la información y no la usan."
-  }
- ],
- "awards": [
-  {
-   "titulo": "Despertó el Norte",
-   "para": "King of The North",
-   "texto": "De 10º a 2º en una sola semana. 90 puntos, el mejor número del fin de semana, y 224 acumulados. El que iba a media tabla ahora le pisa los talones al Comish."
-  },
-  {
-   "titulo": "Empate perfecto",
-   "para": "Chitown’DemBoyz, Niners",
-   "texto": "77 puntos cada uno en la semana 4 y 200 exactos en la general. Dos listas distintas y el mismo resultado. Para qué pensarle tanto."
-  }
- ],
+ "comments": [],
+ "awards": [],
  "season": 2026,
- "week": 4,
+ "week": 5,
  "weeks": 18,
- "updated": "2026-10-10T12:48:42.771Z",
+ "updated": "2026-10-14T07:13:52.810Z",
  "pays": [
   1050,
   350
@@ -138,10 +110,23 @@
     57,
     76,
     101,
-    70
+    70,
+    50
    ],
-   "total": 247,
-   "dropped": 57
+   "total": 304,
+   "dropped": 50
+  },
+  {
+   "name": "Abogado",
+   "weeks": [
+    63,
+    52,
+    75,
+    57,
+    94
+   ],
+   "total": 289,
+   "dropped": 52
   },
   {
    "name": "King of The North",
@@ -149,32 +134,11 @@
     66,
     68,
     49,
-    90
+    90,
+    63
    ],
-   "total": 224,
+   "total": 287,
    "dropped": 49
-  },
-  {
-   "name": "Jorge_B",
-   "weeks": [
-    93,
-    39,
-    56,
-    69
-   ],
-   "total": 218,
-   "dropped": 39
-  },
-  {
-   "name": "Mean Machine",
-   "weeks": [
-    92,
-    40,
-    52,
-    70
-   ],
-   "total": 214,
-   "dropped": 40
   },
   {
    "name": "Cyber70",
@@ -182,10 +146,59 @@
     70,
     56,
     79,
-    60
+    60,
+    77
    ],
-   "total": 209,
+   "total": 286,
    "dropped": 56
+  },
+  {
+   "name": "Osos de Grayslake",
+   "weeks": [
+    69,
+    69,
+    48,
+    61,
+    82
+   ],
+   "total": 281,
+   "dropped": 48
+  },
+  {
+   "name": "Mean Machine",
+   "weeks": [
+    92,
+    40,
+    52,
+    70,
+    67
+   ],
+   "total": 281,
+   "dropped": 40
+  },
+  {
+   "name": "Jorge_B",
+   "weeks": [
+    93,
+    39,
+    56,
+    69,
+    63
+   ],
+   "total": 281,
+   "dropped": 39
+  },
+  {
+   "name": "Niners",
+   "weeks": [
+    60,
+    63,
+    51,
+    77,
+    74
+   ],
+   "total": 274,
+   "dropped": 51
   },
   {
    "name": "Billy Beaner",
@@ -193,9 +206,10 @@
     78,
     74,
     50,
-    50
+    50,
+    63
    ],
-   "total": 202,
+   "total": 265,
    "dropped": 50
   },
   {
@@ -204,109 +218,11 @@
     60,
     63,
     60,
-    77
-   ],
-   "total": 200,
-   "dropped": 60
-  },
-  {
-   "name": "Niners",
-   "weeks": [
-    60,
-    63,
-    51,
-    77
-   ],
-   "total": 200,
-   "dropped": 51
-  },
-  {
-   "name": "Osos de Grayslake",
-   "weeks": [
-    69,
-    69,
-    48,
-    61
-   ],
-   "total": 199,
-   "dropped": 48
-  },
-  {
-   "name": "Juan1768",
-   "weeks": [
-    81,
-    42,
-    73,
-    34
-   ],
-   "total": 196,
-   "dropped": 34
-  },
-  {
-   "name": "This is our year",
-   "weeks": [
-    57,
-    65,
-    65,
-    65
-   ],
-   "total": 195,
-   "dropped": 57
-  },
-  {
-   "name": "Abogado",
-   "weeks": [
-    63,
-    52,
-    75,
-    57
-   ],
-   "total": 195,
-   "dropped": 52
-  },
-  {
-   "name": "SinCasco",
-   "weeks": [
-    65,
-    50,
-    73,
-    36
-   ],
-   "total": 188,
-   "dropped": 36
-  },
-  {
-   "name": "Rastaman",
-   "weeks": [
-    64,
-    58,
-    54,
+    77,
     56
    ],
-   "total": 178,
-   "dropped": 54
-  },
-  {
-   "name": "Manolito’s winning picks",
-   "weeks": [
-    72,
-    49,
-    54,
-    51
-   ],
-   "total": 177,
-   "dropped": 49
-  },
-  {
-   "name": "MVP21",
-   "weeks": [
-    83,
-    35,
-    38,
-    53
-   ],
-   "total": 174,
-   "dropped": 35
+   "total": 260,
+   "dropped": 56
   },
   {
    "name": "Conquistador",
@@ -314,32 +230,35 @@
     55,
     46,
     69,
-    41
-   ],
-   "total": 170,
-   "dropped": 41
-  },
-  {
-   "name": "X-Men Let’s go Boys",
-   "weeks": [
-    71,
     41,
-    50,
-    47
+    82
    ],
-   "total": 168,
+   "total": 252,
    "dropped": 41
   },
   {
-   "name": "Puto el que lo lea",
+   "name": "This is our year",
    "weeks": [
-    47,
-    59,
-    32,
-    58
+    57,
+    65,
+    65,
+    65,
+    56
    ],
-   "total": 164,
-   "dropped": 32
+   "total": 252,
+   "dropped": 56
+  },
+  {
+   "name": "Rastaman",
+   "weeks": [
+    64,
+    58,
+    54,
+    56,
+    71
+   ],
+   "total": 249,
+   "dropped": 54
   },
   {
    "name": "KinkyKing",
@@ -347,10 +266,71 @@
     51,
     59,
     52,
-    23
+    23,
+    83
    ],
-   "total": 162,
+   "total": 245,
    "dropped": 23
+  },
+  {
+   "name": "MVP21",
+   "weeks": [
+    83,
+    35,
+    38,
+    53,
+    71
+   ],
+   "total": 245,
+   "dropped": 35
+  },
+  {
+   "name": "Juan1768",
+   "weeks": [
+    81,
+    42,
+    73,
+    34,
+    40
+   ],
+   "total": 236,
+   "dropped": 34
+  },
+  {
+   "name": "SinCasco",
+   "weeks": [
+    65,
+    50,
+    73,
+    36,
+    44
+   ],
+   "total": 232,
+   "dropped": 36
+  },
+  {
+   "name": "Puto el que lo lea",
+   "weeks": [
+    47,
+    59,
+    32,
+    58,
+    66
+   ],
+   "total": 230,
+   "dropped": 32
+  },
+  {
+   "name": "Manolito’s winning picks",
+   "weeks": [
+    72,
+    49,
+    54,
+    51,
+    52
+   ],
+   "total": 229,
+   "dropped": 49
   },
   {
    "name": "Andrea’s Picks",
@@ -358,10 +338,23 @@
     61,
     54,
     39,
-    30
+    30,
+    73
    ],
-   "total": 154,
+   "total": 227,
    "dropped": 30
+  },
+  {
+   "name": "X-Men Let’s go Boys",
+   "weeks": [
+    71,
+    41,
+    50,
+    47,
+    43
+   ],
+   "total": 211,
+   "dropped": 41
   },
   {
    "name": "Steel Man",
@@ -369,10 +362,11 @@
     45,
     47,
     43,
-    44
+    44,
+    40
    ],
-   "total": 136,
-   "dropped": 43
+   "total": 179,
+   "dropped": 40
   }
  ],
  "strikes": {
