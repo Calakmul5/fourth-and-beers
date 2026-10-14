@@ -92,7 +92,20 @@
    "nfl": "DAL"
   }
  },
- "comments": [],
+ "comments": [
+  {
+   "para": "",
+   "texto": "12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16."
+  },
+  {
+   "para": "Silverback",
+   "texto": "El Comish hizo 50 y sigue líder. La peor semana se tira. Qué regla tan sabia."
+  },
+  {
+   "para": "Abogado",
+   "texto": "Del 12º al 2º en una semana. No fue trampa, fue trámite."
+  }
+ ],
  "awards": [
   {
    "titulo": "Fotocopia",
@@ -113,7 +126,7 @@
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-14T07:18:52.265Z",
+ "updated": "2026-10-14T07:18:59.183Z",
  "pays": [
   1050,
   350
