@@ -7,6 +7,7 @@ const { makeSheet, makeWorkbook, makeGithub, loadPublisher } = require('./mock_g
 
 const CURLY_1 = 'Chitown’DemBoyz';       // Yahoo uses curly apostrophes
 const CURLY_2 = 'Manolito’s winning picks';
+const STRAIGHT_1 = CURLY_1.replace('’', "'");
 
 // Yahoo weekly table. Weeks 1 to 3 played (Billy Beaner missed week 2), 4 to 18 still blank.
 const PLAYERS = [
@@ -38,6 +39,9 @@ function boardGrid() {
 // Same table, pasted as tab-separated text that landed entirely in column A.
 function boardTabbed() { return boardGrid().map(r => [r.join('\t')]); }
 
+// Same table with week 4 scored for everyone (column 5 is Wk 4).
+function boardWeek4() { return boardGrid().map((r, i) => i >= 4 ? r.map((c, j) => j === 5 ? '50' : c) : r); }
+
 const FIELD = [
   ['Field'], [], [],
   ['Entrant', 'Strikes', 'Alive?'],
@@ -57,47 +61,62 @@ const FANS = [
   ['Jorge_B', 'League of Legends', ''],
   ['Billy Beaner', 'Dallas Cowboys and Michigan', ''],
   ['This is our year', 'Cowboys', ''],
-  [CURLY_1.replace('’', "'"), 'Chicago, Wisconsin', ''],   // straight apostrophe in the sheet, curly in Yahoo
+  [STRAIGHT_1, 'Chicago, Wisconsin', ''],   // straight apostrophe in the sheet, curly in Yahoo
   [CURLY_2, 'Random', ''],
   ['KinkyKing', '', ''],                                         // blank, no entry
   ['Steel Man', 'Michigan', ''],                                 // college only
   ['Nobody On The Board', 'KC', ''],                             // not a Pick'em name, ignored
 ];
 
-const COMMENTS = [
+// Tribune: Semana | Sección | Para | Título | Texto | Publicar. Row number in the sheet = index + 1.
+const TRIBUNE_HEAD = ['Semana', 'Sección', 'Para', 'Título', 'Texto', 'Publicar'];
+const TRIBUNE = [
+  TRIBUNE_HEAD,
+  ['3', 'Portada', 'Abogado', 'Del sótano a la azotea', 'Sube nueve lugares.', 'TRUE'],      // row 2
+  ['3', 'Portada', '', 'Segunda portada', 'No cuenta.', 'TRUE'],                              // row 3, only one per week
+  ['3', 'Columna', 'Silverback', '', 'Se roasteó solo.', 'TRUE'],
+  ['3', 'Columna', 'Todos', '', 'Buen domingo, mal pick.', 'TRUE'],
+  ['3', 'Columna', STRAIGHT_1, '', 'Para el de Chitown.', 'TRUE'],
+  ['3', 'Columna', 'Nadie Conocido', '', 'Destinatario raro.', 'TRUE'],
+  ['3', 'Columna', 'Jorge_B', '', 'No marcado.', 'FALSE'],
+  ['2', 'Columna', 'Jorge_B', '', 'Semana vieja.', 'TRUE'],
+  ['3', 'Columna', 'Jorge_B', '', '', 'TRUE'],                                                // row 10, no Texto
+  ['3', 'Clasificado', 'Silverback', 'SE VENDE', 'Semana de 101 puntos.', 'TRUE'],
+  ['3', 'clasificado', 'Jorge_B, ' + STRAIGHT_1 + ',  Silverback', 'SE BUSCA', 'Varios.', 'TRUE'],
+  ['3', 'Clasificado', '', 'SE REGALA', 'Para todos.', 'TRUE'],
+  ['3', 'Clasificado', 'Jorge_B', '', 'Sin título.', 'TRUE'],                                 // row 14, no Título
+  ['3', 'Dato', 'Steel Man', 'Último', 'Último las tres semanas.', 'TRUE'],
+  ['3', 'Dato', '', 'Sin texto', '', 'TRUE'],                                                 // row 16, no Texto
+  ['3', 'Chisme', 'Jorge_B', 'X', 'Y', 'TRUE'],                                               // row 17, not a Sección
+];
+
+// The old tabs. Comentarios: Semana | Para | Texto | Publicar. Premios: Semana | Titulo | Para | Texto | Publicar.
+const COMENTARIOS = [
   ['Semana', 'Para', 'Texto', 'Publicar'],
   ['3', 'Silverback', 'Se roasteó solo.', 'TRUE'],
   ['3', 'Todos', 'Buen domingo, mal pick.', 'TRUE'],
-  ['3', CURLY_1.replace('’', "'"), 'Para el de Chitown.', 'TRUE'],
-  ['3', '', 'Sin destinatario.', 'TRUE'],
-  ['3', 'Nadie Conocido', 'Destinatario raro.', 'TRUE'],
   ['3', 'Jorge_B', 'No marcado.', 'FALSE'],
-  ['2', 'Jorge_B', 'Semana vieja.', 'TRUE'],
-  ['3', 'Jorge_B', '', 'TRUE'],
+  ['2', 'Jorge_B', 'Semana vieja.', true],
+  ['', '', '', ''],
 ];
-
-// Premios: Semana | Titulo | Para | Texto | Publicar
-const STRAIGHT_1 = CURLY_1.replace('\u2019', "'");
 const PREMIOS = [
   ['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'],
   ['3', 'Premio uno', 'Silverback', 'Texto del premio uno.', 'TRUE'],
-  ['3', 'Premio dos', 'Jorge_B, ' + STRAIGHT_1 + ',  Silverback', 'Varios ganadores.', 'TRUE'],
-  ['3', 'Premio tres', 'Todos', 'Para todos.', 'TRUE'],
-  ['3', 'Premio cuatro', '', 'Sin Para, es para todos.', 'TRUE'],
-  ['3', 'Premio cinco', 'Jorge_B, Fulano Desconocido', 'Un nombre que no existe.', 'TRUE'],
-  ['3', 'Premio seis', 'Jorge_B', 'No marcado.', 'FALSE'],
-  ['2', 'Premio siete', 'Jorge_B', 'Semana vieja.', 'TRUE'],
-  ['3', '', 'Jorge_B', 'Sin titulo.', 'TRUE'],
-  ['3', 'Premio nueve', 'Jorge_B', '', 'TRUE'],
+  ['3', 'Premio dos', 'Jorge_B, Silverback', 'Varios ganadores.', true],
+  ['3', 'Premio tres', 'Todos', 'Para todos.', 'FALSE'],
+  ['2', 'Premio cuatro', '', 'Sin Para.', 'TRUE'],
 ];
 
-function participants(boardRows, extra) {
-  return makeWorkbook('participants', [
-    makeSheet('PickEm_Board', boardRows || boardGrid()),
-    makeSheet('Comentarios', (extra && extra.comments) || COMMENTS),
-    makeSheet('Sheet1', (extra && extra.fans) || FANS),
-    makeSheet('Premios', (extra && extra.premios) || PREMIOS),
-  ]);
+/** opts.tribune: rows, or null for no Tribune tab. opts.legacy: add Comentarios and Premios. */
+function participants(boardRows, o) {
+  o = o || {};
+  const tabs = [makeSheet('PickEm_Board', boardRows || boardGrid()), makeSheet('Sheet1', o.fans || FANS)];
+  if (o.tribune !== null) tabs.push(makeSheet('Tribune', o.tribune || TRIBUNE));
+  if (o.legacy) {
+    tabs.push(makeSheet('Comentarios', o.comentarios || COMENTARIOS));
+    tabs.push(makeSheet('Premios', o.premios || PREMIOS));
+  }
+  return makeWorkbook('participants', tabs);
 }
 const model = (rows) => makeWorkbook('model', [makeSheet('Field', rows || FIELD)]);
 
@@ -121,6 +140,8 @@ function build(o) {
 }
 
 function without(d, key) { const c = JSON.parse(JSON.stringify(d)); delete c[key]; return c; }
+const tab = (ws, name) => ws.getSheets().find(t => t.getName() === name);
+const tabNames = ws => ws.getSheets().map(t => t.getName());
 
 // ---- Cases ------------------------------------------------------------------
 
@@ -135,7 +156,7 @@ A.run('Publish.js', [
     A.deep(grid.pickem[2].weeks, [78, 0, 50], 'a missed week stays a zero in the middle');
     A.equal(grid.pickem[2].dropped, 0, 'Yahoo dropped is canon');
     A.deep(Object.keys(grid).sort(),
-      ['awards', 'comments', 'fans', 'pays', 'pickem', 'season', 'strikes', 'survivorOut', 'updated', 'week', 'weeklyPrize', 'weeks'], 'fields');
+      ['fans', 'pickem', 'prizes', 'season', 'strikes', 'survivorOut', 'tribune', 'updated', 'week', 'weeks'], 'fields: no comments, awards, pays or weeklyPrize');
   }],
 
   ['display values with a header only (no scores) throw a clear error', () => {
@@ -192,23 +213,54 @@ A.run('Publish.js', [
     A.deep(d.fans, {});
   }],
 
-  ['Comentarios keeps only checked rows for the current week', () => {
-    const c = build().d.comments;
-    A.deep(c, [
+  ['prizes: one config constant, the reglamento split', () => {
+    const p = build().d.prizes;
+    A.deep(p, { regular: [1050, 350], survivor: [1050, 350], playoffs: [700], weekly: 50, weeks: 18 });
+    A.deep([p.regular[0], p.regular[1], p.survivor[0], p.survivor[1], p.playoffs[0]].map(x => x / 350), [3, 1, 3, 1, 2], '30/10 regular, 30/10 Survivor, 20 playoffs');
+  }],
+
+  ['Tribune: only checked rows of the current week, grouped by Sección', () => {
+    const t = build().d.tribune;
+    A.deep(Object.keys(t), ['portada', 'columna', 'clasificados', 'datos']);
+    A.deep(t.portada, { titulo: 'Del sótano a la azotea', texto: 'Sube nueve lugares.', para: 'Abogado' }, 'first Portada wins');
+    A.deep(t.columna, [
       { para: 'Silverback', texto: 'Se roasteó solo.' },
       { para: '', texto: 'Buen domingo, mal pick.' },
       { para: CURLY_1, texto: 'Para el de Chitown.' },
-      { para: '', texto: 'Sin destinatario.' },
-      { para: '', texto: 'Destinatario raro.' },
-    ]);
+      { para: 'Nadie Conocido', texto: 'Destinatario raro.' },
+    ], 'Columna, sheet order, Todos is blank, apostrophes normalized');
+    A.deep(t.clasificados, [
+      { titulo: 'SE VENDE', para: 'Silverback', texto: 'Semana de 101 puntos.' },
+      { titulo: 'SE BUSCA', para: 'Jorge_B, ' + CURLY_1 + ', Silverback', texto: 'Varios.' },
+      { titulo: 'SE REGALA', para: '', texto: 'Para todos.' },
+    ], 'Clasificados, Sección in any case, several names, blank means everyone');
+    A.deep(t.datos, [{ titulo: 'Último', para: 'Steel Man', texto: 'Último las tres semanas.' }], 'Dato');
   }],
 
-  ['Comentarios checkbox spellings and a missing tab', () => {
-    const rows = [['Semana', 'Para', 'Texto', 'Publicar'],
-      ['3', 'Todos', 'a', 'true'], ['3', 'Todos', 'b', 'x'], ['3', 'Todos', 'c', 'Sí'], ['3', 'Todos', 'd', 'no'], ['3', 'Todos', 'e', '']];
-    A.deep(build({ comments: rows }).d.comments.map(x => x.texto), ['a', 'b', 'c']);
-    const bare = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Sheet1', FANS)]);
-    A.deep(build({ participants: bare }).d.comments, []);
+  ['Tribune: skipped rows are logged, unknown names publish as typed', () => {
+    const { ctx } = build();
+    A.ok(ctx._logs.some(l => /row 3: only one Portada/.test(l)), 'second Portada');
+    A.ok(ctx._logs.some(l => /row 10 is a checked Columna without Texto/.test(l)), 'Columna without Texto');
+    A.ok(ctx._logs.some(l => /row 14 is checked but has no Título or no Texto/.test(l)), 'Clasificado without Título');
+    A.ok(ctx._logs.some(l => /row 16 is checked but has no Título or no Texto/.test(l)), 'Dato without Texto');
+    A.ok(ctx._logs.some(l => /row 17 .*"Chisme" is not one of/.test(l)), 'unknown Sección');
+    A.ok(ctx._logs.some(l => /Nadie Conocido/.test(l)), 'unknown name');
+  }],
+
+  ['Tribune: a Portada without a Título is skipped', () => {
+    const rows = [TRIBUNE_HEAD, ['3', 'Portada', '', '', 'Solo deck.', 'TRUE']];
+    A.equal(build({ tribune: rows }).d.tribune.portada, null);
+  }],
+
+  ['Tribune: checkbox spellings, header lookup, and no Tribune tab', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Columna', 'Todos', '', 'a', 'true'], ['3', 'Columna', 'Todos', '', 'b', 'x'], ['3', 'Columna', 'Todos', '', 'c', 'Sí'],
+      ['3', 'Columna', 'Todos', '', 'd', 'no'], ['3', 'Columna', 'Todos', '', 'e', '']];
+    A.deep(build({ tribune: rows }).d.tribune.columna.map(x => x.texto), ['a', 'b', 'c']);
+    // Columns found by header name, so a reordered sheet still reads right.
+    const swapped = [['Publicar', 'Texto', 'Semana', 'Sección', 'Título', 'Para'], ['TRUE', 'Hola.', '3', 'Columna', '', 'Silverback']];
+    A.deep(build({ tribune: swapped }).d.tribune.columna, [{ para: 'Silverback', texto: 'Hola.' }]);
+    A.deep(build({ tribune: null }).d.tribune, { portada: null, columna: [], clasificados: [], datos: [] }, 'no tab, empty tribune, no failure');
   }],
 
   ['survivorOut carries forward, adds new outs, drops corrected ones', () => {
@@ -226,48 +278,98 @@ A.run('Publish.js', [
     A.deep(fresh.survivorOut, [{ name: 'KinkyKing', week: 3 }], 'no previous file: first seen this week');
   }],
 
-  ['publishLeaderboard: first commit, no-change skip, change commits again', () => {
+  ['publishLeaderboard: edition, index, then data.json; no-change skip; change commits again', () => {
     const { ctx, github } = setup();
     const r1 = ctx.publishLeaderboard();
-    A.match(r1, /Committed data\.json for week 3/);
-    A.equal(github.state.puts.length, 1);
-    A.equal(github.state.puts[0].hadSha, false, 'creating the file sends no sha');
-    A.equal(github.state.puts[0].message, 'Semana 3: tabla actualizada');
-    A.equal(github.state.puts[0].branch, 'main');
-    A.equal(github.state.puts[0].auth, 'Bearer test-token');
-    const written = JSON.parse(github.state.file.text);
-    A.equal(written.week, 3);
+    A.match(r1, /Committed editions\/semana-03\.json, editions\/index\.json, data\.json \(week 3\)/);
+    A.deep(github.state.puts.map(p => p.path), ['editions/semana-03.json', 'editions/index.json', 'data.json'], 'data.json goes last');
+    A.deep(github.state.puts.map(p => p.message), ['Semana 3: edición archivada', 'Semana 3: índice de ediciones', 'Semana 3: tabla actualizada']);
+    A.ok(github.state.puts.every(p => !p.hadSha), 'creating files sends no sha');
+    A.ok(github.state.puts.every(p => p.branch === 'main' && p.auth === 'Bearer test-token'));
+    A.equal(github.state.files['editions/semana-03.json'].text, github.state.file.text, 'the edition is a full copy of data.json');
+    A.deep(JSON.parse(github.state.files['editions/index.json'].text), { weeks: [3] });
+    A.equal(JSON.parse(github.state.file.text).week, 3);
 
     const r2 = ctx.publishLeaderboard();
     A.match(r2, /No changes, nothing committed/);
-    A.equal(github.state.puts.length, 1, 'same numbers, only the timestamp differs, no commit');
+    A.equal(github.state.puts.length, 3, 'same numbers, only the timestamp differs, no commit');
 
-    // A new week lands in the sheet.
-    const rows = boardGrid().map((r, i) => i === 4 ? r.map((c, j) => j === 5 ? '88' : c) : r);
+    // A score changes in the sheet. Edition and data.json update, the index does not.
+    const rows = boardGrid().map((r, i) => i === 4 ? r.map((c, j) => j === 4 ? '88' : c) : r);
     const ctx2 = loadPublisher({ participants: participants(rows), model: model(), github });
     const r3 = ctx2.publishLeaderboard();
-    A.match(r3, /Committed/);
-    A.equal(github.state.puts.length, 2);
-    A.equal(github.state.puts[1].hadSha, true, 'updating sends the sha it read');
+    A.match(r3, /Committed editions\/semana-03\.json, data\.json/);
+    A.equal(github.state.puts.length, 5);
+    A.ok(github.state.puts[3].hadSha && github.state.puts[4].hadSha, 'updating sends the sha it read');
   }],
 
-  ['publishLeaderboard reads survivorOut from the live data.json', () => {
-    const live = JSON.stringify({ week: 2, survivorOut: [{ name: 'Old Timer', week: 1 }] });
+  ['editions: a new week adds its file and the index, and the old week stays frozen', () => {
+    const { ctx, github } = setup();
+    ctx.publishLeaderboard();
+    const frozen = github.state.files['editions/semana-03.json'];
+    const frozenText = frozen.text, frozenSha = frozen.sha;
+    const ctx2 = loadPublisher({ participants: participants(boardWeek4()), model: model(), github });
+    A.match(ctx2.publishLeaderboard(), /Committed editions\/semana-04\.json, editions\/index\.json, data\.json \(week 4\)/);
+    A.deep(JSON.parse(github.state.files['editions/index.json'].text), { weeks: [3, 4] });
+    A.equal(JSON.parse(github.state.files['editions/semana-04.json'].text).week, 4);
+    A.equal(github.state.files['editions/semana-03.json'].text, frozenText, 'week 3 text untouched');
+    A.equal(github.state.files['editions/semana-03.json'].sha, frozenSha, 'week 3 never rewritten');
+    A.equal(github.state.puts.filter(p => p.path === 'editions/semana-03.json').length, 1, 'week 3 written once');
+    ctx2.publishLeaderboard();
+    A.equal(github.state.puts.length, 6, 'a rerun of week 4 commits nothing');
+  }],
+
+  ['editions: a missing edition is written even when data.json already matches', () => {
+    const { ctx, github } = setup();
+    ctx.publishLeaderboard();
+    delete github.state.files['editions/semana-03.json'];
+    delete github.state.files['editions/index.json'];
+    const before = github.state.puts.length;
+    A.match(ctx.publishLeaderboard(), /Committed editions\/semana-03\.json, editions\/index\.json \(week 3\)/);
+    A.deep(github.state.puts.slice(before).map(p => p.path), ['editions/semana-03.json', 'editions/index.json'], 'data.json left alone');
+  }],
+
+  ['publishLeaderboard reads survivorOut from the live data.json and replaces the old schema', () => {
+    const live = JSON.stringify({ week: 2, pays: [1050, 350], weeklyPrize: 50, comments: [{ para: '', texto: 'viejo' }], awards: [], survivorOut: [{ name: 'Old Timer', week: 1 }] });
     const github = makeGithub(live);
     const { ctx } = setup({ github });
     ctx.publishLeaderboard();
     const written = JSON.parse(github.state.file.text);
     A.deep(written.survivorOut, [{ name: 'Old Timer', week: 1 }, { name: 'KinkyKing', week: 3 }]);
+    ['pays', 'weeklyPrize', 'comments', 'awards'].forEach(k => A.ok(!(k in written), k + ' is gone'));
+    A.ok(written.prizes && written.tribune, 'prizes and tribune are in');
   }],
 
-  ['a changed comment or strike alone triggers a commit', () => {
+  ['a changed strike alone triggers a commit', () => {
     const { ctx, github } = setup();
     ctx.publishLeaderboard();
-    const field = FIELD.map(r => r[0] === 'Steel Man' ? r : (r[0] === 'My First-Rate Pick Set' ? [r[0], '3', r[2]] : r));
+    const field = FIELD.map(r => r[0] === 'My First-Rate Pick Set' ? [r[0], '3', r[2]] : r);
     const ctx2 = loadPublisher({ participants: participants(), model: model(field), github });
     A.match(ctx2.publishLeaderboard(), /Committed/);
     const written = JSON.parse(github.state.file.text);
     A.deep(written.survivorOut.map(o => o.name).sort(), ['KinkyKing', 'Steel Man']);
+  }],
+
+  ['Tribune: checking a box or editing a Texto republishes, an unrelated rerun does not', () => {
+    const { ctx, github } = setup();
+    ctx.publishLeaderboard();
+    const n = github.state.puts.length;
+    A.match(ctx.publishLeaderboard(), /No changes/);
+    A.equal(github.state.puts.length, n, 'same rows, no commit');
+    const checked = TRIBUNE.map(r => r[4] === 'No marcado.' ? [r[0], r[1], r[2], r[3], r[4], 'TRUE'] : r);
+    const ctx2 = loadPublisher({ participants: participants(null, { tribune: checked }), model: model(), github });
+    A.match(ctx2.publishLeaderboard(), /Committed/);
+    A.ok(JSON.parse(github.state.file.text).tribune.columna.some(x => x.texto === 'No marcado.'), 'it is in data.json');
+    const edited = checked.map(r => r[4] === 'Se roasteó solo.' ? [r[0], r[1], r[2], r[3], 'Texto cambiado.', r[5]] : r);
+    const ctx3 = loadPublisher({ participants: participants(null, { tribune: edited }), model: model(), github });
+    A.match(ctx3.publishLeaderboard(), /Committed/);
+    A.ok(JSON.parse(github.state.file.text).tribune.columna.some(x => x.texto === 'Texto cambiado.'), 'an edited Texto commits');
+  }],
+
+  ['publish works without a Tribune tab', () => {
+    const { ctx, github } = setup({ tribune: null });
+    ctx.publishLeaderboard();
+    A.deep(JSON.parse(github.state.file.text).tribune, { portada: null, columna: [], clasificados: [], datos: [] });
   }],
 
   ['missing script properties fail loudly', () => {
@@ -280,138 +382,151 @@ A.run('Publish.js', [
   ['a GitHub write failure throws', () => {
     const github = makeGithub('{"week":1}');
     const { ctx } = setup({ github });
-    github.state.file.sha = 'changed-under-us';
+    github.state.files['data.json'].sha = 'changed-under-us';
     const realFetch = github.fetch;
-    // Serve a stale sha on GET, then the real (conflicting) PUT.
+    // Serve a stale sha for data.json on GET, then the real (conflicting) PUT.
     ctx.UrlFetchApp.fetch = (url, opts) => {
       const r = realFetch(url, opts);
-      if (!opts || !opts.method) {
+      if ((!opts || !opts.method) && /contents\/data\.json/.test(url)) {
         return { getResponseCode: () => 200, getContentText: () => JSON.stringify({ sha: 'stale', content: Buffer.from('{"week":1}').toString('base64') }) };
       }
       return r;
     };
     let msg = '';
     try { ctx.publishLeaderboard(); } catch (e) { msg = e.message; }
-    A.match(msg, /GitHub write failed \(409\)/);
+    A.match(msg, /GitHub write failed \(409\) for data\.json/);
   }],
 
-  ['onBoardEdit ignores other tabs and publishes for the three input tabs', () => {
+  ['onBoardEdit publishes for PickEm_Board and Tribune only', () => {
     const { ctx, github } = setup();
     const ev = name => ({ range: { getSheet: () => ({ getName: () => name }) } });
     ctx.onBoardEdit(ev('Sheet1'));
     A.equal(github.state.gets, 0, 'edit in Sheet1 never reaches the publisher');
-    ctx.onBoardEdit(ev('Comentarios'));
-    A.equal(github.state.puts.length, 1, 'edit in Comentarios');
+    ctx.onBoardEdit(ev('Tribune'));
+    A.equal(github.state.puts.length, 3, 'edit in Tribune publishes');
+    const gets = github.state.gets;
     ctx.onBoardEdit(ev(' pickem_board '));
-    A.equal(github.state.gets, 2, 'edit in PickEm_Board reaches the publisher');
-    ctx.onBoardEdit(ev('Premios'));
-    A.equal(github.state.gets, 3, 'edit in Premios reaches the publisher');
-    ctx.onBoardEdit(ev('premios '));
-    A.equal(github.state.gets, 4, 'tab name match ignores case and stray spaces');
-    ctx.onBoardEdit(ev('Field'));
-    A.equal(github.state.gets, 4, 'edit in another tab is ignored');
+    A.ok(github.state.gets > gets, 'edit in PickEm_Board reaches the publisher, case and spaces ignored');
+    const gets2 = github.state.gets;
+    ['Comentarios', 'Premios', 'Field'].forEach(n => ctx.onBoardEdit(ev(n)));
+    A.equal(github.state.gets, gets2, 'the retired tabs and other tabs are ignored');
     ctx.onBoardEdit(undefined);
-    A.equal(github.state.gets, 4, 'no event, no run');
+    A.equal(github.state.gets, gets2, 'no event, no run');
   }],
 
-  ['Premios: only checked rows for the current week, in sheet order', () => {
-    const a = build().d.awards;
-    A.deep(a.map(x => x.titulo), ['Premio uno', 'Premio dos', 'Premio tres', 'Premio cuatro', 'Premio cinco'], 'titles, in sheet order');
-    A.deep(a.map(x => x.texto), ['Texto del premio uno.', 'Varios ganadores.', 'Para todos.', 'Sin Para, es para todos.', 'Un nombre que no existe.']);
-  }],
-
-  ['Premios: Para is one or several call signs, or Todos', () => {
-    const a = build().d.awards;
-    A.equal(a[0].para, 'Silverback', 'one name');
-    A.equal(a[1].para, 'Jorge_B, ' + CURLY_1 + ', Silverback', 'several names, apostrophes normalized, spaces trimmed');
-    A.equal(a[2].para, 'Todos', 'Todos');
-    A.equal(a[3].para, 'Todos', 'blank means everyone');
-  }],
-
-  ['Premios: an unknown name is logged but the row still publishes', () => {
-    const { d, ctx } = build();
-    A.equal(d.awards[4].para, 'Jorge_B, Fulano Desconocido');
-    A.ok(ctx._logs.some(l => /Fulano Desconocido/.test(l)), 'warning logged');
-  }],
-
-  ['Premios: a checked row with no Titulo or no Texto is skipped and logged', () => {
-    const { d, ctx } = build();
-    A.ok(!d.awards.some(x => x.titulo === 'Premio nueve' || x.texto === 'Sin titulo.'));
-    A.ok(ctx._logs.some(l => /Premios row 9 .*no Titulo or no Texto/.test(l)), 'row 9 logged');
-    A.ok(ctx._logs.some(l => /Premios row 10 .*no Titulo or no Texto/.test(l)), 'row 10 logged');
-  }],
-
-  ['Premios: checkbox spellings and a missing tab', () => {
-    const rows = [['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'],
-      ['3', 'A', 'Todos', 'a', 'true'], ['3', 'B', 'Todos', 'b', 'x'], ['3', 'C', 'Todos', 'c', 'Sí'], ['3', 'D', 'Todos', 'd', 'no'], ['3', 'E', 'Todos', 'e', '']];
-    A.deep(build({ premios: rows }).d.awards.map(x => x.titulo), ['A', 'B', 'C']);
-    const bare = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Sheet1', FANS)]);
-    A.deep(build({ participants: bare }).d.awards, [], 'no Premios tab, empty awards, no failure');
-  }],
-
-  ['Premios: checking a box republishes, an unrelated rerun does not', () => {
-    const { ctx, github } = setup();
-    ctx.publishLeaderboard();
-    A.equal(github.state.puts.length, 1);
-    A.match(ctx.publishLeaderboard(), /No changes/);
-    A.equal(github.state.puts.length, 1, 'same awards, no commit');
-    const rows = PREMIOS.map(r => r[1] === 'Premio seis' ? [r[0], r[1], r[2], r[3], 'TRUE'] : r);
-    const ctx2 = loadPublisher({ participants: participants(null, { premios: rows }), model: model(), github });
-    A.match(ctx2.publishLeaderboard(), /Committed/);
-    A.equal(github.state.puts.length, 2, 'a newly checked award commits');
-    A.ok(JSON.parse(github.state.file.text).awards.some(x => x.titulo === 'Premio seis'), 'it is in data.json');
-    const rows2 = rows.map(r => r[1] === 'Premio uno' ? [r[0], r[1], r[2], 'Texto cambiado.', r[4]] : r);
-    const ctx3 = loadPublisher({ participants: participants(null, { premios: rows2 }), model: model(), github });
-    A.match(ctx3.publishLeaderboard(), /Committed/);
-    A.equal(github.state.puts.length, 3, 'an edited Texto commits');
-  }],
-
-  ['setupPremios: creates the tab with a header and checkboxes, seeds the week 3 awards', () => {
+  ['setupTribuneTab: header, frozen row, Sección dropdown, checkboxes', () => {
     const ws = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid())]);
     const { ctx } = setup({ participants: ws });
-    ctx.setupPremios();
-    const sh = ws.getSheets().find(t => t.getName() === 'Premios');
+    ctx.setupTribuneTab();
+    const sh = tab(ws, 'Tribune');
     A.ok(sh, 'tab created');
-    const rows = sh.rows();
-    A.deep(rows[0], ['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'], 'header');
-    A.deep(sh.log.bold[0].slice(0, 4), [1, 1, 1, 5], 'bold header row');
+    A.deep(sh.rows()[0], TRIBUNE_HEAD, 'header');
+    A.deep(sh.log.bold[0].slice(0, 4), [1, 1, 1, 6], 'bold header row');
     A.equal(sh.log.frozen, 1, 'frozen header');
-    A.ok(sh.log.checkboxes.indexOf('r2c5') >= 0, 'checkboxes start at E2');
-    A.deep(rows.slice(1).map(r => r[1]), ['Montaña rusa', 'Reloj suizo', 'Foto finish', 'Doble amenaza', 'Nadie está muerto'], 'the five awards, in order');
-    A.ok(rows.slice(1).every(r => r[0] === 3 && r[4] === true), 'Semana 3, Publicar checked');
-    A.equal(rows[4][2], 'Juan1768, Cyber70, Jorge_B, Osos de Grayslake', 'Para keeps the winners as rendered');
-    A.equal(rows[5][2], 'Todos');
-    A.match(rows[1][3], /^De 93 a 39\. 54 puntos .* Abróchense el cinturón/, 'Texto is the fact plus the joke');
+    A.ok(sh.log.checkboxes.indexOf('r2c6') >= 0, 'checkboxes start at F2');
+    const v = sh.log.validations[0];
+    A.equal(v.at, 'r2c2', 'dropdown starts at B2');
+    A.deep(JSON.parse(JSON.stringify(v.rule.list)), ['Portada', 'Columna', 'Clasificado', 'Dato'], 'exactly these four');
+    A.equal(v.rule.dropdown, true);
+    A.equal(sh.rows().length, 1, 'no rows seeded');
   }],
 
-  ['setupPremios: seeded rows publish in week 3 as the page showed them', () => {
-    const ws = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Premios', [])]);
+  ['setupTribuneTab is idempotent and leaves rows alone', () => {
+    const ws = participants();
     const { ctx } = setup({ participants: ws });
-    ctx.setupPremios();
-    const d = JSON.parse(JSON.stringify(ctx.buildData_(ws, ctx.SpreadsheetApp.openById('model'), null)));
-    A.equal(d.week, 3);
-    A.deep(d.awards.map(x => x.titulo), ['Montaña rusa', 'Reloj suizo', 'Foto finish', 'Doble amenaza', 'Nadie está muerto']);
+    const before = JSON.stringify(tab(ws, 'Tribune').rows());
+    ctx.setupTribuneTab();
+    ctx.setupTribuneTab();
+    A.equal(tabNames(ws).filter(n => n === 'Tribune').length, 1, 'one Tribune tab');
+    A.equal(JSON.stringify(tab(ws, 'Tribune').rows()), before, 'rows untouched');
   }],
 
-  ['setupPremios: seeds only an empty tab, and only once', () => {
-    const ws = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid())]);
+  ['migrateToTribune dry run: logs counts per source and per week, writes nothing', () => {
+    const ws = participants(null, { legacy: true, tribune: null });
     const { ctx } = setup({ participants: ws });
-    ctx.setupPremios();
-    ctx.setupPremios();
-    const sh = ws.getSheets().find(t => t.getName() === 'Premios');
-    A.equal(sh.rows().length, 6, 'header plus five rows, not ten');
-    // A tab that already has rows is left alone.
-    const mine = [['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'], ['4', 'Mi premio', 'Todos', 'Mío.', true]];
-    const ws2 = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Premios', mine)]);
-    const c2 = setup({ participants: ws2 }).ctx;
-    c2.setupPremios();
-    const sh2 = ws2.getSheets().find(t => t.getName() === 'Premios');
-    A.equal(sh2.rows().length, 2, 'existing rows, nothing seeded');
-    A.equal(sh2.rows()[1][1], 'Mi premio', 'my row untouched');
-    // A header-only tab counts as empty.
-    const ws3 = makeWorkbook('participants', [makeSheet('PickEm_Board', boardGrid()), makeSheet('Premios', [mine[0]])]);
-    setup({ participants: ws3 }).ctx.setupPremios();
-    A.equal(ws3.getSheets().find(t => t.getName() === 'Premios').rows().length, 6, 'header only, seeded');
+    const rep = ctx.migrateToTribune(true);
+    A.deep(JSON.parse(JSON.stringify(rep.counts)), { Comentarios: 4, Premios: 4 });
+    A.deep(JSON.parse(JSON.stringify(rep.byWeek)), { Comentarios: { 3: 3, 2: 1 }, Premios: { 3: 3, 2: 1 } });
+    A.ok(ctx._logs.some(l => /^Comentarios: 4 rows/.test(l)), 'Comentarios logged');
+    A.ok(ctx._logs.some(l => /^Premios: 4 rows/.test(l)), 'Premios logged');
+    A.deep(tabNames(ws), ['PickEm_Board', 'Sheet1', 'Comentarios', 'Premios'], 'no tab created or deleted');
+    const rep2 = ctx.migrateToTribune();
+    A.equal(rep2.dryRun, true, 'dry run is the default');
+    A.deep(tabNames(ws), ['PickEm_Board', 'Sheet1', 'Comentarios', 'Premios']);
+  }],
+
+  ['migrateToTribune: rows land with the right Sección, counts match, legacy tabs are deleted', () => {
+    const existing = [TRIBUNE_HEAD, ['5', 'Dato', '', 'Mío', 'Ya estaba aquí.', true]];
+    const ws = participants(null, { legacy: true, tribune: existing });
+    const { ctx } = setup({ participants: ws });
+    const rep = ctx.migrateToTribune(false);
+    A.equal(rep.ok, true);
+    A.deep(JSON.parse(JSON.stringify(rep.deleted)), ['Comentarios', 'Premios']);
+    A.deep(tabNames(ws), ['PickEm_Board', 'Sheet1', 'Tribune'], 'legacy tabs gone');
+    const rows = tab(ws, 'Tribune').rows();
+    A.deep(rows[1], existing[1], 'existing rows stay where they were');
+    A.equal(rows.length, 2 + 8, 'header, the existing row, 4 + 4 migrated');
+    A.deep(rows[2], ['3', 'Columna', 'Silverback', '', 'Se roasteó solo.', 'TRUE'], 'Comentarios row becomes Columna');
+    A.deep(rows[5], ['2', 'Columna', 'Jorge_B', '', 'Semana vieja.', true], 'a checked boolean survives');
+    A.deep(rows[6], ['3', 'Clasificado', 'Silverback', 'Premio uno', 'Texto del premio uno.', 'TRUE'], 'Premios Titulo goes to Título, Para stays Para');
+    A.deep(rows[9], ['2', 'Clasificado', '', 'Premio cuatro', 'Sin Para.', 'TRUE']);
+    A.equal(rows.filter(r => r[1] === 'Columna').length, 4, 'Columna count equals Comentarios');
+    A.equal(rows.filter(r => r[1] === 'Clasificado').length, 4, 'Clasificado count equals Premios');
+    A.ok(ctx._logs.some(l => /Moved 8 rows .* deleted Comentarios, Premios/.test(l)));
+  }],
+
+  ['migrateToTribune: creates the Tribune tab when it does not exist yet', () => {
+    const ws = participants(null, { legacy: true, tribune: null });
+    const { ctx } = setup({ participants: ws });
+    ctx.migrateToTribune(false);
+    const sh = tab(ws, 'Tribune');
+    A.ok(sh, 'created');
+    A.deep(sh.rows()[0], TRIBUNE_HEAD);
+    A.equal(sh.rows().length, 9);
+  }],
+
+  ['migrateToTribune: a count mismatch clears what it wrote and deletes nothing', () => {
+    const ws = participants(null, { legacy: true, tribune: [TRIBUNE_HEAD] });
+    const sh = tab(ws, 'Tribune');
+    const orig = sh.getRange;
+    sh.getRange = (a, b, c, d) => {            // the sheet silently drops the last row of a bulk write
+      const r = orig(a, b, c, d);
+      if (typeof a === 'number' && c > 1) { const sv = r.setValues; r.setValues = vals => sv(vals.slice(0, -1)); }
+      return r;
+    };
+    const { ctx } = setup({ participants: ws });
+    const rep = ctx.migrateToTribune(false);
+    A.equal(rep.ok, false);
+    A.deep(JSON.parse(JSON.stringify(rep.deleted)), []);
+    A.deep(tabNames(ws), ['PickEm_Board', 'Sheet1', 'Tribune', 'Comentarios', 'Premios'], 'nothing deleted');
+    A.ok(sh.rows().slice(1).every(r => r.every(c => c === '')), 'appended rows cleared again');
+    A.ok(ctx._logs.some(l => /do not match/.test(l)), 'reason logged');
+  }],
+
+  ['migrateToTribune: with no legacy tabs there is nothing to do', () => {
+    const ws = participants();
+    const { ctx } = setup({ participants: ws });
+    const rep = ctx.migrateToTribune(false);
+    A.equal(rep.ok, true);
+    A.deep(JSON.parse(JSON.stringify(rep.deleted)), []);
+    A.equal(tab(ws, 'Tribune').rows().length, TRIBUNE.length, 'Tribune untouched');
+  }],
+
+  ['migrated week 3 rows publish as Columna and Clasificados', () => {
+    const ws = participants(null, { legacy: true, tribune: null });
+    const { ctx } = setup({ participants: ws });
+    ctx.migrateToTribune(false);
+    const t = JSON.parse(JSON.stringify(ctx.buildData_(ws, ctx.SpreadsheetApp.openById('model'), null))).tribune;
+    A.deep(t.columna, [{ para: 'Silverback', texto: 'Se roasteó solo.' }, { para: '', texto: 'Buen domingo, mal pick.' }]);
+    A.deep(t.clasificados.map(x => x.titulo), ['Premio uno', 'Premio dos'], 'only the checked week 3 rows');
+    A.equal(t.portada, null);
+  }],
+
+  ['nothing in the code reads the retired tabs', () => {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'gas', 'Publish.js'), 'utf8');
+    const onEdit = /function onBoardEdit[\s\S]*?\n}/.exec(src)[0];
+    A.noMatch(onEdit, /Comentarios|Premios|commentsTab|awardsTab/, 'onEdit filter');
+    A.noMatch(src, /readComments_|readAwards_|setupComentarios|setupPremios|PREMIOS_SEED|CFG\.pays|weeklyPrize/, 'old readers and setups');
   }],
 
   ['published data carries no email addresses or tokens', () => {

@@ -3,821 +3,1154 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="color-scheme" content="dark">
+<meta name="color-scheme" content="only light">
 <meta name="theme-color" content="">
-<title>Fourth &amp; Beers 2026: así va la quiniela</title>
+<meta name="description" content="La quiniela más grande del mundo. Información que nadie pidió.">
+<title>Fourth and Beers Tribune</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&display=swap">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:ital,wght@0,400;0,700;1,400;1,700&family=Libre+Franklin:wght@600;700;800;900&display=swap">
 <style>
-/* Dark is enforced in every mode on purpose. */
 :root{
-  color-scheme:dark;
-  /* Horario estelar: night game broadcast. The only place a color is written. */
-  --bg:#0A1324; --surface:#111E36; --surface2:#1A2B4A; --line:#26395C;
-  --text:#F1F4F9; --muted:#9AAAC2; --faint:#7587A4;
-  --accent:#FFC72C; --accent-soft:#6B5A1E; --on-accent:#0A1324;
-  --red:#E5484D; --green:#4CC38A;
-  --dot:rgba(241,244,249,.55); --hatch:rgba(241,244,249,.28); --hatch-strong:rgba(241,244,249,.35); --line-neutral:rgba(241,244,249,.22);
-  --display:"Big Shoulders Display","Big Shoulders","Arial Narrow","Roboto Condensed",Impact,sans-serif;
-  --body:"Public Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-  box-sizing:border-box;
-  padding-top:env(safe-area-inset-top,0px);
-  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:only light;
+  --paper:#F3EEE3;--paper2:#E9E2D3;--ink:#161514;--ink2:#3B3834;--muted:#6B655C;--rule:#161514;--hair:#B9B0A0;
+  --red:#A3191F;--up:#2E7D4F;--down:#C2610C;--blush:#E7B9B2;--stone:#BDB5A6;
+  --head:"Playfair Display",Georgia,serif;--body:"Source Serif 4",Georgia,serif;--sans:"Libre Franklin",Arial,sans-serif;--black:"UnifrakturMaguntia","Old English Text MT",serif;
 }
-*,*::before,*::after{box-sizing:inherit}
-html{background:var(--bg);scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
-body{margin:0;background:var(--bg);color:var(--text);font-family:var(--body);font-size:16px;line-height:1.5}
-.wrap{max-width:760px;margin:0 auto;padding:28px 18px 56px}
-h1,h2,h3{font-family:var(--display);font-weight:800;line-height:1;margin:0;letter-spacing:.01em}
-h1{font-size:clamp(3rem,13vw,5.4rem);font-weight:900;line-height:.88}
-h2{font-size:clamp(2rem,7vw,2.6rem);margin-bottom:6px}
-h3{font-size:1.45rem}
-p{margin:0 0 12px;max-width:62ch}
-.league{font-family:var(--display);font-size:1.3rem;font-weight:600;color:var(--accent);margin-bottom:6px}
-.lede{color:var(--muted);margin-top:14px}
-section{margin-top:52px}
-.note{color:var(--muted);font-size:.9rem}
-.num{font-variant-numeric:tabular-nums}
-
-/* Find yourself */
-.finder{margin-top:26px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px}
-.finder label{display:block;font-weight:700;margin-bottom:8px}
-select{width:100%;font:inherit;font-size:1rem;color:var(--text);background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:12px 40px 12px 12px;appearance:none;-webkit-appearance:none;
-  background-image:linear-gradient(45deg,transparent 50%,var(--accent) 50%),linear-gradient(135deg,var(--accent) 50%,transparent 50%);
-  background-position:calc(100% - 20px) 50%,calc(100% - 14px) 50%;background-size:6px 6px;background-repeat:no-repeat}
-select:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-.me{display:none;margin-top:16px}
-.me.on{display:block}
-.me-top{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
-.me-rank{font-family:var(--display);font-weight:900;font-size:4.2rem;line-height:.85;color:var(--accent)}
-.me-name{font-family:var(--display);font-weight:800;font-size:1.8rem;line-height:1}
-.me-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
-.me-grid div{background:var(--bg);border-radius:10px;padding:10px 12px}
-.me-grid b{display:block;font-family:var(--display);font-size:1.7rem;font-weight:800;line-height:1.05}
-.me-grid span{color:var(--muted);font-size:.85rem}
-.me-say{margin-top:12px}
-
-/* Standings */
-.board{list-style:none;margin:18px 0 0;padding:0}
-.row{display:grid;grid-template-columns:34px 1fr auto;column-gap:10px;align-items:center;padding:9px 8px;border-radius:10px}
-.row+.row{margin-top:2px}
-.row .rk{font-family:var(--display);font-weight:800;font-size:1.35rem;text-align:right;color:var(--muted)}
-.row .nm{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.row .tt{font-family:var(--display);font-weight:800;font-size:1.35rem;text-align:right}
-.row .gap{color:var(--muted);font-size:.8rem;font-family:var(--body);font-weight:400;margin-left:6px}
-.bar{grid-column:2 / 4;display:flex;height:12px;margin-top:6px;border-radius:3px;overflow:hidden}
-.bar .c{background:var(--accent)}
-.bar .d{background:repeating-linear-gradient(135deg,transparent 0 3px,var(--hatch) 3px 5px);outline:1px solid var(--hatch);outline-offset:-1px}
-.row.sel{background:var(--surface2);box-shadow:inset 3px 0 0 var(--accent)}
-.row.sel .rk{color:var(--accent)}
-.money{display:flex;justify-content:space-between;align-items:center;margin:4px 8px 6px;padding:6px 0;border-bottom:2px dashed var(--accent-soft);color:var(--accent);font-size:.85rem;font-weight:700}
-.legend{display:flex;gap:18px;flex-wrap:wrap;margin-top:10px;font-size:.85rem;color:var(--muted)}
-.legend i{display:inline-block;width:22px;height:10px;margin-right:6px;vertical-align:middle;border-radius:2px}
-.legend .lc{background:var(--accent)}
-.legend .ld{background:repeating-linear-gradient(135deg,transparent 0 3px,var(--hatch-strong) 3px 5px);outline:1px solid var(--hatch-strong);outline-offset:-1px}
-
-/* Bump chart */
-.toggle{display:inline-flex;background:var(--surface);border-radius:10px;padding:3px;margin-top:12px}
-.toggle button{font:inherit;font-size:.9rem;font-weight:600;color:var(--muted);background:transparent;border:0;border-radius:8px;padding:8px 14px;cursor:pointer}
-.toggle button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent)}
-.bumpbox{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:12px;background:var(--surface);border-radius:14px;padding:10px 4px}
+*{box-sizing:border-box}
+html,body{background:var(--paper) !important;color:var(--ink) !important;margin:0}
+html{-webkit-text-size-adjust:100%}
+body{font-variant-numeric:lining-nums;font-family:var(--body);font-size:15.5px;line-height:1.45}
+html.locked,html.locked body{overflow:hidden}
+.page{max-width:480px;margin:0 auto;padding:12px 16px 28px;background:var(--paper)}
+a{color:var(--ink)}
+.banner{background:var(--ink);color:var(--paper);font:700 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;text-align:center;padding:10px 12px;margin:-12px -16px 12px}
+.banner a{color:var(--blush);display:inline-block;padding:6px 4px}
+.dateline{display:flex;justify-content:space-between;gap:8px;font:600 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.mast{font:400 44px/0.95 var(--black);text-align:center;margin:10px 0 2px;color:var(--ink)}
+.mast span{display:block;font-size:60px}
+.tag{text-align:center;font:italic 400 12.5px var(--body);color:var(--ink2);padding:4px 0 6px}
+.rules{border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);height:5px;margin:0 0 12px}
+.pick{position:relative;display:flex;align-items:center;justify-content:space-between;min-height:46px;padding:0 12px;border:1px solid var(--ink);background:var(--paper);font:600 14px var(--sans);color:var(--ink2);width:100%;cursor:pointer}
+.pick b{color:var(--ink)}
+.pick select{position:absolute;inset:0;width:100%;height:100%;opacity:0;font-size:16px;cursor:pointer;background:var(--paper);color:var(--ink)}
+.pick:focus-within{outline:2px solid var(--red);outline-offset:2px}
+.kicker{font:800 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--red)}
+.head{font:900 46px/0.95 var(--head);margin:6px 0 8px;letter-spacing:-.01em;overflow-wrap:anywhere}
+.deck{font:italic 400 19px/1.3 var(--body);color:var(--ink2);margin:0 0 8px}
+.by{font:700 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:12px;border-bottom:1px solid var(--hair)}
+.sec{font:800 13px var(--sans);text-transform:uppercase;letter-spacing:.16em;margin:22px 0 10px;padding:6px 0;border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);text-align:center}
+.sec[hidden],section[hidden]{display:none}
+.col p{margin:0 0 10px;font:17px/1.42 var(--body)}
+.col .sig{font:italic 700 14px var(--head);text-align:right}
+.ads{columns:2;column-gap:14px;column-rule:1px solid var(--hair)}
+.ad{break-inside:avoid;font:13px/1.38 var(--body);padding:0 0 8px;margin-bottom:8px;border-bottom:1px solid var(--hair)}
+.ad b{display:block;font:900 15px var(--sans);letter-spacing:.06em}
+.cifra{display:flex;gap:14px;align-items:center;background:var(--ink);color:var(--paper);padding:12px 14px;margin-bottom:6px}
+.cifra .n{font:900 70px/0.85 var(--head)}
+.cifra .k{font:800 10.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--blush)}
+.cifra p{margin:3px 0 0;font:14.5px/1.35 var(--body)}
+.fact{display:flex;gap:12px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--hair)}
+.fact .v{flex:0 0 70px;font:900 26px/1 var(--head);text-align:right}
+.fact .t{font:14.5px/1.38 var(--body)}
+.fact .t b{display:block;font:800 10.5px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:2px}
+.box{border:1px solid var(--ink);padding:10px 12px;margin-bottom:10px;background:var(--paper)}
+.box .h{display:flex;align-items:center;gap:8px;font:800 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--hair)}
+.pill{font:700 9.5px var(--sans);letter-spacing:.06em;border:1px solid currentColor;padding:1px 5px;color:var(--red)}
+.pill.soon{color:var(--muted)}
+.pzr{display:flex;align-items:baseline;gap:10px;padding:3px 0}
+.pzr .r{font:900 20px var(--head);width:28px;flex:0 0 28px}
+.pzr .n{flex:1;font:16px var(--body);min-width:0;overflow-wrap:anywhere}
+.pzr .m{font:900 21px var(--head);white-space:nowrap}
+.pzr .m small{font:700 11px var(--sans);color:var(--muted)}
+.note{font:italic 13.5px/1.4 var(--body);color:var(--ink2);margin-top:5px}
+.note.plain{font-style:normal;font-size:12.5px}
+.big{font:900 32px/1 var(--head);margin:2px 0;overflow-wrap:anywhere}
+.box.pizza .h{color:var(--red)}
+.grid18{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin:4px 0 8px}
+.g{position:relative;height:54px;display:flex;flex-direction:column-reverse;padding-top:14px;align-items:center;justify-content:center;font:700 9.5px var(--sans);letter-spacing:.04em;color:var(--muted)}
+.g b{font:900 18px/1.05 var(--head)}
+.g.done{background:var(--ink);color:var(--stone)}
+.g.done b{color:var(--paper)}
+.g.now{outline:2px solid var(--red);outline-offset:2px}
+.g.next{border:1px dashed var(--hair)}
+.g.next b{font:700 12px var(--sans);color:var(--muted)}
+.g.tie{background:linear-gradient(to top right,var(--ink) 0 47%,var(--paper) 47% 53%,var(--ink) 53% 100%);padding:0}
+.g.tie i{position:absolute;font:900 13px/1 var(--head);font-style:normal;color:var(--paper)}
+.g.tie i.a{top:5px;left:5px}
+.g.tie i.b{bottom:5px;right:5px}
+.g.tie em{position:absolute;left:4px;bottom:4px;font:700 8.5px var(--sans);font-style:normal;color:var(--stone)}
+.lg{display:block;object-fit:contain;font:700 8px var(--sans);color:var(--muted)}
+.g .lg{position:absolute;top:3px;right:3px;width:18px;height:18px;padding:1px;border-radius:50%;background:var(--paper)}
+.lg.em{text-align:center}
+.afi .row{display:grid;grid-template-columns:34px 30px 1fr 46px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--hair)}
+.afi .row:last-of-type{border-bottom:0}
+.afi .lg{width:30px;height:30px;font-size:9px}
+.afi .lg.em{font-size:22px;line-height:30px}
+.afi .cnt{font:700 12px var(--sans);color:var(--muted)}
+.afi .tr{height:12px;background:var(--paper2);position:relative}
+.afi .tr i{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+.afi .amt{font:900 18px var(--head);text-align:right}
+.afi .zero{color:var(--muted)}
+.foot{margin-top:18px;padding-top:8px;border-top:1px solid var(--rule);font:12px var(--sans);color:var(--ink2);text-align:center;line-height:1.7}
+.foot a{display:inline-block;min-width:44px;min-height:44px;line-height:44px;font-weight:700}
+.foot .ver{font:600 11px var(--sans);color:var(--muted);margin-top:4px}
+.sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet[hidden]{display:none}
+.scrim{position:absolute;inset:0;background:var(--ink);opacity:.55}
+.panel{position:relative;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;-webkit-overflow-scrolling:touch;background:var(--paper);border-top:3px solid var(--rule);padding:8px 16px 28px}
+.pbar{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--rule);padding-bottom:4px}
+.pbar .mini{font:400 24px/1 var(--black)}
+.close{min-width:44px;min-height:44px;border:0;background:var(--paper);color:var(--ink);font:700 22px var(--sans);cursor:pointer}
+.panel h2{font:900 34px/1 var(--head);margin:4px 0 6px;overflow-wrap:anywhere}
+.panel .line{font:italic 17px/1.3 var(--body);color:var(--ink2);margin:0 0 4px}
+.toggle{display:flex;border:1px solid var(--ink);margin-top:10px}
+.toggle button{flex:1;min-height:44px;font:700 12px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:var(--paper);border:0;cursor:pointer}
+.toggle button+button{border-left:1px solid var(--ink)}
+.toggle button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+.movers{display:flex;flex-direction:column;gap:2px;margin-top:10px;font:600 13px var(--sans)}
+.movers .u b{color:var(--up)}.movers .d b{color:var(--down)}
+.bumpbox{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:8px;border:1px solid var(--hair);padding:6px 2px;background:var(--paper)}
 .bumpbox svg{display:block;height:auto}
 .bl{cursor:pointer}
-.bl .ln{fill:none;stroke:var(--line-neutral);stroke-width:2}
+.bl .ln{fill:none;stroke:var(--ink);stroke-opacity:.28;stroke-width:2}
 .bl .hit{fill:none;stroke:transparent;stroke-width:12}
-.bl circle{fill:var(--dot)}
-.bl text{fill:var(--muted);font-family:var(--body);font-size:11px}
-.bl.up .ln{stroke:var(--green);stroke-width:2.5}.bl.up circle{fill:var(--green)}.bl.up text{fill:var(--green);font-weight:700}
-.bl.down .ln{stroke:var(--red);stroke-width:2.5}.bl.down circle{fill:var(--red)}.bl.down text{fill:var(--red);font-weight:700}
-.bl.sel .ln{stroke:var(--accent);stroke-width:4}.bl.sel circle{fill:var(--accent)}.bl.sel text{fill:var(--accent);font-weight:700}
-.movers{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px;font-size:.9rem}
-.movers div{background:var(--surface);border-radius:10px;padding:8px 12px}
-.movers .u b{color:var(--green)}.movers .d b{color:var(--red)}
-
-/* Week strips */
-.weeks{margin-top:14px}
-.wk{background:var(--surface);border-radius:14px;padding:14px 14px 10px;margin-top:12px}
-.wk-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
-.wk-head .who{font-size:.9rem;color:var(--muted)}
-.wk-head .who b{color:var(--text)}
-.wk svg{display:block;width:100%;height:auto;margin-top:6px}
-
-/* Heatmap */
-.scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:14px}
-table{border-collapse:separate;border-spacing:3px;width:100%;min-width:340px}
-th{font-weight:600;font-size:.8rem;color:var(--muted);text-align:center;padding:4px}
-th:first-child{text-align:left}
-td{padding:0}
-td.n{font-size:.9rem;font-weight:600;white-space:nowrap;padding:6px 8px 6px 4px;max-width:180px;overflow:hidden;text-overflow:ellipsis}
-td.h{text-align:center;font-family:var(--display);font-weight:800;font-size:1.15rem;border-radius:6px;padding:6px 4px;width:64px;position:relative}
-td.h.dropped{text-decoration:line-through;text-decoration-thickness:2px}
-td.h .crown{position:absolute;top:-7px;right:-4px;background:var(--bg);color:var(--accent);font-family:var(--body);font-weight:700;font-size:.6rem;line-height:1;padding:2px 6px;border-radius:9px;border:1px solid var(--accent);white-space:nowrap;text-decoration:none}
-tr.sel td.n{color:var(--accent)}
-tr.sel td.h{outline:2px solid var(--text);outline-offset:-2px}
-.scale{display:flex;align-items:center;gap:8px;font-size:.8rem;color:var(--muted);margin-top:10px}
-.scale .g{flex:0 0 120px;height:10px;border-radius:3px}
-
-/* Awards */
-.awards{margin-top:14px;display:grid;gap:12px}
-.award{border-left:4px solid var(--accent);padding:4px 0 4px 14px}
-.award h3{color:var(--accent)}
-.award .who{font-weight:700;margin:4px 0 2px}
-.award p{color:var(--muted);margin:0}
-
-.grill-h{margin-top:30px;font-size:1.7rem;color:var(--red)}
-.award.grill{border-left-color:var(--red)}
-.award.grill h3{color:var(--red)}
-
-.quotes{margin-top:16px;display:grid;gap:10px}
-.quote{background:var(--surface);border-radius:12px;padding:12px 14px}
-.quote .to{display:block;color:var(--accent);font-size:.8rem;font-weight:700;margin-bottom:2px}
-.quote p{margin:0;font-size:1.02rem}
-.me-q{margin-top:10px;background:var(--bg);border-radius:10px;padding:10px 12px}
-.me-q b{color:var(--accent);font-weight:700}
-.fanplot{margin-top:14px;background:var(--surface);border-radius:14px;padding:10px 6px}
-.fanplot svg{display:block;width:100%;height:auto}
-
-/* Survivor */
-.surv{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:14px}
-.sv{background:var(--surface);border-radius:10px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px}
-.sv .n{font-size:.88rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bl circle{fill:var(--ink);fill-opacity:.35}
+.bl text{fill:var(--muted);font-family:var(--sans);font-size:11px}
+.bl.up .ln{stroke:var(--up);stroke-opacity:1;stroke-width:2.5}.bl.up circle{fill:var(--up);fill-opacity:1}.bl.up text{fill:var(--up);font-weight:700}
+.bl.down .ln{stroke:var(--down);stroke-opacity:1;stroke-width:2.5}.bl.down circle{fill:var(--down);fill-opacity:1}.bl.down text{fill:var(--down);font-weight:700}
+.bl.sel .ln{stroke:var(--red);stroke-opacity:1;stroke-width:4}.bl.sel circle{fill:var(--red);fill-opacity:1}.bl.sel text{fill:var(--red);font-weight:800}
+.tally{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.tally div{border:1px solid var(--ink);padding:6px 10px;font:600 12px var(--sans)}
+.tally b{font:900 22px var(--head);margin-right:6px}
+.surv{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px;margin-top:10px}
+.sv{border:1px solid var(--hair);padding:9px 10px;display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:44px}
+.sv .n{font:600 13px var(--sans);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sv .dots{display:flex;gap:4px;flex:0 0 auto}
-.sv .dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--green)}
-.sv .dots i.x{background:var(--red);border-color:var(--red)}
-.sv.out{opacity:.5}
+.sv .dots i{width:12px;height:12px;border-radius:50%;border:2px solid var(--up)}
+.sv .dots i.x{background:var(--down);border-color:var(--down)}
+.sv.out{opacity:.55}
 .sv.out .n{text-decoration:line-through}
-.sv.sel{outline:2px solid var(--accent)}
-.tally{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
-.tally div{background:var(--surface);border-radius:10px;padding:8px 12px;font-size:.9rem}
-.tally b{font-family:var(--display);font-size:1.5rem;margin-right:6px}
-
-/* Rules */
-.rules{margin-top:14px;background:var(--surface);border-radius:14px;padding:16px 18px}
-.rules p:last-child{margin-bottom:0}
-.rules b{color:var(--accent)}
-footer{margin-top:48px;color:var(--muted);font-size:.8rem;border-top:1px solid var(--line);padding-top:14px}
-
-@media (prefers-reduced-motion: no-preference){
-  .bar .c,.bar .d{transform-origin:left;animation:grow .7s ease-out both}
-  @keyframes grow{from{transform:scaleX(0)}to{transform:scaleX(1)}}
-}
+.sv.sel{outline:2px solid var(--red);outline-offset:1px;opacity:1}
+.sub{font:800 12px var(--sans);letter-spacing:.14em;text-transform:uppercase;margin:18px 0 4px;padding-top:8px;border-top:1px solid var(--rule)}
+.hint{font:italic 13px/1.4 var(--body);color:var(--ink2);margin:0}
 </style>
-<script>
-/* theme-color follows the --bg token, so the palette lives in one block. */
-(function(){ try{ document.querySelector('meta[name="theme-color"]').setAttribute("content", getComputedStyle(document.documentElement).getPropertyValue("--bg").trim()); }catch(e){} })();
-</script>
 </head>
 <body>
-<div class="wrap">
+<div class="page" id="page">
+  <div id="banner" hidden></div>
+  <div class="dateline" id="dateline"><span>Edición</span><span></span><span>Una chela</span></div>
+  <div class="mast">Fourth and Beers <span>Tribune</span></div>
+  <div class="tag">La quiniela más grande del mundo. Información que nadie pidió.</div>
+  <div class="rules"></div>
+  <label class="pick" id="pickbox"><span id="pick-label">¿Quién eres? <b>Escoge tu nombre</b></span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="currentColor" stroke-width="2"></path></svg><select id="pick" aria-label="¿Quién eres? Escoge tu nombre"><option value="">Escoge tu nombre</option></select></label>
 
-<header>
-  <div class="league">Fourth &amp; Beers 2026</div>
-  <h1 id="t-h1">Así va la quiniela.</h1>
-  <p class="lede" id="t-lede">Cargando la tabla.</p>
-</header>
+  <section id="portada"><div class="kicker" style="margin-top:16px">Última hora</div><h1 class="head" id="p-head">Cargando la edición</h1><p class="deck" id="p-deck"></p><div class="by" id="p-by"></div></section>
 
-<div class="finder">
-  <label for="pick">¿Quién eres?</label>
-  <select id="pick"><option value="">Escoge tu nombre de quiniela</option></select>
-  <div class="me" id="me" aria-live="polite"></div>
+  <section id="columna" hidden><div class="sec">Columna del Comish</div><div class="col" id="col"></div></section>
+
+  <section id="clasificados" hidden><div class="sec">Clasificados</div><div class="ads" id="ads"></div></section>
+
+  <section id="datos"><div class="sec">Datos que nadie pidió</div><div id="cifra"></div><div id="facts"></div></section>
+
+  <section id="premios"><div class="sec">Premios, pizzas y carne asada</div><div id="prizes"></div></section>
+
+  <div class="foot">
+    <div id="eds" hidden></div>
+    <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
+    <div class="ver">
+      v3.0.0 c2.0.0
+    </div>
+  </div>
 </div>
 
-<section id="quotes-box" hidden>
-  <h2>Palabras del Comish</h2>
-  <div class="quotes" id="quotes"></div>
-</section>
-
-<section id="tabla">
-  <h2>La tabla</h2>
-  <p class="note">Puntos que cuentan y la semana que se te cae. La línea punteada marca hasta dónde se cobra al final de la temporada regular.</p>
-  <div class="legend"><span><i class="lc"></i>Cuenta</span><span><i class="ld"></i>Se cae (tu peor semana)</span></div>
-  <ol class="board" id="board"></ol>
-</section>
-
-<section id="subidas">
-  <h2>Subidas y bajadas</h2>
-  <p class="note">Tu lugar en la tabla al cierre de cada semana. La semana 1 va sin descuento. Desde la semana 2 ya se cae tu peor semana. Toca una línea o un nombre para seguirlo.</p>
-  <div class="toggle" role="group" aria-label="Qué lugar mostrar">
-    <button type="button" data-mode="acum" aria-pressed="true">En la tabla</button>
-    <button type="button" data-mode="sola" aria-pressed="false">Solo esa semana</button>
+<div class="sheet" id="sheet" hidden role="dialog" aria-modal="true" aria-labelledby="sh-name">
+  <div class="scrim" id="scrim"></div>
+  <div class="panel" id="panel">
+    <div class="pbar"><span class="mini">Fourth and Beers Tribune</span><button class="close" id="close" type="button" aria-label="Cerrar">×</button></div>
+    <div class="kicker" style="margin-top:10px">Tu edición</div>
+    <h2 id="sh-name"></h2>
+    <p class="line" id="sh-line"></p>
+    <div class="sub">Subidas y bajadas</div>
+    <p class="hint">Tu lugar al cierre de cada semana. Desde la semana 2 ya se cae tu peor semana. Toca una línea para seguir a otro jugador.</p>
+    <div class="toggle" role="group" aria-label="Qué lugar mostrar">
+      <button type="button" data-mode="acum" aria-pressed="true">En la tabla</button>
+      <button type="button" data-mode="sola" aria-pressed="false">Solo esa semana</button>
+    </div>
+    <div class="movers" id="movers"></div>
+    <div class="bumpbox" id="bumpbox"></div>
+    <div id="svbox">
+      <div class="sub">Survivor: strikes</div>
+      <p class="hint">Tres strikes y para afuera. Círculo verde es vida, rojo es strike.</p>
+      <div class="tally" id="tally"></div>
+      <div class="surv" id="surv"></div>
+    </div>
   </div>
-  <div class="movers" id="movers"></div>
-  <div class="bumpbox" id="bumpbox"></div>
-</section>
-
-<section id="semanas">
-  <h2>Cada semana, uno por uno</h2>
-  <p class="note">Cada punto es un jugador. La raya vertical es el promedio del grupo. El que queda más a la derecha se lleva los $50.</p>
-  <div class="weeks" id="weeks"></div>
-</section>
-
-<section id="mapa">
-  <h2>Semana por semana</h2>
-  <p class="note">El color dice en qué lugar quedaste esa semana. Tachado es la semana que se te cae.</p>
-  <div class="scroll"><table id="heat"></table></div>
-  <div class="scale"><span>1º</span><span class="g" id="grad"></span><span id="grad-last">22º</span></div>
-</section>
-
-<section id="premios">
-  <h2>Premios que no pagan</h2>
-  <p class="note">Nada de esto da dinero. Da para platicar.</p>
-  <div class="awards" id="awards"></div>
-  <h3 class="grill-h" id="grill-h" hidden>Castigos que sí duelen</h3>
-  <p class="note" id="grill-note" hidden>Estos sí cuestan. El primer eliminado de Survivor organiza la carne asada. El último de la quiniela regular paga las pizzas del Super Bowl para todos, familias incluidas.</p>
-  <div class="awards" id="grill"></div>
-</section>
-
-<section id="aficiones" hidden>
-  <h2>La tabla de las aficiones</h2>
-  <p class="note">Promedio de puntos en la tabla según el equipo al que le van. La raya es el promedio de toda la liga.</p>
-  <div class="fanplot" id="fanplot"></div>
-  <div class="awards" id="fanawards"></div>
-</section>
-
-<section id="survivor">
-  <h2>Survivor: strikes</h2>
-  <p class="note">Tres strikes y para afuera. Círculo verde es vida, rojo es strike. <span id="t-surv"></span></p>
-  <div class="tally" id="tally"></div>
-  <div class="surv" id="surv"></div>
-</section>
-
-<section id="reglas">
-  <h2>Cómo se cuenta</h2>
-  <div class="rules">
-    <p><b>Se cae una semana.</b> De las 18 semanas, Yahoo te quita la peor del acumulado. <span id="t-drop"></span> Si más adelante tienes una semana todavía peor, esa es la que se cae y la anterior regresa a tu total.</p>
-    <p><b>Si se te olvida mandar picks,</b> esa semana vale 0 y se vuelve la que se cae. Ya no tienes colchón para otra.</p>
-    <p><b>$50 a la mejor semana.</b> Aunque esa semana sea la que se te cae, los $50 son tuyos. <span id="t-paid"></span></p>
-    <p><b>Al final de la temporada regular:</b> 1er lugar $1,050 y 2do lugar $350. Empates se reparten como en el golf.</p>
-    <p><b>Castigos.</b> El último de la quiniela regular paga las pizzas en la fiesta del Super Bowl para todos, familias incluidas. El primer eliminado de Survivor organiza la carne asada para todos los participantes. Si hay empate, se dividen la cuenta.</p>
-  </div>
-</section>
-
-<footer>
-  <span id="t-foot"></span><br>
-  v2.7.1 c1.6.0
-</footer>
 </div>
 
-<script type="application/json" id="seed">{"season": 2026, "week": 3, "weeks": 18, "updated": "2026-09-30T12:00:00Z", "pays": [1050, 350], "weeklyPrize": 50, "pickem": [{"name": "Silverback", "weeks": [57, 76, 101], "total": 177, "dropped": 57}, {"name": "Juan1768", "weeks": [81, 42, 73], "total": 154, "dropped": 42}, {"name": "Billy Beaner", "weeks": [78, 74, 50], "total": 152, "dropped": 50}, {"name": "Cyber70", "weeks": [70, 56, 79], "total": 149, "dropped": 56}, {"name": "Jorge_B", "weeks": [93, 39, 56], "total": 149, "dropped": 39}, {"name": "Mean Machine", "weeks": [92, 40, 52], "total": 144, "dropped": 40}, {"name": "Abogado", "weeks": [63, 52, 75], "total": 138, "dropped": 52}, {"name": "SinCasco", "weeks": [65, 50, 73], "total": 138, "dropped": 50}, {"name": "Osos de Grayslake", "weeks": [69, 69, 48], "total": 138, "dropped": 48}, {"name": "King of The North", "weeks": [66, 68, 49], "total": 134, "dropped": 49}, {"name": "This is our year", "weeks": [57, 65, 65], "total": 130, "dropped": 57}, {"name": "Manolito’s winning picks", "weeks": [72, 49, 54], "total": 126, "dropped": 49}, {"name": "Conquistador", "weeks": [55, 46, 69], "total": 124, "dropped": 46}, {"name": "Chitown’DemBoyz", "weeks": [60, 63, 60], "total": 123, "dropped": 60}, {"name": "Niners", "weeks": [60, 63, 51], "total": 123, "dropped": 51}, {"name": "Rastaman", "weeks": [64, 58, 54], "total": 122, "dropped": 54}, {"name": "X-Men Let’s go Boys", "weeks": [71, 41, 50], "total": 121, "dropped": 41}, {"name": "MVP21", "weeks": [83, 35, 38], "total": 121, "dropped": 35}, {"name": "Andrea’s Picks", "weeks": [61, 54, 39], "total": 115, "dropped": 39}, {"name": "KinkyKing", "weeks": [51, 59, 52], "total": 111, "dropped": 51}, {"name": "Puto el que lo lea", "weeks": [47, 59, 32], "total": 106, "dropped": 32}, {"name": "Steel Man", "weeks": [45, 47, 43], "total": 92, "dropped": 43}], "strikes": {"Silverback": 2, "Juan1768": 0, "Billy Beaner": 2, "Cyber70": 0, "Jorge_B": 0, "Mean Machine": 1, "Abogado": 1, "SinCasco": 2, "Osos de Grayslake": 0, "King of The North": 1, "This is our year": 1, "Manolito’s winning picks": 2, "Conquistador": 2, "Chitown’DemBoyz": 1, "Niners": 1, "Rastaman": 2, "X-Men Let’s go Boys": 2, "MVP21": 2, "Andrea’s Picks": 2, "KinkyKing": 3, "Puto el que lo lea": 2, "Steel Man": 1}, "survivorOut": [{"name": "KinkyKing", "week": 3}], "fans": {"Rastaman": {"nfl": "DAL"}, "Conquistador": {"nfl": "DAL"}, "MVP21": {"nfl": "PIT"}, "This is our year": {"nfl": "DAL"}, "King of The North": {"nfl": "CHI"}, "Niners": {"nfl": "SF"}, "Steel Man": {"nfl": "PIT"}, "Silverback": {"nfl": "PIT"}, "Osos de Grayslake": {"nfl": "CHI"}, "Chitown’DemBoyz": {"nfl": "DAL"}, "Billy Beaner": {"nfl": "DAL", "ncaa": "Michigan"}, "Mean Machine": {"nfl": "DAL"}, "Jorge_B": {"random": true, "other": "League of Legends"}, "Andrea’s Picks": {"nfl": "CHI", "ncaa": "Wisconsin"}, "Juan1768": {"nfl": "CHI"}, "SinCasco": {"nfl": "DAL"}, "X-Men Let’s go Boys": {"nfl": "DAL"}}, "comments": [], "awards": [{"titulo":"Montaña rusa","para":"Jorge_B","texto":"De 93 a 39. 54 puntos entre su mejor y su peor semana. Abróchense el cinturón, este juego mecánico no tiene frenos."},{"titulo":"Reloj suizo","para":"Chitown’DemBoyz","texto":"60, 63, 60. Solo 3 puntos de diferencia en 3 semanas. Ni muy muy, ni tan tan. Puntual como la cobranza del Comish."},{"titulo":"Foto finish","para":"Jorge_B","texto":"Ganó la semana 1 por 1 punto. Un pick de confianza 1 y los $50 eran de alguien más. Así se ganan las semanas: sufriendo hasta el lunes en la noche."},{"titulo":"Doble amenaza","para":"Juan1768, Cyber70, Jorge_B, Osos de Grayslake","texto":"Top 10 en la quiniela y sin un solo strike en Survivor. Los demás ya andan copiando picks. Ni así."},{"titulo":"Nadie está muerto","para":"Todos","texto":"Del 1º al 22º hay 85 puntos. La mejor semana hasta ahora fue de 101. Una semana buena y te metes a la pelea."}]}</script>
+<script type="application/json" id="seed">{"survivorOut":[{"name":"KinkyKing","week":3},{"name":"Rastaman","week":4},{"name":"Billy Beaner","week":4},{"name":"Andrea’s Picks","week":4},{"name":"Manolito’s winning picks","week":4},{"name":"X-Men Let’s go Boys","week":5}],"fans":{"Rastaman":{"nfl":"DAL"},"Conquistador":{"nfl":"DAL"},"MVP21":{"nfl":"PIT"},"This is our year":{"nfl":"DAL"},"King of The North":{"nfl":"CHI"},"Niners":{"nfl":"SF"},"Abogado":{"nfl":"SF"},"KinkyKing":{"nfl":"GB"},"Steel Man":{"nfl":"PIT"},"Silverback":{"nfl":"PIT"},"Osos de Grayslake":{"nfl":"CHI"},"Chitown’DemBoyz":{"nfl":"DAL"},"Puto el que lo lea":{"nfl":"CHI"},"Cyber70":{"nfl":"DAL"},"Billy Beaner":{"nfl":"CHI","ncaa":"Michigan"},"Mean Machine":{"nfl":"DAL"},"Manolito’s winning picks":{"nfl":"CHI"},"Jorge_B":{"random":true,"other":"League of Legends"},"Andrea’s Picks":{"nfl":"CHI","ncaa":"Wisconsin"},"Juan1768":{"nfl":"CHI"},"SinCasco":{"nfl":"DAL"},"X-Men Let’s go Boys":{"nfl":"DAL"}},"tribune":{"portada":null,"columna":[{"para":"","texto":"12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16."},{"para":"Silverback","texto":"El Comish hizo 50 y sigue líder. La peor semana se tira. Qué regla tan sabia."},{"para":"Abogado","texto":"Del 12º al 2º en una semana. No fue trampa, fue trámite."}],"clasificados":[{"titulo":"Fotocopia","para":"Osos de Grayslake, Mean Machine, Jorge_B","texto":"281, 281 y 281. Tres listas distintas y el mismo total."},{"titulo":"Disco rayado","para":"This is our year","texto":"65, 65 y 65. Dice que este es su año. Parece la misma semana."},{"titulo":"Lo que da, quita","para":"Andrea’s Picks","texto":"Su mejor semana, 73. Esa misma semana Dallas la sacó de Survivor."}],"datos":[]},"season":2026,"week":5,"weeks":18,"updated":"2026-10-15T12:48:41.715Z","prizes":{"regular":[1050,350],"survivor":[1050,350],"playoffs":[700],"weekly":50,"weeks":18},"pickem":[{"name":"Silverback","weeks":[57,76,101,70,50],"total":304,"dropped":50},{"name":"Abogado","weeks":[63,52,75,57,94],"total":289,"dropped":52},{"name":"King of The North","weeks":[66,68,49,90,63],"total":287,"dropped":49},{"name":"Cyber70","weeks":[70,56,79,60,77],"total":286,"dropped":56},{"name":"Osos de Grayslake","weeks":[69,69,48,61,82],"total":281,"dropped":48},{"name":"Mean Machine","weeks":[92,40,52,70,67],"total":281,"dropped":40},{"name":"Jorge_B","weeks":[93,39,56,69,63],"total":281,"dropped":39},{"name":"Niners","weeks":[60,63,51,77,74],"total":274,"dropped":51},{"name":"Billy Beaner","weeks":[78,74,50,50,63],"total":265,"dropped":50},{"name":"Chitown’DemBoyz","weeks":[60,63,60,77,56],"total":260,"dropped":56},{"name":"Conquistador","weeks":[55,46,69,41,82],"total":252,"dropped":41},{"name":"This is our year","weeks":[57,65,65,65,56],"total":252,"dropped":56},{"name":"Rastaman","weeks":[64,58,54,56,71],"total":249,"dropped":54},{"name":"KinkyKing","weeks":[51,59,52,23,83],"total":245,"dropped":23},{"name":"MVP21","weeks":[83,35,38,53,71],"total":245,"dropped":35},{"name":"Juan1768","weeks":[81,42,73,34,40],"total":236,"dropped":34},{"name":"SinCasco","weeks":[65,50,73,36,44],"total":232,"dropped":36},{"name":"Puto el que lo lea","weeks":[47,59,32,58,66],"total":230,"dropped":32},{"name":"Manolito’s winning picks","weeks":[72,49,54,51,52],"total":229,"dropped":49},{"name":"Andrea’s Picks","weeks":[61,54,39,30,73],"total":227,"dropped":30},{"name":"X-Men Let’s go Boys","weeks":[71,41,50,47,43],"total":211,"dropped":41},{"name":"Steel Man","weeks":[45,47,43,44,40],"total":179,"dropped":40}],"strikes":{"Silverback":2,"Rastaman":3,"Conquistador":2,"MVP21":2,"This is our year":1,"King of The North":2,"Niners":2,"Abogado":2,"KinkyKing":3,"Steel Man":2,"Osos de Grayslake":1,"Chitown’DemBoyz":2,"Puto el que lo lea":2,"Cyber70":1,"Billy Beaner":3,"Andrea’s Picks":3,"X-Men Let’s go Boys":3,"Jorge_B":1,"Manolito’s winning picks":3,"Juan1768":0,"SinCasco":2,"Mean Machine":2}}</script>
 <script>
 (function(){
-  // Reads data.json next to this page. If that fails (file opened locally, Claude preview), uses the seed above.
-  function seed(){ return JSON.parse(document.getElementById("seed").textContent); }
-  function boot(D){
-    try { render(D); }
-    catch(e){ document.getElementById("t-lede").textContent = "No se pudo leer la tabla. Recarga la página."; throw e; }
-  }
-  if (window.fetch){
-    fetch("data.json?t="+Date.now(), {cache:"no-store"})
-      .then(function(r){ if(!r.ok) throw new Error(r.status); return r.json(); })
-      .then(boot)
-      .catch(function(){ boot(seed()); });
-  } else boot(seed());
+"use strict";
 
-function render(D){
-  // Colors come from the :root tokens. Nothing below writes a color of its own.
-  var ROOT_CSS = getComputedStyle(document.documentElement);
-  function token(n){ return ROOT_CSS.getPropertyValue("--"+n).trim(); }
-  var C = {}; ["bg","surface","surface2","line","text","muted","faint","accent","accentSoft","onAccent","red","green","dot"].forEach(function(k){
-    C[k] = token(k.replace(/[A-Z]/g,function(m){return "-"+m.toLowerCase()}));
-  });
-  var WEEK = D.week, SEASON_WEEKS = D.weeks || 18, PAYS = D.pays, PRIZE = D.weeklyPrize || 50;
-  var PICKEM = D.pickem;
-  function normName(n){ return String(n).replace(/[\u2018\u2019`\u00b4]/g,"'").trim().toLowerCase(); }
-  var STRIKE_BY = {}; Object.keys(D.strikes||{}).forEach(function(k){ STRIKE_BY[normName(k)] = D.strikes[k]; });
-  function strikeOf(name){ var v = STRIKE_BY[normName(name)]; return (typeof v==="number") ? v : null; }
+// ---------------------------------------------------------------------------
+// Constants
+// ---------------------------------------------------------------------------
+var COMISH = "Silverback";            // the commissioner's Pick'em call sign
+var YAHOO_URL = "https://football.fantasysports.yahoo.com/pickem";
+var TZ = "America/Chicago";
+var NFL = {ARI:"Cardinals",ATL:"Falcons",BAL:"Ravens",BUF:"Bills",CAR:"Panthers",CHI:"Bears",CIN:"Bengals",CLE:"Browns",DAL:"Cowboys",DEN:"Broncos",DET:"Lions",GB:"Packers",HOU:"Texans",IND:"Colts",JAX:"Jaguars",KC:"Chiefs",LV:"Raiders",LAC:"Chargers",LAR:"Rams",MIA:"Dolphins",MIN:"Vikings",NE:"Patriots",NO:"Saints",NYG:"Giants",NYJ:"Jets",PHI:"Eagles",PIT:"Steelers",SF:"49ers",SEA:"Seahawks",TB:"Buccaneers",TEN:"Titans",WAS:"Commanders"};
+var CITY = {ARI:"Arizona",ATL:"Atlanta",BAL:"Baltimore",BUF:"Buffalo",CAR:"Carolina",CHI:"Chicago",CIN:"Cincinnati",CLE:"Cleveland",DAL:"Dallas",DEN:"Denver",DET:"Detroit",GB:"Green Bay",HOU:"Houston",IND:"Indianápolis",JAX:"Jacksonville",KC:"Kansas City",LV:"Las Vegas",LAC:"los Chargers",LAR:"los Rams",MIA:"Miami",MIN:"Minnesota",NE:"Nueva Inglaterra",NO:"Nueva Orleans",NYG:"los Giants",NYJ:"los Jets",PHI:"Filadelfia",PIT:"Pittsburgh",SF:"San Francisco",SEA:"Seattle",TB:"Tampa Bay",TEN:"Tennessee",WAS:"Washington"};
+var C9 = "https://upload.wikimedia.org/wikipedia/commons/f/f7/Cloud9_logo.svg";
+var SKIP = {"of":1,"the":1,"de":1,"la":1,"el":1,"is":1,"our":1,"go":1,"que":1,"lo":1,"let's":1,"winning":1};
+var NUMW = ["cero","uno","dos","tres","cuatro","cinco","seis","siete","ocho","nueve","diez","once","doce","trece","catorce","quince","dieciséis","diecisiete","dieciocho","diecinueve","veinte"];
 
-  var N = PICKEM.length;
-  // Yahoo is canon for totals and the dropped week. Weekly scores come from the same table.
-  var players = PICKEM.map(function(p){
-    var w = p.weeks.slice(0,WEEK);
-    var sum = w.reduce(function(a,b){return a+b},0);
-    var drop = (typeof p.dropped==="number") ? p.dropped : (WEEK>1 ? Math.min.apply(null,w) : 0);
-    var total = (typeof p.total==="number") ? p.total : sum-drop;
-    return {name:p.name, w:w, raw:sum, drop:drop, dropIdx:(WEEK>1 ? w.lastIndexOf(drop) : -1), total:total};
+var T = {};   // pure functions, also exposed for the tests as window.__tribune
+
+// ---------------------------------------------------------------------------
+// Small helpers
+// ---------------------------------------------------------------------------
+function normName(n){ return String(n).replace(/[‘’`´]/g,"'").trim().toLowerCase(); }
+function sum(a){ return a.reduce(function(x,y){return x+y},0); }
+function min(a){ return Math.min.apply(null,a); }
+function max(a){ return Math.max.apply(null,a); }
+function esc(s){ return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]}); }
+function ord(n){ return n+"º"; }
+function pad2(n){ return (n<10?"0":"")+n; }
+function money(n){ return "$"+Math.round(n).toLocaleString("en-US"); }
+function nw(n){ return n<=20 ? NUMW[n] : String(n); }
+function plural(n,one,many){ return n===1 ? one : many; }
+function J(list){ return list.length<2 ? (list[0]||"") : list.slice(0,-1).join(", ")+" y "+list[list.length-1]; }
+function uniq(a){ return a.filter(function(x,i){return a.indexOf(x)===i}); }
+
+// A name as it reads inside a sentence. The commissioner is "el Comish".
+function fill(t, v){
+  var s = t.replace(/\{(\w+)\}/g,function(_,k){ return v[k]!=null ? v[k] : ""; });
+  s = s.replace(/\bde el Comish/g,"del Comish").replace(/\ba el Comish/g,"al Comish");
+  s = s.replace(/([.!?]\s+)el Comish/g,"$1El Comish");
+  if (s.indexOf("el Comish")===0) s = "E"+s.slice(1);
+  return s;
+}
+function who(name){ return name===COMISH ? "el Comish" : name; }
+
+// ---------------------------------------------------------------------------
+// Initials: first letter of the first two meaningful words, unique across the league
+// ---------------------------------------------------------------------------
+function wordsOf(name){
+  var s = String(name).replace(/[‘’`´]/g,"'").replace(/'(?=[A-Z])/g," ");
+  var out = [];
+  s.split(/[\s_\-]+/).forEach(function(tok){
+    if (!tok) return;
+    tok.replace(/([a-zà-ÿ])([A-Z])/g,"$1 $2").split(" ").forEach(function(w){
+      if (!w || SKIP[w.toLowerCase()]) return;
+      w = w.replace(/'s$/i,"");
+      if (w) out.push(w);
+    });
   });
-  players.sort(function(a,b){return b.total-a.total});
-  // Official rank (ties share the better rank)
+  return out;
+}
+T.initials = function(names){
+  var out = {}, used = {};
+  names.slice().sort(function(a,b){ return a<b?-1:a>b?1:0; }).forEach(function(n){
+    var w = wordsOf(n), letters = w.join("").replace(/[^A-Za-zÀ-ÿ]/g,"");
+    var base = w.length>=2 ? w[0].charAt(0)+w[1].charAt(0) : (w[0]||n).replace(/[^A-Za-zÀ-ÿ]/g,"").slice(0,2);
+    base = base.toUpperCase();
+    var cand = base, tries = [];
+    if (w.length>=1 && w[0].length>1) tries.push(w[0].charAt(1));
+    if (w.length>=2 && w[w.length-1].length>1) tries.push(w[w.length-1].charAt(1));
+    letters.split("").forEach(function(c){ tries.push(c); });
+    for (var i=0; used[cand] && i<tries.length; i++) cand = base+tries[i].toUpperCase();
+    var k = 2;
+    while (used[cand]) { cand = base+k; k++; }
+    used[cand] = 1; out[n] = cand;
+  });
+  return out;
+};
+
+// ---------------------------------------------------------------------------
+// Data: old files still load. Prizes come from data.json, with a fallback for the old schema.
+// ---------------------------------------------------------------------------
+T.normalize = function(D){
+  var d = {};
+  Object.keys(D).forEach(function(k){ d[k] = D[k]; });
+  d.weeks = d.weeks || 18;
+  d.prizes = d.prizes || {
+    regular: d.pays || [1050,350], survivor: [1050,350], playoffs: [700], weekly: d.weeklyPrize || 50, weeks: d.weeks
+  };
+  d.prizes.weeks = d.prizes.weeks || d.weeks;
+  var t = d.tribune || {};
+  d.tribune = {
+    portada: t.portada && t.portada.titulo ? t.portada : null,
+    columna: (t.columna||[]).filter(function(c){return c && c.texto}),
+    clasificados: (t.clasificados||[]).filter(function(c){return c && c.titulo && c.texto}),
+    datos: (t.datos||[]).filter(function(c){return c && c.titulo && c.texto})
+  };
+  d.strikes = d.strikes || {};
+  d.fans = d.fans || {};
+  d.survivorOut = d.survivorOut || [];
+  return d;
+};
+
+// The same league as it stood after week k. Strikes after k are approximated: whoever went out later has 2.
+T.truncate = function(D, k){
+  var d = {};
+  Object.keys(D).forEach(function(x){ d[x] = D[x]; });
+  d.week = k;
+  d.pickem = D.pickem.map(function(p){
+    var w = p.weeks.slice(0,k), s = sum(w), drop = k>1 ? min(w) : 0;
+    return {name:p.name, weeks:w, total:s-drop, dropped:drop};
+  });
+  d.survivorOut = (D.survivorOut||[]).filter(function(o){ return o.week==null || o.week<=k; });
+  var later = {};
+  (D.survivorOut||[]).forEach(function(o){ if (o.week!=null && o.week>k) later[normName(o.name)] = 1; });
+  d.strikes = {};
+  Object.keys(D.strikes||{}).forEach(function(n){ d.strikes[n] = later[normName(n)] ? 2 : D.strikes[n]; });
+  return d;
+};
+
+// ---------------------------------------------------------------------------
+// The model: ranks, weekly winners, prizes, fan bases
+// ---------------------------------------------------------------------------
+function placeGroups(list, score){
+  var groups = [], pos = 1;
+  list.forEach(function(x){
+    var g = groups[groups.length-1];
+    if (g && g.score===score(x)) g.items.push(x);
+    else groups.push({score:score(x), items:[x], start:0});
+  });
+  groups.forEach(function(g){ g.start = pos; pos += g.items.length; });
+  return groups;
+}
+// Golf rule: tied players share the prizes of the places they occupy.
+function splitGroups(groups, amounts){
+  groups.forEach(function(g){
+    var s = 0;
+    for (var i=0;i<g.items.length;i++){ var a = amounts[g.start-1+i]; if (a) s += a; }
+    g.per = s/g.items.length;
+  });
+  return groups;
+}
+
+T.model = function(D){
+  D = T.normalize(D);
+  var N = D.week, WK = D.weeks, PR = D.prizes;
+  var players = D.pickem.map(function(p,i){
+    var w = p.weeks.slice(0,N), s = sum(w);
+    var drop = typeof p.dropped==="number" ? p.dropped : (N>1 ? min(w) : 0);
+    var total = typeof p.total==="number" ? p.total : s-drop;
+    return {name:p.name, w:w, sum:s, drop:drop, total:total, i:i};
+  });
+  players.sort(function(a,b){ return b.total-a.total || a.i-b.i; });
+  var byName = {};
+  players.forEach(function(p){ byName[p.name] = p; });
+  var tot = {}; players.forEach(function(p){ tot[p.total] = (tot[p.total]||0)+1; });
   players.forEach(function(p){
     p.rank = 1 + players.filter(function(q){return q.total>p.total}).length;
-    p.tied = players.filter(function(q){return q.total===p.total}).length>1;
+    p.tied = tot[p.total]>1;
   });
-  // Weekly ranks and winners
-  var weekly = [];
-  for (var k=0;k<WEEK;k++){
-    var scores = players.map(function(p){return p.w[k]});
-    var sorted = scores.slice().sort(function(a,b){return b-a});
-    var avg = scores.reduce(function(a,b){return a+b},0)/N;
-    players.forEach(function(p){ p.wr = p.wr||[]; p.wr[k] = 1 + scores.filter(function(s){return s>p.w[k]}).length; });
-    var winners = players.filter(function(p){return p.w[k]===sorted[0]});
-    var second = sorted.find(function(s){return s<sorted[0]});
-    weekly.push({k:k, avg:avg, max:sorted[0], min:sorted[N-1], second:second, winners:winners});
-  }
-  players.forEach(function(p){
-    p.won = weekly.filter(function(w){return w.winners.indexOf(p)>=0}).map(function(w){return w.k+1});
-    p.best = Math.max.apply(null,p.w); p.bestIdx = p.w.indexOf(p.best);
-  });
-  var leader = players[0];
-  var byName = {}; players.forEach(function(p){byName[p.name]=p});
+  var M = {D:D, N:N, WK:WK, PR:PR, players:players, byName:byName, ids:T.initials(players.map(function(p){return p.name}))};
 
-  function el(tag,cls,html){var e=document.createElement(tag); if(cls)e.className=cls; if(html!=null)e.innerHTML=html; return e;}
-  function esc(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
-  function ord(n){return n+"º"}
-
-  // ---------- Page text that depends on the week ----------
-  function plural(n,one,many){ return n===1 ? one : many; }
-  var left = SEASON_WEEKS-WEEK;
-  document.getElementById("t-h1").textContent = "Así va la quiniela. Semana "+WEEK+".";
-  document.getElementById("t-lede").textContent = N+" jugadores, "+WEEK+" "+plural(WEEK,"semana jugada","semanas jugadas")+", "+(left>0 ? left+" por jugar." : "temporada regular terminada.")+" Tu peor semana no cuenta para el acumulado. Búscate abajo y te digo dónde estás parado.";
-  document.getElementById("t-surv").textContent = "Conteo del Comish al cierre de la semana "+WEEK+".";
-  document.getElementById("t-drop").textContent = WEEK>1 ? "Hoy, con "+WEEK+" jugadas, se cae la más baja de esas "+WEEK+"." : "Con una sola semana jugada todavía no se cae nada.";
-  var paid = weekly.length*PRIZE;
-  document.getElementById("t-paid").textContent = "Van $"+paid.toLocaleString("en-US")+" repartidos de $"+(SEASON_WEEKS*PRIZE).toLocaleString("en-US")+".";
-  var upd = D.updated ? new Date(D.updated) : null;
-  document.getElementById("t-foot").textContent = "Datos de Yahoo al cierre de la semana "+WEEK+(upd && !isNaN(upd) ? ", actualizado el "+upd.toLocaleDateString("es-MX",{day:"numeric",month:"long"}) : "")+". Survivor según el control del Comish.";
-  document.title = "Fourth & Beers "+(D.season||"")+": semana "+WEEK;
-
-  // ---------- Standings ----------
-  var board = document.getElementById("board");
-  var maxRaw = Math.max.apply(null,players.map(function(p){return p.raw}));
-  var moneyCut = players.filter(function(p){return p.rank<=2}).length;
-  players.forEach(function(p,i){
-    var li = el("li","row"); li.dataset.name = p.name;
-    var gap = p.rank===1 ? "" : '<span class="gap">−'+(leader.total-p.total)+'</span>';
-    li.innerHTML = '<span class="rk num">'+p.rank+'</span><span class="nm">'+esc(p.name)+'</span><span class="tt num">'+p.total+gap+'</span>'+
-      '<div class="bar" aria-hidden="true"><span class="c" style="width:'+(p.total/maxRaw*100)+'%"></span><span class="d" style="width:'+(p.drop/maxRaw*100)+'%"></span></div>';
-    li.setAttribute("aria-label", p.rank+"º "+p.name+", "+p.total+" puntos, se cae una semana de "+p.drop);
-    board.appendChild(li);
-    if (i+1===moneyCut){
-      var m = el("li","money",'<span>Hasta aquí se cobra</span><span class="num">1º $'+PAYS[0].toLocaleString("en-US")+', 2º $'+PAYS[1]+'</span>');
-      board.appendChild(m);
-    }
-  });
-
-
-  // ---------- Bump chart: ups and downs ----------
-  var bumpMode = "acum", current = "";
-  function colFor(k){
+  // Rank of every player after k weeks, ties share the better rank. Week N is Yahoo's table.
+  var memo = {};
+  M.ranksAt = function(k){
+    if (memo[k]) return memo[k];
     var rows = players.map(function(p){
-      var w = p.w.slice(0,k+1), s = w.reduce(function(a,b){return a+b},0);
-      var pts = bumpMode==="acum" ? (k>=1 ? s-Math.min.apply(null,w) : s) : p.w[k];
-      return {p:p, pts:pts};
-    });
-    rows.sort(function(a,b){return b.pts-a.pts || players.indexOf(a.p)-players.indexOf(b.p)});
-    rows.forEach(function(r,i){ r.pos=i; r.rank=1+rows.filter(function(q){return q.pts>r.pts}).length; });
-    var byP = {}; rows.forEach(function(r){byP[r.p.name]=r});
-    return byP;
+      var w = p.w.slice(0,k), s = sum(w);
+      return {name:p.name, t: k===N ? p.total : s-(k>1 ? min(w) : 0)};
+    }), r = {};
+    rows.forEach(function(a){ r[a.name] = 1 + rows.filter(function(b){return b.t>a.t}).length; });
+    return memo[k] = r;
+  };
+
+  // Weekly winners and averages
+  M.weekly = [];
+  for (var k=0;k<N;k++){
+    var scores = players.map(function(p){return p.w[k]});
+    var top = max(scores);
+    M.weekly.push({k:k, max:top, avg:sum(scores)/players.length, winners:players.filter(function(p){return p.w[k]===top}).map(function(p){return p.name})});
   }
-  function drawBump(){
-    var cols=[]; for (var k=0;k<WEEK;k++) cols.push(colFor(k));
-    var rowH=21, top=30, left=30, labelW=170;
-    var colW = WEEK>1 ? Math.max(56, Math.min(110, 200/(WEEK-1))) : 0;
-    var plotW = colW*(WEEK-1), W = left+plotW+labelW, H = top+rowH*(N-1)+20;
-    function X(k){return left+10+k*colW}
-    function Y(pos){return top+pos*rowH}
-    // movers: change in position going into the latest week
-    var up=null, down=null;
-    if (WEEK>1){
-      players.forEach(function(p){
-        var d = cols[WEEK-2][p.name].pos - cols[WEEK-1][p.name].pos;
-        if (!up || d>up.d) up={p:p,d:d};
-        if (!down || d<down.d) down={p:p,d:d};
-      });
+
+  // Regular season money
+  var regAmounts = PR.regular || [];
+  M.regular = splitGroups(placeGroups(players, function(p){return p.total}), regAmounts);
+  M.inMoney = {};
+  M.regular.forEach(function(g){ if (g.per>0) g.items.forEach(function(p){ M.inMoney[p.name] = true; }); });
+
+  // Survivor
+  var strikeBy = {}; Object.keys(D.strikes).forEach(function(n){ strikeBy[normName(n)] = D.strikes[n]; });
+  M.strikeOf = function(name){ var v = strikeBy[normName(name)]; return typeof v==="number" ? v : null; };
+  M.hasStrikes = Object.keys(D.strikes).length>0;
+  M.alive = players.filter(function(p){ var s = M.strikeOf(p.name); return s!==null && s<3; });
+  var outs = D.survivorOut.map(function(o){ return {name:o.name, week:o.week==null ? null : o.week}; });
+  players.forEach(function(p){
+    if (M.strikeOf(p.name)>=3 && !outs.some(function(o){return normName(o.name)===normName(p.name)})) outs.push({name:p.name, week:null});
+  });
+  M.outs = outs;
+  M.survivorDecided = M.hasStrikes && M.alive.length<=1;
+  var finalists = M.alive.map(function(p){ return {name:p.name, key:1e9}; }).concat(outs.map(function(o){ return {name:o.name, key:o.week==null ? -1 : o.week}; }));
+  finalists.sort(function(a,b){ return b.key-a.key; });
+  M.survivorFinal = splitGroups(placeGroups(finalists, function(x){return x.key}), PR.survivor || []);
+
+  // Fan bases
+  var fanBy = {}; Object.keys(D.fans).forEach(function(n){ fanBy[normName(n)] = D.fans[n]; });
+  M.hasFans = Object.keys(D.fans).length>0;
+  var groups = {};
+  players.forEach(function(p){
+    var f = fanBy[normName(p.name)] || null;
+    var key = !f ? "suiza" : f.random ? "azar" : f.nfl ? f.nfl : f.ncaa ? "ncaa" : "suiza";
+    p.group = key;
+    var g = groups[key] || (groups[key] = {key:key, members:[], money:0});
+    g.members.push(p);
+  });
+  M.groups = Object.keys(groups).map(function(k){ var g = groups[k]; g.n = g.members.length; g.label = T.groupLabel(g.key); g.city = T.groupCity(g.key); return g; });
+
+  // Money already paid, per player: weekly $50s, plus the final prizes once they are decided.
+  var paid = {}; players.forEach(function(p){ paid[p.name] = 0; });
+  M.weekly.forEach(function(w){ w.winners.forEach(function(n){ paid[n] += PR.weekly/w.winners.length; }); });
+  if (N>=WK) M.regular.forEach(function(g){ g.items.forEach(function(p){ paid[p.name] += g.per; }); });
+  if (M.survivorDecided) M.survivorFinal.forEach(function(g){ g.items.forEach(function(x){ if (paid[x.name]!=null) paid[x.name] += g.per; }); });
+  M.paid = paid;
+  M.groups.forEach(function(g){ g.money = sum(g.members.map(function(p){return paid[p.name]})); });
+  return M;
+};
+
+T.groupLabel = function(key){
+  return key==="suiza" ? "Suiza" : key==="azar" ? "Video Juegos" : key==="ncaa" ? "College" : (NFL[key]||key);
+};
+T.groupCity = function(key){
+  return key==="suiza" ? "Suiza" : key==="azar" ? "Video Juegos" : key==="ncaa" ? "College" : (CITY[key]||NFL[key]||key);
+};
+
+// ---------------------------------------------------------------------------
+// Fact engine. Deterministic rules, no model calls. Each rule returns one fact or nothing.
+// A fact is {rule, valor, titulo, texto, score, num, data}.
+// ---------------------------------------------------------------------------
+var TPL = {
+  reboteRecord: ["{n} hizo {a} en la semana {p} y {b} en la {c}. Nadie ha rebotado tanto."],
+  reboteUp: [
+    "{n} pasó de {a} a {b} en una semana. Los picks anteriores quedaron en la banca.",
+    "{n} subió {d} puntos de una semana a otra. Alguien por fin leyó el reporte de lesionados.",
+    "De {a} a {b}. Los picks de la semana {p} fueron un experimento."
+  ],
+  caidaRecord: ["{n} cayó de {a} a {b} en una semana. Nadie había caído tanto."],
+  caida: [
+    "{n} cayó de {a} a {b} en una semana. Los picks de la semana {c} no pasaron el filtro.",
+    "{n} bajó {d} puntos de golpe. Esos picks se escogieron con muchas ganas y poca información.",
+    "De {a} a {b}. Los picks de {n} se tomaron la semana libre."
+  ],
+  arriba1: [
+    "{n} le ha ganado al promedio de la liga las {N} semanas. Los demás lo hacen por turnos.",
+    "Solo {n} ha estado arriba del promedio todas las semanas. Que alguien lo anote."
+  ],
+  arriba2: [
+    "{n} han estado arriba del promedio las {N} semanas. Los demás, de visita.",
+    "Solo {n} le han ganado al promedio cada semana. El resto, cuando se acuerda."
+  ],
+  fotocopia: [
+    "{names}: {t} cada uno. Mismos puntos, distintas excusas.",
+    "{tie} en {t}. {names} llegaron al mismo lugar por caminos distintos."
+  ],
+  disco: [
+    "{n} sacó {s} puntos en {cw} semanas. Los picks cambian, el resultado no.",
+    "{s} puntos, {cw} veces. {n} encontró una cifra y no la suelta."
+  ],
+  rachaUp: [
+    "{n}: {series}. Cada semana mejor que la anterior.",
+    "{n} sube desde la semana {w0}: {series}. Los picks por fin hacen caso."
+  ],
+  rachaDown: [
+    "{n}: {series}. Cada semana peor que la anterior.",
+    "{n} baja desde la semana {w0}: {series}. El piso todavía no aparece."
+  ],
+  recordBest: [
+    "{n} hizo {s} en la semana {c}, la mejor de la liga en todo el año.",
+    "{s} puntos de {n}. Ninguna semana de nadie había llegado tan lejos."
+  ],
+  recordWorst: [
+    "{n} hizo {s} en la semana {c}, la peor de la liga en todo el año.",
+    "{s} puntos de {n}. Esos picks descubrieron un piso nuevo."
+  ],
+  remontadaLider: [
+    "{n} era {from}º después de la semana 1. {streak} {coda}",
+    "{n} arrancó {from}º y hoy manda la tabla. {streak}"
+  ],
+  remontada: [
+    "{n} era {from}º después de la semana 1 y hoy es {to}º.{lead}",
+    "De {from}º a {to}º. {n} remontó {up} lugares desde la semana 1.{lead}"
+  ],
+  siempreUltimo: [
+    "{n} ha sido último las {N} semanas. Sus picks ya tienen domicilio fijo.",
+    "Último lugar {N} semanas seguidas. {n} no se mueve, y sus picks tampoco."
+  ],
+  siempreLider: [
+    "{n} ha liderado las {N} semanas. Lo único que cambia es la excusa de los demás.",
+    "Primer lugar {N} semanas seguidas. {n} no suelta el volante."
+  ],
+  peor: [
+    "La peor semana de {a} ({x}) le gana a la mejor de {b} ({y}).",
+    "{b} nunca pasó de {y}. {a} nunca bajó de {x}."
+  ],
+  survMuchos: [
+    "La semana {m} sacó a {cw} de Survivor de un jalón.",
+    "{cw} eliminados en la semana {m}. Survivor no avisa, solo cobra."
+  ],
+  survSemana1: ["{n} se despidió de Survivor esta semana. Quedan {alive} vivos."],
+  survSemanaN: ["{cw} se fueron de Survivor esta semana. Quedan {alive}."],
+  survSolo: [
+    "{n} es el único sin strikes en Survivor. Los demás ya conocen la derrota.",
+    "Un solo jugador sigue limpio en Survivor: {n}. Los demás ya tienen apuntes."
+  ],
+  aficionesCero: [
+    "Hay {sum} fans de {bases}. Ninguno cobra hoy. Los que cobran le van a {money}.",
+    "De {sum} fans de {bases}, ninguno cobra. La lana es de {money}."
+  ],
+  aficionesPocos: ["Los dos lugares con premio son de fans de {money}. Poca porra, mucho pick."],
+  aficionesSeco: ["Los {n} fans de {team} suman $0 en premios. La afición más grande y la más seca."],
+  portadaClimb1: [
+    "{n} sube {up} {lugares} en una semana. {coda}"
+  ],
+  portadaClimbN: [
+    "{names} suben {up} {lugares} cada uno en una semana. {coda}"
+  ],
+  portadaCodas: ["Nadie pidió explicaciones.", "Fue trámite, no trampa.", "El elevador funciona."],
+  portadaStart: ["{n} abre con {pts} puntos. Quedan {left} semanas para que nadie lo recuerde."],
+  portadaQuiet: ["Nadie subió lo suficiente para ser noticia. {n} sigue arriba con {pts}."]
+};
+T.TPL = TPL;
+
+// Week 5 shows the first line of every list, then they rotate week by week.
+function rot(M, list){ var len = list.length; return list[(((M.N-5)%len)+len)%len]; }
+
+function fact(rule, valor, titulo, texto, score, num, data){
+  return {rule:rule, valor:valor, titulo:titulo, texto:texto, score:score, num:!!num, data:data||{}};
+}
+
+function fRebote(M){
+  if (M.N<2) return null;
+  var best = null, earlier = 0;
+  M.players.forEach(function(p){
+    for (var k=1;k<M.N;k++){
+      if (!p.w[k] || !p.w[k-1]) continue;
+      var d = p.w[k]-p.w[k-1];
+      if (k===M.N-1){ if (!best || Math.abs(d)>Math.abs(best.d)) best = {p:p, d:d, a:p.w[k-1], b:p.w[k]}; }
+      else earlier = Math.max(earlier, Math.abs(d));
     }
-    var svg = '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="width:'+(W<=460?'100%':W+'px')+'" role="img" aria-label="Lugar de cada jugador semana por semana">';
-    for (var k=0;k<WEEK;k++){
-      svg+='<text x="'+X(k)+'" y="16" text-anchor="middle" fill="'+C.muted+'" font-size="11" font-family="Public Sans, sans-serif">Sem '+(k+1)+'</text>';
-      svg+='<line x1="'+X(k)+'" x2="'+X(k)+'" y1="'+(top-8)+'" y2="'+(H-10)+'" stroke="'+C.line+'" stroke-width="1"/>';
-    }
-    for (var i=0;i<N;i++) svg+='<text x="'+(left-6)+'" y="'+(Y(i)+4)+'" text-anchor="end" fill="'+C.faint+'" font-size="10" font-family="Public Sans, sans-serif">'+(i+1)+'</text>';
-    // money zone after latest week
-    svg+='<line x1="'+(left)+'" x2="'+(W-6)+'" y1="'+(Y(1)+rowH/2)+'" y2="'+(Y(1)+rowH/2)+'" stroke="'+C.accentSoft+'" stroke-width="1.5" stroke-dasharray="4 4"/>';
-    players.forEach(function(p){
-      var d='', dots='';
-      for (var k=0;k<WEEK;k++){
-        var x0=X(k), y0=Y(cols[k][p.name].pos);
-        if (k===0) d+='M'+x0+' '+y0;
-        else { var xp=X(k-1), yp=Y(cols[k-1][p.name].pos), m=(x0-xp)/2; d+=' C'+(xp+m)+' '+yp+' '+(x0-m)+' '+y0+' '+x0+' '+y0; }
-        dots+='<circle cx="'+x0+'" cy="'+y0+'" r="3.5"><title>'+esc(p.name)+', semana '+(k+1)+': '+ord(cols[k][p.name].rank)+' ('+cols[k][p.name].pts+' pts)</title></circle>';
+  });
+  if (!best || Math.abs(best.d)<20) return null;
+  var record = Math.abs(best.d)>earlier, up = best.d>0;
+  var tpl = up ? (record ? TPL.reboteRecord : TPL.reboteUp) : (record ? TPL.caidaRecord : TPL.caida);
+  var v = {n:who(best.p.name), a:best.a, b:best.b, d:Math.abs(best.d), p:M.N-1, c:M.N};
+  return fact("rebote", (up?"+":"−")+Math.abs(best.d), up?"Rebote":"Caída", fill(rot(M,tpl),v), Math.min(100,40+Math.abs(best.d)), true,
+    {name:best.p.name, delta:best.d, from:best.a, to:best.b, record:record});
+}
+
+function fArriba(M){
+  if (M.N<3) return null;
+  var list = M.players.filter(function(p){ return M.weekly.every(function(w,k){ return p.w[k]>w.avg; }); });
+  if (list.length<1 || list.length>2) return null;
+  var names = list.map(function(p){return p.name});
+  var v = {n:J(names.map(who)), N:M.N};
+  return fact("arriba", M.N+"/"+M.N, "Arriba del promedio", fill(rot(M, list.length===1 ? TPL.arriba1 : TPL.arriba2), v), 62, false, {names:names, weeks:M.N});
+}
+
+function fFotocopia(M){
+  var by = {};
+  M.players.forEach(function(p){ (by[p.total] = by[p.total]||[]).push(p.name); });
+  var best = null;
+  Object.keys(by).forEach(function(t){
+    var l = by[t]; t = Number(t);
+    if (l.length>=3 && (!best || l.length>best.l.length || (l.length===best.l.length && t>best.t))) best = {l:l, t:t};
+  });
+  if (!best) return null;
+  var k = best.l.length;
+  var v = {names: k<=4 ? J(best.l) : k+" jugadores", t:best.t, tie: k===3 ? "Empate triple" : "Empate de "+nw(k)};
+  return fact("fotocopia", "×"+k, "Fotocopia", fill(rot(M,TPL.fotocopia),v), 76, true, {names:best.l, total:best.t});
+}
+
+function fDisco(M){
+  var best = null;
+  M.players.forEach(function(p){
+    var c = {};
+    p.w.forEach(function(s){ if (s>0) c[s] = (c[s]||0)+1; });
+    Object.keys(c).forEach(function(s){ if (c[s]>=3 && (!best || c[s]>best.c)) best = {p:p, s:Number(s), c:c[s]}; });
+  });
+  if (!best) return null;
+  return fact("disco", "×"+best.c, "Disco rayado", fill(rot(M,TPL.disco),{n:who(best.p.name), s:best.s, cw:nw(best.c)}), 60, true, {name:best.p.name, score:best.s, times:best.c});
+}
+
+function fRacha(M){
+  var best = null;
+  M.players.forEach(function(p){
+    [1,-1].forEach(function(dir){
+      var k = M.N-1, L = 0;
+      while (k>=1 && p.w[k] && p.w[k-1] && (p.w[k]-p.w[k-1])*dir>0){ L++; k--; }
+      if (L>=3){
+        var gain = p.w[M.N-1]-p.w[M.N-1-L];
+        if (!best || L>best.L || (L===best.L && Math.abs(gain)>Math.abs(best.gain))) best = {p:p, L:L, gain:gain, dir:dir, from:M.N-1-L};
       }
-      var last = cols[WEEK-1][p.name];
-      var cls = 'bl'+(up&&up.p===p&&up.d>0?' up':'')+(down&&down.p===p&&down.d<0?' down':'');
-      if (WEEK===1) d+=' h0.01';
-      svg+='<g class="'+cls+'" data-name="'+esc(p.name)+'"><path class="hit" d="'+d+'"/><path class="ln" d="'+d+'"/>'+dots+
-           '<text x="'+(X(WEEK-1)+10)+'" y="'+(Y(last.pos)+4)+'">'+last.rank+'  '+esc(p.name)+'</text></g>';
     });
-    svg+='</svg>';
-    var box = document.getElementById("bumpbox");
+  });
+  if (!best) return null;
+  var series = J(best.p.w.slice(best.from, M.N).map(String));
+  var up = best.dir>0;
+  var v = {n:who(best.p.name), series:series, w0:best.from+1};
+  return fact("racha", (up?"+":"−")+Math.abs(best.gain), (best.L+1)+(up?" semanas en ascenso":" semanas en descenso"),
+    fill(rot(M, up?TPL.rachaUp:TPL.rachaDown), v), Math.min(94,84+(best.L-3)*2), true,
+    {name:best.p.name, streak:best.L, weeks:best.p.w.slice(best.from, M.N), gain:best.gain, dir:best.dir});
+}
+
+function fRecord(M){
+  if (M.N<2) return null;
+  var cur = M.weekly[M.N-1], earlier = [];
+  M.players.forEach(function(p){ p.w.slice(0,M.N-1).forEach(function(s){ if (s>0) earlier.push(s); }); });
+  var lows = M.players.filter(function(p){return p.w[M.N-1]>0}).map(function(p){return p.w[M.N-1]});
+  var low = lows.length ? min(lows) : null;
+  if (cur.max>max(earlier)){
+    var w = cur.winners[0];
+    return fact("record", String(cur.max), "Récord de la temporada", fill(rot(M,TPL.recordBest),{n:who(w), s:cur.max, c:M.N}), 58, true, {name:w, score:cur.max, kind:"best"});
+  }
+  if (low!==null && low<min(earlier)){
+    var l = M.players.filter(function(p){return p.w[M.N-1]===low})[0];
+    return fact("record", String(low), "Piso nuevo", fill(rot(M,TPL.recordWorst),{n:who(l.name), s:low, c:M.N}), 58, true, {name:l.name, score:low, kind:"worst"});
+  }
+  return null;
+}
+
+function leaderStreak(M, name){
+  var k = M.N, s = 0;
+  while (k>=1 && M.ranksAt(k)[name]===1){ s++; k--; }
+  return s;
+}
+
+function fRemontada(M){
+  if (M.N<3) return null;
+  var r1 = M.ranksAt(1), rN = M.ranksAt(M.N), best = null;
+  M.players.forEach(function(p){
+    var up = r1[p.name]-rN[p.name];
+    if (up>=5 && (!best || up>best.up)) best = {p:p, up:up, from:r1[p.name], to:rN[p.name]};
+  });
+  if (!best) return null;
+  var leader = M.players[0].name, st = leaderStreak(M, leader);
+  var isLeader = best.p.name===leader && best.to===1;
+  var text;
+  if (isLeader){
+    var streak = st>=2 ? "Lleva "+nw(st)+" semanas de líder." : "Es líder desde esta semana.";
+    text = fill(rot(M,TPL.remontadaLider), {n:who(best.p.name), from:best.from, streak:streak, coda: best.p.name===COMISH ? "Nadie lo vio venir, ni él." : "Nadie lo vio venir."});
+  } else {
+    var lead = st>=3 ? " "+fill("{l} lleva "+nw(st)+" semanas arriba.",{l:who(leader)}) : "";
+    text = fill(rot(M,TPL.remontada), {n:who(best.p.name), from:best.from, to:best.to, up:best.up, lead:lead});
+  }
+  return fact("remontada", ord(best.from)+"→"+ord(best.to), "Remontada", text, 82, false,
+    {name:best.p.name, from:best.from, to:best.to, leader:leader, streak:st});
+}
+
+function fSiempre(M){
+  if (M.N<3) return null;
+  var hit = null;
+  M.players.forEach(function(p){
+    if (hit) return;
+    var first = true, last = true;
+    for (var k=1;k<=M.N;k++){
+      var r = M.ranksAt(k), worst = max(M.players.map(function(q){return r[q.name]}));
+      if (r[p.name]!==1) first = false;
+      if (r[p.name]!==worst || worst===1) last = false;
+    }
+    if (first) hit = {p:p, kind:"first"};
+    else if (last) hit = {p:p, kind:"last"};
+  });
+  if (!hit) return null;
+  return fact("siempre", M.N+"/"+M.N, "Siempre ahí", fill(rot(M, hit.kind==="last"?TPL.siempreUltimo:TPL.siempreLider), {n:who(hit.p.name), N:M.N}), 55, false, {name:hit.p.name, kind:hit.kind, weeks:M.N});
+}
+
+function fPeor(M){
+  if (M.N<2) return null;
+  var a = null, b = null;
+  M.players.forEach(function(p){
+    if (!a || min(p.w)>min(a.w)) a = p;
+    if (!b || max(p.w)<max(b.w)) b = p;
+  });
+  if (a===b) return null;
+  var m = min(a.w)-max(b.w);
+  if (m<5) return null;
+  return fact("peor", "+"+m, "Peor que tu mejor", fill(rot(M,TPL.peor), {a:who(a.name), b:who(b.name), x:min(a.w), y:max(b.w)}), 50, true, {worst:a.name, best:b.name, margin:m});
+}
+
+function fSurvivor(M){
+  if (!M.hasStrikes) return null;
+  var byWeek = {};
+  M.outs.forEach(function(o){ if (o.week!=null) (byWeek[o.week] = byWeek[o.week]||[]).push(o.name); });
+  var many = null;
+  Object.keys(byWeek).forEach(function(w){ var c = byWeek[w].length; if (c>=3 && (!many || c>=many.c)) many = {w:Number(w), c:c}; });
+  var thisWeek = byWeek[M.N] || [];
+  var clean = M.players.filter(function(p){return M.strikeOf(p.name)===0});
+  var alive = M.alive.length;
+  if (many) return fact("survivor", String(many.c), "Survivor", fill(rot(M,TPL.survMuchos), {m:many.w, cw:nw(many.c)}), 72, true, {sub:"many", week:many.w, count:many.c});
+  if (thisWeek.length>=2) return fact("survivor", String(thisWeek.length), "Survivor", fill(rot(M,TPL.survSemanaN), {cw:nw(thisWeek.length).replace(/^./,function(c){return c.toUpperCase()}), alive:alive}), 70, true, {sub:"week", week:M.N, count:thisWeek.length});
+  if (thisWeek.length===1) return fact("survivor", "1", "Survivor", fill(rot(M,TPL.survSemana1), {n:who(thisWeek[0]), alive:alive}), 60, true, {sub:"week", week:M.N, count:1});
+  if (clean.length===1) return fact("survivor", "0", "Survivor", fill(rot(M,TPL.survSolo), {n:who(clean[0].name)}), 58, true, {sub:"clean", name:clean[0].name});
+  return null;
+}
+
+function fAficiones(M){
+  if (!M.hasFans) return null;
+  var moneyNames = Object.keys(M.inMoney);
+  if (!moneyNames.length) return null;
+  var moneyGroups = uniq(moneyNames.map(function(n){return M.byName[n].group}));
+  var team = M.groups.filter(function(g){ return NFL[g.key]; });
+  var dry = team.filter(function(g){ return g.n>=3 && !g.members.some(function(p){return M.inMoney[p.name]}); });
+  if (dry.length){
+    var total = sum(dry.map(function(g){return g.n}));
+    var v = {sum:total, bases:J(dry.map(function(g){return g.city})), money:J(moneyGroups.map(function(k){return T.groupCity(k)}))};
+    return fact("aficiones", "0/"+total, "Aficiones", fill(rot(M,TPL.aficionesCero),v), 86, false,
+      {inMoney:0, total:total, bases:dry.map(function(g){return g.key}), money:moneyGroups});
+  }
+  var fewAll = moneyNames.length===2 && moneyNames.every(function(n){ var g = M.groups.filter(function(x){return x.key===M.byName[n].group})[0]; return g.n<=2; });
+  if (fewAll) return fact("aficiones", "2/2", "Aficiones", fill(rot(M,TPL.aficionesPocos),{money:J(moneyGroups.map(function(k){return T.groupCity(k)}))}), 70, false, {money:moneyGroups});
+  var dryBig = M.groups.filter(function(g){return g.money===0 && g.n>=3 && NFL[g.key]}).sort(function(a,b){return b.n-a.n})[0];
+  if (dryBig) return fact("aficiones", "$0", "Aficiones", fill(rot(M,TPL.aficionesSeco),{n:dryBig.n, team:dryBig.city}), 55, false, {team:dryBig.key, n:dryBig.n});
+  return null;
+}
+
+var RULES = [fRebote,fArriba,fFotocopia,fDisco,fRacha,fRecord,fRemontada,fSiempre,fPeor,fSurvivor,fAficiones];
+T.facts = function(M){
+  var out = [];
+  RULES.forEach(function(f){ var r = f(M); if (r) out.push(r); });
+  return out;
+};
+
+// The 6 best facts. A rule that ran last week goes to the back of the line when another candidate exists.
+// The highest-scoring numeric one is La cifra de la semana.
+T.pickFacts = function(M, prevRules){
+  var all = T.facts(M).sort(function(a,b){ return b.score-a.score; });
+  var prev = prevRules || [];
+  var fresh = all.filter(function(f){return prev.indexOf(f.rule)<0}), stale = all.filter(function(f){return prev.indexOf(f.rule)>=0});
+  var picks = fresh.concat(stale).slice(0,6).sort(function(a,b){ return b.score-a.score; });
+  var cifra = null;
+  picks.forEach(function(f){ if (f.num && !cifra) cifra = f; });
+  return {picks:picks, cifra:cifra, list:picks.filter(function(f){return f!==cifra}), all:all};
+};
+
+// What last week's edition ran, found by running the same engine on last week's league.
+T.prevRules = function(M){
+  if (M.N<2) return [];
+  var P = T.model(T.truncate(M.D, M.N-1));
+  return T.pickFacts(P, []).picks.map(function(f){return f.rule});
+};
+
+// ---------------------------------------------------------------------------
+// Portada: the Tribune row, or the biggest climber of the week
+// ---------------------------------------------------------------------------
+T.portada = function(M){
+  var row = M.D.tribune.portada;
+  if (row) return {titulo:row.titulo, texto:row.texto||"", fromSheet:true};
+  var leader = M.players[0];
+  if (M.N>=2){
+    var before = M.ranksAt(M.N-1), now = M.ranksAt(M.N), top = 0;
+    M.players.forEach(function(p){ top = Math.max(top, before[p.name]-now[p.name]); });
+    if (top>0){
+      var ups = M.players.filter(function(p){return before[p.name]-now[p.name]===top}).map(function(p){return who(p.name)});
+      var coda = rot(M, TPL.portadaCodas);
+      var v = {n:ups[0], names:J(ups), up:nw(top), lugares:plural(top,"lugar","lugares"), coda:coda};
+      var t = fill(ups.length===1 ? TPL.portadaClimb1[0] : TPL.portadaClimbN[0], v);
+      if (ups.length===1 && top===1) t = t.replace("sube uno lugar","sube un lugar");
+      return {titulo:"Del sótano a la azotea", texto:t, fromSheet:false, data:{names:ups, up:top}};
+    }
+    return {titulo:"Semana sin sobresaltos", texto:fill(TPL.portadaQuiet[0],{n:who(leader.name), pts:leader.total}), fromSheet:false};
+  }
+  return {titulo:"Arranca la temporada", texto:fill(TPL.portadaStart[0],{n:who(leader.name), pts:leader.total, left:nw(M.WK-M.N)}), fromSheet:false};
+};
+
+T.byline = function(M){
+  var base = "Por el Comish";
+  var c = M.byName[COMISH];
+  if (!c) return base;
+  var worst = max(M.players.map(function(p){return p.rank}));
+  if (c.rank===1){
+    var prevLead = M.N>1 && M.ranksAt(M.N-1)[COMISH]===1;
+    return base+", que "+(prevLead ? "sigue líder" : "ya es líder")+" y no piensa disculparse";
+  }
+  if (c.rank===worst && worst>1) return base+", que va en el sótano y lo reporta él mismo";
+  return base;
+};
+
+// ---------------------------------------------------------------------------
+// Prize cards: text computed from the model
+// ---------------------------------------------------------------------------
+T.weeksLeft = function(M){
+  var l = M.WK-M.N;
+  return l<=0 ? "Temporada regular terminada." : l===1 ? "Falta 1 semana." : "Faltan "+l+" semanas.";
+};
+
+// Who is closest to the money and how far. null when everybody is paid or nobody is out.
+T.closest = function(M){
+  var out = M.regular.filter(function(g){return !(g.per>0)});
+  if (!out.length) return null;
+  var paidGroups = M.regular.filter(function(g){return g.per>0}), lastPaid = paidGroups[paidGroups.length-1];
+  var g = out[0];
+  return {names:g.items.map(function(p){return p.name}), gap:lastPaid.score-g.score};
+};
+
+T.lastPlace = function(M){
+  var worst = M.regular[M.regular.length-1];
+  var names = worst.items.map(function(p){return p.name});
+  var above = M.regular[M.regular.length-2] || null;
+  var weeksLast = 0;
+  if (names.length===1){
+    for (var k=1;k<=M.N;k++){ var r = M.ranksAt(k), w = max(M.players.map(function(q){return r[q.name]})); if (r[names[0]]===w) weeksLast++; }
+  }
+  return {names:names, total:worst.score, gap: above ? above.score-worst.score : 0, aboveRank: above ? above.start : null, weeksLast:weeksLast};
+};
+
+T.firstOut = function(M){
+  if (!M.outs.length) return null;
+  var known = M.outs.filter(function(o){return o.week!=null});
+  var wk = known.length ? min(known.map(function(o){return o.week})) : null;
+  var first = wk!=null ? known.filter(function(o){return o.week===wk}) : M.outs;
+  return {names:first.map(function(o){return o.name}), week:wk};
+};
+
+T.fanRows = function(M){
+  var rows = M.groups.slice().sort(function(a,b){ return b.money-a.money || b.n-a.n; });
+  var top = max(rows.map(function(g){return g.money}).concat([0]));
+  rows.forEach(function(g){ g.pct = top>0 ? g.money/top*100 : 0; });
+  return rows;
+};
+
+T.fanNote = function(M){
+  var dry = M.groups.filter(function(g){return g.money===0});
+  if (!dry.length) return "Todas las aficiones ya cobraron algo.";
+  dry.sort(function(a,b){return b.n-a.n});
+  var g = dry[0];
+  var name = g.city;
+  return g.n===1 ? "El único de "+name+" todavía no ve un peso." : "Los "+g.n+" de "+name+" todavía no ven un peso.";
+};
+
+// ---------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------
+function logoHtml(key, big){
+  var label = key==="azar" ? "Video Juegos" : key==="ncaa" ? "Solo college" : key==="suiza" ? "Suiza, sin equipo" : (NFL[key]||key);
+  var src = key==="azar" ? C9 : NFL[key] ? "https://a.espncdn.com/i/teamlogos/nfl/500/"+(key==="WAS" ? "wsh" : key.toLowerCase())+".png" : "";
+  if (!src) return '<span class="lg em" role="img" aria-label="'+esc(label)+'">'+(key==="ncaa" ? "🎓" : "🏳️")+'</span>';
+  return '<img class="lg" src="'+src+'" alt="'+esc(label)+'" loading="lazy">';
+}
+
+function render(D, opts){
+  opts = opts || {};
+  var M = T.model(D);
+  D = M.D;
+  var N = M.N, WK = M.WK, PR = M.PR;
+  var $ = function(id){ return document.getElementById(id); };
+  function el(tag,cls,html){ var e = document.createElement(tag); if (cls) e.className = cls; if (html!=null) e.innerHTML = html; return e; }
+
+  // ---- Head: dateline, banner
+  var upd = D.updated ? new Date(D.updated) : null;
+  var dateTxt = "";
+  try { dateTxt = upd && !isNaN(upd) ? upd.toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric",timeZone:TZ}) : ""; } catch(e){ dateTxt = ""; }
+  $("dateline").innerHTML = "<span>Edición "+N+"</span><span>"+esc(dateTxt)+"</span><span>Una chela</span>";
+  document.title = "Fourth and Beers Tribune";
+  if (opts.ed){
+    var b = $("banner");
+    b.className = "banner";
+    b.innerHTML = 'Edición '+N+', archivo · <a href="'+esc(location.pathname)+'">Volver a la edición actual</a>';
+    b.hidden = false;
+  }
+  $("yahoo").href = YAHOO_URL;
+
+  // ---- Portada
+  var pt = T.portada(M);
+  $("p-head").textContent = pt.titulo;
+  $("p-deck").textContent = pt.texto;
+  $("p-by").textContent = T.byline(M);
+
+  // ---- Columna
+  var col = D.tribune.columna;
+  if (col.length){
+    $("col").innerHTML = col.map(function(c){ return "<p>"+esc(c.texto)+"</p>"; }).join("")+'<div class="sig">El Comish</div>';
+    $("columna").hidden = false;
+  }
+
+  // ---- Clasificados
+  var ads = D.tribune.clasificados;
+  if (ads.length){
+    $("ads").innerHTML = ads.map(function(a){ return '<div class="ad"><b>'+esc(a.titulo)+'</b>'+esc(a.texto)+'</div>'; }).join("");
+    $("clasificados").hidden = false;
+  }
+
+  // ---- Datos
+  var pk = T.pickFacts(M, T.prevRules(M));
+  M.pk = pk;
+  if (pk.cifra){
+    $("cifra").innerHTML = '<div class="cifra"><div class="n">'+esc(pk.cifra.valor)+'</div><div><div class="k">La cifra de la semana</div><p>'+esc(pk.cifra.texto)+'</p></div></div>';
+  }
+  var items = D.tribune.datos.map(function(d){ return {v:"✱", titulo:d.titulo, texto:d.texto}; })
+    .concat(pk.list.map(function(f){ return {v:f.valor, titulo:f.titulo, texto:f.texto}; })).slice(0,6);
+  $("facts").innerHTML = items.map(function(f){
+    return '<div class="fact"><div class="v">'+esc(f.v)+'</div><div class="t"><b>'+esc(f.titulo)+'</b>'+esc(f.texto)+'</div></div>';
+  }).join("");
+
+  // ---- Premios
+  var P = [];
+  // Quiniela regular
+  var rows = M.regular.filter(function(g){return g.per>0}).map(function(g){
+    var names = g.items.map(function(p){return esc(p.name)});
+    var many = g.items.length>1;
+    return '<div class="pzr"><span class="r">'+ord(g.start)+'</span><span class="n">'+J(names)+', '+g.score+'</span><span class="m">'+money(g.per)+(many?' <small>c/u</small>':'')+'</span></div>';
+  }).join("");
+  var cl = T.closest(M), notes = [];
+  if (cl) notes.push(esc(J(cl.names.map(who)))+(cl.names.length>1?" están":" está")+" a "+cl.gap+" "+plural(cl.gap,"punto","puntos")+" del dinero.");
+  notes.push(T.weeksLeft(M));
+  P.push('<div class="box"><div class="h">Quiniela regular <span class="pill">'+(N>=WK?"final":"en juego")+'</span></div>'+rows+'<div class="note">'+notes.join(" ")+'</div></div>');
+
+  // Premio semanal
+  var tiles = "", seen = [], keyLine = [];
+  for (var k=0;k<PR.weeks;k++){
+    if (k<N){
+      var w = M.weekly[k], now = k===N-1 ? " now" : "";
+      w.winners.forEach(function(n){ if (seen.indexOf(n)<0){ seen.push(n); keyLine.push(esc(M.ids[n])+" "+esc(n)); } });
+      if (w.winners.length>1){
+        tiles += '<div class="g done tie'+now+'" aria-label="Semana '+(k+1)+': '+esc(w.winners.join(" y "))+'"><i class="a">'+esc(M.ids[w.winners[0]])+'</i><i class="b">'+esc(M.ids[w.winners[1]])+'</i><em>S'+(k+1)+'</em></div>';
+      } else {
+        var wn = w.winners[0], fk = M.byName[wn].group;
+        tiles += '<div class="g done'+now+'" aria-label="Semana '+(k+1)+': '+esc(wn)+'">'+logoHtml(fk)+'S'+(k+1)+'<b>'+esc(M.ids[wn])+'</b></div>';
+      }
+    } else tiles += '<div class="g next">S'+(k+1)+'<b>'+money(PR.weekly)+'</b></div>';
+  }
+  P.push('<div class="box"><div class="h">Premio semanal, '+money(PR.weekly)+' <span class="pill">'+N+' de '+PR.weeks+'</span></div><div class="grid18">'+tiles+'</div><div class="note plain">'+keyLine.join(" · ")+'</div></div>');
+
+  // Aficiones
+  if (M.hasFans){
+    var frows = T.fanRows(M).map(function(g){
+      return '<div class="row">'+logoHtml(g.key)+'<span class="cnt">×'+g.n+'</span><span class="tr"><i style="width:'+g.pct.toFixed(1)+'%"></i></span><span class="amt'+(g.money?'':' zero')+'">'+money(g.money)+'</span></div>';
+    }).join("");
+    P.push('<div class="box afi"><div class="h">La tabla de las aficiones</div>'+frows+'<div class="note">Premios ya cobrados, sumados por afición. '+esc(T.fanNote(M))+'</div></div>');
+  }
+
+  // Survivor
+  var sv = M.survivorDecided;
+  var lab1 = "El último en pie", lab2 = "El penúltimo", srows = "";
+  if (sv){
+    srows = M.survivorFinal.filter(function(g){return g.per>0}).map(function(g){
+      return '<div class="pzr"><span class="r">'+ord(g.start)+'</span><span class="n">'+J(g.items.map(function(x){return esc(x.name)}))+'</span><span class="m">'+money(g.per)+(g.items.length>1?' <small>c/u</small>':'')+'</span></div>';
+    }).join("");
+  } else {
+    srows = '<div class="pzr"><span class="r">1º</span><span class="n">'+lab1+'</span><span class="m">'+money((PR.survivor||[])[0]||0)+'</span></div>'+
+            '<div class="pzr"><span class="r">2º</span><span class="n">'+lab2+'</span><span class="m">'+money((PR.survivor||[])[1]||0)+'</span></div>';
+  }
+  var clean = M.players.filter(function(p){return M.strikeOf(p.name)===0}), sn;
+  if (sv) sn = "Terminó. El premio ya tiene dueño.";
+  else {
+    sn = "Dura hasta el Super Bowl.";
+    if (M.hasStrikes) sn += clean.length===0 ? " Nadie se salvó de los strikes." : clean.length===1 ? " "+esc(who(clean[0].name)).replace(/^./,function(c){return c.toUpperCase()})+" sigue sin strikes." : " "+clean.length+" siguen sin strikes.";
+  }
+  var pill = M.hasStrikes ? (sv ? "decidido" : M.alive.length+" "+plural(M.alive.length,"vivo","vivos")) : "";
+  P.push('<div class="box"><div class="h">Survivor '+(pill?'<span class="pill">'+pill+'</span>':'')+'</div>'+srows+'<div class="note">'+sn+'</div></div>');
+
+  // Playoffs. Hook: when data.json carries playoffs.pickem [{name, total}], the leader shows here.
+  var po = D.playoffs && D.playoffs.pickem && D.playoffs.pickem.length ? D.playoffs.pickem.slice().sort(function(a,b){return b.total-a.total})[0] : null;
+  if (po) P.push('<div class="box"><div class="h">Quiniela de playoffs <span class="pill">en juego</span></div><div class="pzr"><span class="r">1º</span><span class="n">'+esc(po.name)+', '+po.total+'</span><span class="m">'+money((PR.playoffs||[])[0]||0)+'</span></div><div class="note">Solo paga primer lugar.</div></div>');
+  else P.push('<div class="box"><div class="h">Quiniela de playoffs <span class="pill soon">en enero</span></div><div class="pzr"><span class="r">1º</span><span class="n">Todos empiezan en cero</span><span class="m">'+money((PR.playoffs||[])[0]||0)+'</span></div><div class="note">Solo paga primer lugar.</div></div>');
+
+  // Pizzas
+  var lp = T.lastPlace(M), pn;
+  if (lp.names.length===1){
+    pn = lp.total+" puntos"+(lp.gap ? ", a "+lp.gap+" del "+ord(lp.aboveRank) : "")+".";
+    if (M.N>1) pn += lp.weeksLast===M.N ? " Último las "+nw(M.N)+" semanas." : lp.weeksLast>1 ? " Último "+nw(lp.weeksLast)+" de las "+nw(M.N)+" semanas." : " Llegó al sótano esta semana.";
+  } else pn = lp.total+" puntos cada uno"+(lp.gap ? ", a "+lp.gap+" del "+ord(lp.aboveRank) : "")+". Empate: se dividen la cuenta.";
+  P.push('<div class="box pizza"><div class="h">'+(N>=WK?"Paga las pizzas":"Hoy pagaría las pizzas")+'</div><div class="big">'+esc(J(lp.names))+'</div><div class="note">'+esc(pn)+'</div></div>');
+
+  // Carne asada
+  var fo = T.firstOut(M), cn, cname;
+  if (fo){
+    cname = J(fo.names);
+    cn = (fo.names.length>1 ? "Primeros fuera de Survivor" : "Primero fuera de Survivor")+(fo.week ? ", semana "+fo.week : "")+". Ya es oficial."+(fo.names.length>1 ? " Empate: se dividen la cuenta." : "");
+  } else { cname = "Nadie, todavía"; cn = "El primero que caiga en Survivor organiza la carne asada."; }
+  P.push('<div class="box"><div class="h">Organiza la carne asada</div><div class="big">'+esc(cname)+'</div><div class="note">'+esc(cn)+'</div></div>');
+
+  $("prizes").innerHTML = P.join("");
+
+  // ---- Footer: earlier editions
+  var eds = (opts.weeks||[]).filter(function(w){return w!==N}).sort(function(a,b){return a-b});
+  if (eds.length){
+    $("eds").innerHTML = 'Ediciones anteriores: '+eds.map(function(w){ return '<a href="?ed='+w+'">'+w+'</a>'; }).join(" · ");
+    $("eds").hidden = false;
+  }
+
+  // ---- Name picker and panel
+  var sel = $("pick"), label = $("pick-label");
+  var current = "";
+  var alpha = M.players.slice().sort(function(a,b){ return a.name.localeCompare(b.name); });
+  alpha.forEach(function(p){ var o = document.createElement("option"); o.value = p.name; o.textContent = p.name; sel.appendChild(o); });
+  function setLabel(n){ label.innerHTML = n ? '¿Quién eres? <b>'+esc(n)+'</b>' : '¿Quién eres? <b>Escoge tu nombre</b>'; }
+
+  var bumpMode = "acum";
+  function colFor(k){
+    var rws = M.players.map(function(p){
+      var w = p.w.slice(0,k+1), s = sum(w);
+      return {p:p, pts: bumpMode==="acum" ? (k>=1 ? s-min(w) : s) : p.w[k]};
+    });
+    rws.sort(function(a,b){ return b.pts-a.pts || M.players.indexOf(a.p)-M.players.indexOf(b.p); });
+    rws.forEach(function(r,i){ r.pos = i; r.rank = 1+rws.filter(function(q){return q.pts>r.pts}).length; });
+    var by = {}; rws.forEach(function(r){ by[r.p.name] = r; });
+    return by;
+  }
+  var ROOT = getComputedStyle(document.documentElement);
+  function tok(n){ return ROOT.getPropertyValue("--"+n).trim(); }
+  function drawBump(){
+    var cols = []; for (var k=0;k<N;k++) cols.push(colFor(k));
+    var NP = M.players.length, rowH = 21, top = 30, left = 30, labelW = 170;
+    var colW = N>1 ? Math.max(56, Math.min(110, 200/(N-1))) : 0;
+    var W = left+colW*(N-1)+labelW, H = top+rowH*(NP-1)+20;
+    function X(k){ return left+10+k*colW; }
+    function Y(pos){ return top+pos*rowH; }
+    var up = null, down = null;
+    if (N>1) M.players.forEach(function(p){
+      var d = cols[N-2][p.name].pos-cols[N-1][p.name].pos;
+      if (!up || d>up.d) up = {p:p,d:d};
+      if (!down || d<down.d) down = {p:p,d:d};
+    });
+    var svg = '<svg viewBox="0 0 '+W+' '+H+'" width="'+W+'" style="width:'+(W<=460?'100%':W+'px')+'" role="img" aria-label="Lugar de cada jugador semana por semana">';
+    for (var k=0;k<N;k++){
+      svg += '<text x="'+X(k)+'" y="16" text-anchor="middle" fill="'+tok("muted")+'" font-size="11" font-family="Libre Franklin, sans-serif">Sem '+(k+1)+'</text>';
+      svg += '<line x1="'+X(k)+'" x2="'+X(k)+'" y1="'+(top-8)+'" y2="'+(H-10)+'" stroke="'+tok("hair")+'" stroke-width="1"/>';
+    }
+    for (var i=0;i<NP;i++) svg += '<text x="'+(left-6)+'" y="'+(Y(i)+4)+'" text-anchor="end" fill="'+tok("muted")+'" font-size="10" font-family="Libre Franklin, sans-serif">'+(i+1)+'</text>';
+    svg += '<line x1="'+left+'" x2="'+(W-6)+'" y1="'+(Y(1)+rowH/2)+'" y2="'+(Y(1)+rowH/2)+'" stroke="'+tok("red")+'" stroke-opacity=".5" stroke-width="1.5" stroke-dasharray="4 4"/>';
+    M.players.forEach(function(p){
+      var d = '', dots = '';
+      for (var k=0;k<N;k++){
+        var x0 = X(k), y0 = Y(cols[k][p.name].pos);
+        if (k===0) d += 'M'+x0+' '+y0;
+        else { var xp = X(k-1), yp = Y(cols[k-1][p.name].pos), m = (x0-xp)/2; d += ' C'+(xp+m)+' '+yp+' '+(x0-m)+' '+y0+' '+x0+' '+y0; }
+        dots += '<circle cx="'+x0+'" cy="'+y0+'" r="3.5"><title>'+esc(p.name)+', semana '+(k+1)+': '+ord(cols[k][p.name].rank)+' ('+cols[k][p.name].pts+' pts)</title></circle>';
+      }
+      var last = cols[N-1][p.name];
+      var cls = 'bl'+(up&&up.p===p&&up.d>0?' up':'')+(down&&down.p===p&&down.d<0?' down':'')+(p.name===current?' sel':'');
+      if (N===1) d += ' h0.01';
+      svg += '<g class="'+cls+'" data-name="'+esc(p.name)+'"><path class="hit" d="'+d+'"/><path class="ln" d="'+d+'"/>'+dots+
+        '<text x="'+(X(N-1)+10)+'" y="'+(Y(last.pos)+4)+'">'+last.rank+'  '+esc(p.name)+'</text></g>';
+    });
+    svg += '</svg>';
+    var box = $("bumpbox");
     box.innerHTML = svg;
+    var sg = box.querySelector(".bl.sel"); if (sg) sg.parentNode.appendChild(sg);
     box.querySelectorAll(".bl").forEach(function(g){
-      g.addEventListener("click", function(){ var n=g.dataset.name; if (sel){ sel.value=n; } choose(n,true); });
+      g.addEventListener("click", function(){ openSheet(g.dataset.name, false); });
     });
-    var mv = document.getElementById("movers");
+    var mv = $("movers");
+    mv.innerHTML = "";
     if (up && down){
-      mv.innerHTML = (up.d>0 ? '<div class="u">Subió más en la semana '+WEEK+': <b>'+esc(up.p.name)+'</b> +'+up.d+' lugares</div>' : '')+
-                     (down.d<0 ? '<div class="d">Bajó más: <b>'+esc(down.p.name)+'</b> −'+Math.abs(down.d)+' lugares</div>' : '');
+      mv.innerHTML = (up.d>0 ? '<div class="u">Subió más en la semana '+N+': <b>'+esc(up.p.name)+'</b> +'+up.d+' '+plural(up.d,"lugar","lugares")+'</div>' : '')+
+        (down.d<0 ? '<div class="d">Bajó más: <b>'+esc(down.p.name)+'</b> −'+Math.abs(down.d)+' '+plural(Math.abs(down.d),"lugar","lugares")+'</div>' : '');
     }
     box.scrollLeft = box.scrollWidth;
-    if (current) choose(current,false);
   }
   document.querySelectorAll(".toggle button").forEach(function(b){
     b.addEventListener("click", function(){
       bumpMode = b.dataset.mode;
-      document.querySelectorAll(".toggle button").forEach(function(o){o.setAttribute("aria-pressed", o===b?"true":"false")});
+      document.querySelectorAll(".toggle button").forEach(function(o){ o.setAttribute("aria-pressed", o===b?"true":"false"); });
       drawBump();
     });
   });
 
-  // ---------- Weekly strip plots ----------
-  var weeksBox = document.getElementById("weeks");
-  var allScores = players.reduce(function(a,p){return a.concat(p.w)},[]);
-  var lo = Math.floor((Math.min.apply(null,allScores)-5)/10)*10, hi = Math.ceil((Math.max.apply(null,allScores)+5)/10)*10;
-  var W=340, padL=12, padR=12;
-  function x(v){return padL+(v-lo)/(hi-lo)*(W-padL-padR)}
-  weekly.forEach(function(wk){
-    var box = el("div","wk");
-    var wn = wk.winners.map(function(p){return esc(p.name)}).join(" y ");
-    var margin = wk.max - wk.second;
-    box.innerHTML = '<div class="wk-head"><h3>Semana '+(wk.k+1)+'</h3><span class="who">$50 para <b>'+wn+'</b> con '+wk.max+', por '+margin+(margin===1?' punto':' puntos')+'</span></div>';
-    // stack dots into lanes first, then size the chart to fit
-    var used = {}, dots = [], maxOff = 0;
-    players.slice().sort(function(a,b){return a.w[wk.k]-b.w[wk.k]}).forEach(function(p){
-      var v = p.w[wk.k], cx = x(v), lane = 0;
-      while (used[lane] && used[lane].some(function(u){return Math.abs(u-cx)<10})) lane++;
-      (used[lane]=used[lane]||[]).push(cx);
-      var off = (lane%2?1:-1)*Math.ceil(lane/2)*10;
-      maxOff = Math.max(maxOff, Math.abs(off));
-      dots.push({p:p, v:v, cx:cx, off:off});
-    });
-    var mid = 22 + maxOff, bottom = mid + maxOff + 10, Hh = bottom + 18;
-    var svg = '<svg viewBox="0 0 '+W+' '+Hh+'" role="img" aria-label="Puntos de la semana '+(wk.k+1)+'. Promedio '+wk.avg.toFixed(1)+'">';
-    for (var t=lo;t<=hi;t+=10){ svg+='<line x1="'+x(t)+'" x2="'+x(t)+'" y1="16" y2="'+bottom+'" stroke="'+C.line+'" stroke-width="1"/><text x="'+x(t)+'" y="'+(bottom+13)+'" fill="'+C.muted+'" font-size="10" text-anchor="middle" font-family="Public Sans, sans-serif">'+t+'</text>'; }
-    svg+='<line x1="'+x(wk.avg)+'" x2="'+x(wk.avg)+'" y1="14" y2="'+bottom+'" stroke="'+C.text+'" stroke-width="2"/>';
-    svg+='<text x="'+(x(wk.avg)+4)+'" y="11" fill="'+C.text+'" font-size="10" font-family="Public Sans, sans-serif">promedio '+wk.avg.toFixed(1)+'</text>';
-    dots.forEach(function(d){
-      var win = wk.winners.indexOf(d.p)>=0;
-      svg+='<circle class="dot" data-name="'+esc(d.p.name)+'" cx="'+d.cx+'" cy="'+(mid+d.off)+'" r="4.5" fill="'+(win?C.accent:C.dot)+'"><title>'+esc(d.p.name)+': '+d.v+'</title></circle>';
-    });
-    svg+='</svg>';
-    box.insertAdjacentHTML("beforeend",svg);
-    weeksBox.appendChild(box);
+  function drawSurvivor(){
+    var box = $("svbox");
+    if (!M.hasStrikes){ box.hidden = true; return; }
+    box.hidden = false;
+    var list = M.players.map(function(p){ return {name:p.name, s:M.strikeOf(p.name)}; }).filter(function(x){return x.s!==null})
+      .sort(function(a,b){ return a.s-b.s || a.name.localeCompare(b.name); });
+    var c = [0,0,0,0]; list.forEach(function(s){ c[Math.min(s.s,3)]++; });
+    $("tally").innerHTML = '<div><b>'+(list.length-c[3])+'</b>vivos</div><div><b>'+c[0]+'</b>sin strikes</div><div><b>'+c[2]+'</b>en la cuerda floja (2)</div><div><b>'+c[3]+'</b>fuera</div>';
+    $("surv").innerHTML = list.map(function(s){
+      var dots = ''; for (var i=0;i<3;i++) dots += '<i class="'+(i<s.s?'x':'')+'"></i>';
+      return '<div class="sv'+(s.s>=3?' out':'')+(s.name===current?' sel':'')+'" data-name="'+esc(s.name)+'"><span class="n">'+esc(s.name)+'</span><span class="dots" aria-label="'+s.s+' strikes">'+dots+'</span></div>';
+    }).join("");
+  }
+
+  var lastFocus = null;
+  function openSheet(name, save){
+    var p = M.byName[name];
+    if (!p) return;
+    current = name;
+    setLabel(name);
+    var lives = M.strikeOf(name), line = (p.tied ? "Empatado en el " : "")+ord(p.rank)+" con "+p.total+" puntos.";
+    if (p.tied) line = "Empatado en el "+ord(p.rank)+" con "+p.total+" puntos.";
+    else line = ord(p.rank)+" con "+p.total+" puntos.";
+    if (lives!==null) line += lives>=3 ? " Survivor: fuera." : " Survivor: "+(3-lives)+" "+plural(3-lives,"vida","vidas")+".";
+    $("sh-name").textContent = name;
+    $("sh-line").textContent = line;
+    drawBump();
+    drawSurvivor();
+    var sh = $("sheet");
+    if (sh.hidden){ lastFocus = document.activeElement; sh.hidden = false; document.documentElement.classList.add("locked"); $("close").focus(); }
+    $("panel").scrollTop = 0;
+    if (save){ try { localStorage.setItem("fab-me", name); } catch(e){} }
+  }
+  function closeSheet(){
+    var sh = $("sheet");
+    if (sh.hidden) return;
+    sh.hidden = true;
+    document.documentElement.classList.remove("locked");
+    try { if (lastFocus && lastFocus.focus) lastFocus.focus(); } catch(e){}
+  }
+  $("close").addEventListener("click", closeSheet);
+  $("scrim").addEventListener("click", closeSheet);
+  document.addEventListener("keydown", function(e){ if (e.key==="Escape") closeSheet(); });
+  sel.addEventListener("change", function(){
+    var v = sel.value;
+    sel.value = "";                       // so choosing the same name again still fires
+    if (v) openSheet(v, true);
   });
 
-  // ---------- Heatmap ----------
-  // 1st is --accent, last is --surface. Colors are mixed from the tokens, so a palette change needs no edit here.
-  function rgbOf(c){
-    c = String(c).trim();
-    if (c.charAt(0)==="#"){
-      if (c.length===4) c = "#"+c.charAt(1)+c.charAt(1)+c.charAt(2)+c.charAt(2)+c.charAt(3)+c.charAt(3);
-      return [1,3,5].map(function(i){return parseInt(c.substr(i,2),16)});
-    }
-    return (c.match(/[d.]+/g)||[0,0,0]).slice(0,3).map(Number);
-  }
-  function hexOf(a){ return "#"+a.map(function(v){return ("0"+Math.round(v).toString(16)).slice(-2)}).join(""); }
-  function lum(a){
-    var l = a.map(function(v){ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055,2.4); });
-    return 0.2126*l[0]+0.7152*l[1]+0.0722*l[2];
-  }
-  function contrast(a,b){ var x=lum(a), y=lum(b); return (Math.max(x,y)+0.05)/(Math.min(x,y)+0.05); }
-  var HEAT_A = rgbOf(C.accent), HEAT_B = rgbOf(C.surface);
-  function heatRgb(r){
-    var t = (r-1)/(N-1);
-    return HEAT_A.map(function(v,i){return v+(HEAT_B[i]-v)*t});
-  }
-  function heatColor(r){ return hexOf(heatRgb(r)); }
-  // Dark text on the bright end, light text on the dark end, whichever reads better.
-  function heatText(r){
-    var bg = heatRgb(r);
-    return contrast(bg, rgbOf(C.onAccent)) >= contrast(bg, rgbOf(C.text)) ? C.onAccent : C.text;
-  }
-  document.getElementById("grad-last").textContent = N+"º";
-  document.getElementById("grad").style.background="linear-gradient(90deg,"+heatColor(1)+","+heatColor(Math.round(N/2))+","+heatColor(N)+")";
-  var heat = document.getElementById("heat");
-  var hh = '<thead><tr><th>Jugador</th>';
-  for (var k=0;k<WEEK;k++) hh+='<th>Sem '+(k+1)+'</th>';
-  hh+='<th>Total</th></tr></thead><tbody>';
-  players.forEach(function(p){
-    hh+='<tr data-name="'+esc(p.name)+'"><td class="n">'+esc(p.name)+'</td>';
-    for (var k=0;k<WEEK;k++){
-      var r=p.wr[k], d=(k===p.dropIdx), crown=(p.won.indexOf(k+1)>=0)?'<span class="crown" aria-label="ganó la semana y se llevó $'+PRIZE+'">$'+PRIZE+'</span>':'';
-      hh+='<td class="h num'+(d?' dropped':'')+'" style="background:'+heatColor(r)+';color:'+heatText(r)+'" title="'+ord(r)+' de la semana">'+p.w[k]+crown+'</td>';
-    }
-    hh+='<td class="h num" style="background:transparent;color:'+C.text+'">'+p.total+'</td></tr>';
-  });
-  heat.innerHTML = hh+'</tbody>';
-
-  // ---------- Jokes: the winner comes from the data, the line rotates every week ----------
-  // Each award has its own offset so they don't all change in lockstep.
-  function rot(pool, salt){ return pool[(WEEK - 1 + (salt||0)) % pool.length]; }
-  function fillT(t, v){ return t.replace(/\{(\w+)\}/g, function(_,k){ return v[k]!=null ? v[k] : ""; }); }
-  function fmt1(x){ return (Math.round(x*10)/10).toFixed(1); }
-  var JOKES = {
-    climb: [
-      "Del elevador de servicio al penthouse, sin escalas.",
-      "Hace una semana era visita. Hoy ya se siente dueño de la casa.",
-      "Hay quien empieza lento y hay quien empieza dormido. Este ya despertó.",
-      "Si sigue así, va a querer cobrarle renta a los de abajo.",
-      "Subió más rápido que el precio de la cerveza en el estadio."
-    ],
-    fall: [
-      "Una semana buena no firma contrato por las siguientes.",
-      "Llegó con todo a la fiesta y se fue antes del pastel.",
-      "El que sube rápido también sabe bajar rápido.",
-      "Iba como caballo de carreras. Ahora va al paso, pero con dignidad."
-    ],
-    lolWin: [
-      "Cero partidos vistos, cero jerseys comprados. Ustedes sigan con sus podcasts.",
-      "Llevan años estudiando lesionados. Él escoge con los ojos cerrados. Mismo resultado, menos estrés.",
-      "Él no sabe qué es un down. Ustedes no saben cómo ganarle.",
-      "Cada domingo que pierden con él, un aficionado de los {bigTeam} se pregunta para qué paga el Sunday Ticket.",
-      "Pónganle pausa a ESPN y aprendan League of Legends. Les va a ir mejor."
-    ],
-    lolLose: [
-      "Por fin los que sí ven fútbol le ganan al que escoge con los ojos cerrados. La vara estaba baja, pero ahí va.",
-      "La moneda se cansó. Esta semana la ciencia gana.",
-      "El de League of Legends va abajo. Dice que fue lag.",
-      "Los aficionados respiran tantito. Que no se acostumbren."
-    ],
-    bigUp: [
-      "Son muchos y además saben. Qué coraje.",
-      "La mayoría manda, y esta vez también atina.",
-      "Tantos jerseys de los {team} en la fiesta y encima con puntos."
-    ],
-    bigTie: [
-      "Pegaditos al promedio. Lo van a vender como Super Bowl.",
-      "Justo en el promedio. Muy de su equipo.",
-      "Tanta gente para quedar justo en el promedio."
-    ],
-    bigDown: [
-      "Mucha camiseta, poca quiniela.",
-      "Hacen más ruido en el WhatsApp que en la tabla.",
-      "Cantidad sí hay. Calidad, la seguimos esperando.",
-      "Son muchos pero en la tabla no se nota. Como en enero."
-    ],
-    bestFan: [
-      "Sufren los domingos, pero en la quiniela la rompen.",
-      "Por fin una alegría que no depende de su equipo.",
-      "Lo que no ganan en el campo lo ganan aquí.",
-      "De su equipo no decimos nada. De sus picks, puros aplausos."
-    ],
-    swiss: [
-      "No le van a nadie. Así no sufren los lunes.",
-      "Sin camiseta, sin drama, sin excusas.",
-      "Sospechosamente neutrales. El Comish los está vigilando.",
-      "Todavía están a tiempo de declarar equipo. Hay 32 para escoger y la mitad ni duele."
-    ],
-    twoShirts: [
-      "Dos equipos, el doble de corajes.",
-      "Sábado y domingo sufriendo. Eso es compromiso.",
-      "Si un equipo falla, siempre hay otro para sufrir.",
-      "El fin de semana completo con el Jesús en la boca."
-    ]
-  };
-  function add(list, title, who, fact, pool, salt, vars){
-    list.push([title, who, fact + (pool ? " " + fillT(rot(pool, salt), vars||{}) : "")]);
-  }
-  function names(arr){ return arr.map(function(p){return p.name}).join(", "); }
-
-  // ---------- Awards ----------
-  // Two awards are computed here, both against the PREVIOUS week. Every other award is written
-  // in the Premios tab and arrives in data.json as awards[].
-  // Standings after k weeks use the table's rules: the worst week drops (not with one week), ties share the better rank.
-  function rankAfter(k){
-    var tot = players.map(function(p){
-      var w = p.w.slice(0,k), sum = w.reduce(function(a,b){return a+b},0);
-      return {name:p.name, t: sum - (k>1 ? Math.min.apply(null,w) : 0)};
-    });
-    var r = {};
-    tot.forEach(function(a){ r[a.name] = 1 + tot.filter(function(b){return b.t>a.t}).length; });
-    return r;
-  }
-  var aw = [];
-  if (WEEK>=2){
-    var before = rankAfter(WEEK-1);
-    var moves = players.map(function(p){ return {p:p, from:before[p.name], to:p.rank, up:before[p.name]-p.rank}; });
-    // Everyone who tied for the biggest move in one direction. dir 1 = climb, -1 = drop. Nobody moved that way: no award.
-    var biggest = function(dir){
-      var top = 0;
-      moves.forEach(function(m){ if (m.up*dir > top) top = m.up*dir; });
-      return top ? moves.filter(function(m){return m.up*dir===top}) : [];
-    };
-    var moveFact = function(list, verb){
-      var n = Math.abs(list[0].up);
-      if (list.length===1) return "Era "+ord(list[0].from)+" la semana pasada, hoy es "+ord(list[0].to)+".";
-      return verb+" "+n+" "+plural(n,"lugar","lugares")+" cada uno: "+list.map(function(m){return m.p.name+" del "+ord(m.from)+" al "+ord(m.to)}).join(", ")+".";
-    };
-    var ups = biggest(1), downs = biggest(-1);
-    if (ups.length) add(aw, "Del sótano a la azotea", names(ups.map(function(m){return m.p})), moveFact(ups,"Subieron"), JOKES.climb, 0);
-    if (downs.length) add(aw, "La cruda de la semana", names(downs.map(function(m){return m.p})), moveFact(downs,"Bajaron"), JOKES.fall, 3);
-  }
-  // Sheet awards: checked rows of the Premios tab for this week, in sheet order.
-  (D.awards||[]).forEach(function(a){
-    if (a && a.titulo && a.texto) aw.push([a.titulo, a.para || "Todos", a.texto]);
-  });
-  var awBox = document.getElementById("awards");
-  aw.forEach(function(a){ awBox.appendChild(el("div","award",'<h3>'+esc(a[0])+'</h3><div class="who">'+esc(a[1])+'</div><p>'+esc(a[2])+'</p>')); });
-
-  // ---------- Commissioner's comments (checked rows in the Comentarios tab) ----------
-  var COMMENTS = (D.comments||[]).filter(function(c){return c && c.texto});
-  function commentsFor(name){ return COMMENTS.filter(function(c){return c.para && normName(c.para)===normName(name)}); }
-  if (COMMENTS.length){
-    var qb = document.getElementById("quotes");
-    COMMENTS.forEach(function(c){
-      var to = c.para ? '<span class="to">Para '+esc(c.para)+'</span>' : '';
-      qb.appendChild(el("div","quote",to+'<p>'+esc(c.texto)+'</p>'));
-    });
-    document.getElementById("quotes-box").hidden = false;
-  }
-
-  // ---------- Fan bases ----------
-  var NFL = {ARI:"Cardinals",ATL:"Falcons",BAL:"Ravens",BUF:"Bills",CAR:"Panthers",CHI:"Bears",CIN:"Bengals",CLE:"Browns",DAL:"Cowboys",DEN:"Broncos",DET:"Lions",GB:"Packers",HOU:"Texans",IND:"Colts",JAX:"Jaguars",KC:"Chiefs",LV:"Raiders",LAC:"Chargers",LAR:"Rams",MIA:"Dolphins",MIN:"Vikings",NE:"Patriots",NO:"Saints",NYG:"Giants",NYJ:"Jets",PHI:"Eagles",PIT:"Steelers",SF:"49ers",SEA:"Seahawks",TB:"Buccaneers",TEN:"Titans",WAS:"Commanders"};
-  var FAN_BY = {}; Object.keys(D.fans||{}).forEach(function(k){ FAN_BY[normName(k)] = D.fans[k]; });
-  var C9 = "https://upload.wikimedia.org/wikipedia/commons/f/f7/Cloud9_logo.svg";
-  function logo(key, x, y){
-    var href = key==="azar" ? C9 : NFL[key] ? "https://a.espncdn.com/i/teamlogos/nfl/500-dark/"+(key==="WAS" ? "wsh" : key.toLowerCase())+".png" : "";
-    if (!href) return '<text x="'+(x+12)+'" y="'+(y+17)+'" text-anchor="middle" font-size="15">'+(key==="ncaa" ? "🎓" : "🏳️")+'</text>';
-    return '<image href="'+href+'" x="'+x+'" y="'+y+'" width="24" height="24" preserveAspectRatio="xMidYMid meet"/>';
-  }
-  var hasFans = Object.keys(FAN_BY).length > 0;
-  var leagueAvg = players.reduce(function(a,p){return a+p.total},0)/N;
-  var groups = {};
-  players.forEach(function(p){
-    var f = FAN_BY[normName(p.name)] || null;
-    p.fan = f;
-    var key = !f ? "suiza" : f.random ? "azar" : f.nfl ? f.nfl : f.ncaa ? "ncaa" : "suiza";
-    var label = key==="suiza" ? "Suiza (sin equipo)" : key==="azar" ? "Video Juegos"+(f.other?" ("+f.other+")":"") : key==="ncaa" ? "Solo college" : (NFL[key]||key);
-    var short = key==="suiza" ? "Suiza" : key==="azar" ? "Video Juegos" : key==="ncaa" ? "College" : (NFL[key]||key);
-    p.group = key;
-    (groups[key] = groups[key] || {key:key, label:label, short:short, members:[]}).members.push(p);
-  });
-  var G = Object.keys(groups).map(function(k){ var g=groups[k]; g.n=g.members.length; g.avg=g.members.reduce(function(a,p){return a+p.total},0)/g.n; return g; })
-    .sort(function(a,b){return b.avg-a.avg});
-  G.forEach(function(g,i){ g.rank=i+1; });
-
-  if (hasFans){
-    document.getElementById("aficiones").hidden = false;
-    // dot plot: one row per fan base
-    var fw=360, labelW=132, rowH=30, padT=26, fh=padT+rowH*G.length+8;
-    var mn=Math.min.apply(null,G.map(function(g){return g.avg}).concat([leagueAvg])), mx=Math.max.apply(null,G.map(function(g){return g.avg}).concat([leagueAvg]));
-    var lo2=Math.floor((mn-4)/5)*5, hi2=Math.ceil((mx+4)/5)*5;
-    function fx(v){ return labelW+8+(v-lo2)/(hi2-lo2)*(fw-labelW-34); }
-    var fsvg='<svg viewBox="0 0 '+fw+' '+fh+'" role="img" aria-label="Promedio de puntos por afición">';
-    fsvg+='<line x1="'+fx(leagueAvg)+'" x2="'+fx(leagueAvg)+'" y1="14" y2="'+(fh-4)+'" stroke="'+C.text+'" stroke-width="1.5" stroke-dasharray="3 3"/>';
-    fsvg+='<text x="'+fx(leagueAvg)+'" y="10" text-anchor="middle" fill="'+C.text+'" font-size="10" font-family="Public Sans, sans-serif">liga '+fmt1(leagueAvg)+'</text>';
-    G.forEach(function(g,i){
-      var y=padT+i*rowH+rowH/2, col = g.key==="azar" ? C.accent : g.key==="suiza" ? C.muted : C.text;
-      fsvg+=logo(g.key, 0, y-12);
-      fsvg+='<text x="'+labelW+'" y="'+(y+4)+'" text-anchor="end" fill="'+col+'" font-size="12" font-weight="600" font-family="Public Sans, sans-serif">'+esc(g.short)+' · '+g.n+'</text>';
-      fsvg+='<line x1="'+(labelW+8)+'" x2="'+fx(g.avg)+'" y1="'+y+'" y2="'+y+'" stroke="'+col+'" stroke-opacity=".35" stroke-width="2"/>';
-      fsvg+='<circle cx="'+fx(g.avg)+'" cy="'+y+'" r="6" fill="'+col+'"><title>'+esc(g.label)+': '+fmt1(g.avg)+'</title></circle>';
-      fsvg+='<text x="'+(fx(g.avg)+10)+'" y="'+(y+4)+'" fill="'+col+'" font-size="11" font-family="Public Sans, sans-serif">'+fmt1(g.avg)+'</text>';
-    });
-    fsvg+='</svg>';
-    document.getElementById("fanplot").innerHTML = fsvg;
-
-    var fa = [];
-    var teamGroups = G.filter(function(g){return g.key!=="azar" && g.key!=="suiza" && g.key!=="ncaa"});
-    var big = teamGroups.slice().sort(function(a,b){return b.n-a.n || b.avg-a.avg})[0];
-    var withTeam = players.filter(function(p){return p.group!=="azar" && p.group!=="suiza"});
-    if (groups.azar){
-      var rAvg = groups.azar.avg;
-      var below = withTeam.filter(function(p){return p.total < rAvg}).length;
-      add(fa, "Índice League of Legends", names(groups.azar.members),
-        below+" de "+withTeam.length+" aficionados con equipo van abajo de alguien que escoge al azar.",
-        below*2 > withTeam.length ? JOKES.lolWin : JOKES.lolLose, 0, {bigTeam: big ? NFL[big.key] : "Cowboys"});
-    }
-    if (big && big.n>=3){
-      var diff = big.avg-leagueAvg;
-      add(fa, "La afición más numerosa", "Los "+NFL[big.key]+" ("+big.n+")",
-        "Promedian "+fmt1(big.avg)+" puntos. La liga promedia "+fmt1(leagueAvg)+".",
-        Math.abs(diff)<2 ? JOKES.bigTie : diff>0 ? JOKES.bigUp : JOKES.bigDown, 1, {team: NFL[big.key]});
-    }
-    var bestG = teamGroups.filter(function(g){return g.n>=2})[0];
-    if (bestG && (!big || bestG.key!==big.key || big.n<3))
-      add(fa, "La mejor afición", "Los "+NFL[bestG.key], "Promedian "+fmt1(bestG.avg)+" con "+bestG.n+" aficionados. Ninguna afición de dos o más promedia más.", JOKES.bestFan, 2, {team: NFL[bestG.key]});
-    if (groups.suiza)
-      add(fa, "Suiza", names(groups.suiza.members), "Sin equipo declarado. Promedian "+fmt1(groups.suiza.avg)+".", JOKES.swiss, 3);
-    var two = players.filter(function(p){return p.fan && p.fan.nfl && p.fan.ncaa});
-    if (two.length)
-      add(fa, "Doble camiseta", names(two), two.map(function(p){return p.name+": "+(NFL[p.fan.nfl]||p.fan.nfl)+" y "+p.fan.ncaa+"."}).join(" "), JOKES.twoShirts, 0);
-    var faBox = document.getElementById("fanawards");
-    fa.forEach(function(a){ faBox.appendChild(el("div","award",'<h3>'+esc(a[0])+'</h3><div class="who">'+esc(a[1])+'</div><p>'+esc(a[2])+'</p>')); });
-  }
-
-  // ---------- La carne asada: last places. Wording rotates each week. ----------
-  var FIRST_OUT_LINES = [
-    "Tres strikes antes que nadie. Cero estrés en los playoffs. Ahora a organizar la carne asada para todos.",
-    "El Survivor duró menos que una hielera en julio. Ahora la única decisión pendiente: ¿arrachera o diezmillo?",
-    "Ya no hay picks que mandar ni strikes que contar. Puro tiempo libre para ir prendiendo el asador.",
-    "Primer pase directo a la parrilla. Las tortillas y la salsa también cuentan, eh."
-  ];
-  var LAST_LINES = [
-    "{gap} puntos abajo del líder. Por ahora las pizzas del Super Bowl van por su cuenta, familias incluidas. Quedan {left} semanas para pasarle la cuenta a alguien más.",
-    "Último lugar con {total} puntos. Vayan pidiendo el menú de la pizzería, por si las dudas.",
-    "Desde el sótano se ve toda la tabla. Bonita vista. Y los niños ya preguntaron de qué van a ser las pizzas.",
-    "La quiniela no perdona y el sótano tampoco. {left} semanas para salir de aquí o empezar a juntar cupones de pizza."
-  ];
-  var LAST_FINAL = "Temporada terminada. Ni modo: las pizzas del Super Bowl van por su cuenta, familias incluidas.";
-  function pickLine(pool){ return pool[(WEEK-1) % pool.length]; }
-  var grill = [];
-  var outList = (D.survivorOut && D.survivorOut.length) ? D.survivorOut :
-    players.filter(function(p){return strikeOf(p.name)>=3}).map(function(p){return {name:p.name, week:null}});
-  if (outList.length){
-    var fw = outList[0].week;
-    var firsts = outList.filter(function(o){return o.week===fw});
-    grill.push([firsts.length>1 ? "Los primeros en irse del Survivor" : "El primero en irse del Survivor",
-      firsts.map(function(o){return o.name}).join(" y "),
-      (fw ? "Fuera en la semana "+fw+". " : "")+pickLine(FIRST_OUT_LINES)+(firsts.length>1 ? " Empate: se dividen la cuenta." : "")]);
-  }
-  var lastTotal = players[N-1].total;
-  var lasts = players.filter(function(p){return p.total===lastTotal});
-  grill.push([lasts.length>1 ? "Últimos en la quiniela" : "Último en la quiniela",
-    lasts.map(function(p){return p.name}).join(" y "),
-    (SEASON_WEEKS-WEEK>0 ? fillT(pickLine(LAST_LINES), {gap:leader.total-lastTotal, total:lastTotal, left:SEASON_WEEKS-WEEK}) : LAST_FINAL)+(lasts.length>1 ? " Empate: se dividen la cuenta." : "")]);
-  var grillBox = document.getElementById("grill");
-  grill.forEach(function(a){ grillBox.appendChild(el("div","award grill",'<h3>'+esc(a[0])+'</h3><div class="who">'+esc(a[1])+'</div><p>'+esc(a[2])+'</p>')); });
-  document.getElementById("grill-h").hidden = !grill.length;
-  document.getElementById("grill-note").hidden = !grill.length;
-
-  // ---------- Survivor ----------
-  var sv = document.getElementById("surv");
-  var surv = players.map(function(p){return {name:p.name, s:strikeOf(p.name)}}).filter(function(x){return x.s!==null}).sort(function(a,b){return a.s-b.s || a.name.localeCompare(b.name)});
-  var counts=[0,0,0,0]; surv.forEach(function(s){counts[Math.min(s.s,3)]++});
-  document.getElementById("tally").innerHTML =
-    '<div><b class="num">'+(surv.length-counts[3])+'</b>vivos</div><div><b class="num">'+counts[0]+'</b>sin strikes</div><div><b class="num">'+counts[2]+'</b>en la cuerda floja (2)</div><div><b class="num">'+counts[3]+'</b>fuera</div>';
-  surv.forEach(function(s){
-    var d=''; for (var i=0;i<3;i++) d+='<i class="'+(i<s.s?'x':'')+'"></i>';
-    var c = el("div","sv"+(s.s>=3?" out":""),'<span class="n">'+esc(s.name)+'</span><span class="dots" aria-label="'+s.s+' strikes">'+d+'</span>');
-    c.dataset.name = s.name; sv.appendChild(c);
-  });
-
-  // ---------- Find yourself ----------
-  var sel = document.getElementById("pick");
-  players.slice().sort(function(a,b){return a.name.localeCompare(b.name)}).forEach(function(p){
-    var o=document.createElement("option"); o.value=p.name; o.textContent=p.name; sel.appendChild(o);
-  });
-  function meCard(p){
-    var gapL = leader.total-p.total;
-    var second = players.filter(function(q){return q.rank===2})[0] || players[1];
-    var third = players.filter(function(q){return q.rank>2})[0];
-    var line;
-    if (p.rank===1) line = "Vas arriba por "+(p.total-second.total)+" sobre el 2º lugar. "+(SEASON_WEEKS-WEEK>0 ? "Quedan "+(SEASON_WEEKS-WEEK)+" semanas para que te alcancen." : "Se acabó la temporada regular.");
-    else if (p.rank===2) line = "Estás en zona de premio. "+gapL+" del líder y "+(p.total-third.total)+" arriba del 3º.";
-    else line = gapL+" del líder y "+(second.total-p.total)+" del 2º lugar, que también cobra.";
-    var t = p.tied ? " (empatado)" : "";
-    var wonTxt = p.won.length ? "Ganaste la semana "+p.won.join(" y la ")+"." : "Todavía no ganas una semana. Los $50 siguen en la mesa.";
-    var s = strikeOf(p.name);
-    var sTxt = s===null ? "Sin dato" : (s>=3 ? "Fuera" : s+" de 3");
-    return '<div class="me-top"><span class="me-rank num">'+ord(p.rank)+'</span><span class="me-name">'+esc(p.name)+t+'</span></div>'+
-      '<div class="me-grid">'+
-        '<div><b class="num">'+p.total+'</b><span>puntos que cuentan</span></div>'+
-        '<div><b class="num">'+p.best+'</b><span>tu mejor semana (sem '+(p.bestIdx+1)+', '+ord(p.wr[p.bestIdx])+')</span></div>'+
-        (p.dropIdx>=0 ? '<div><b class="num">'+p.drop+'</b><span>se te cae (sem '+(p.dropIdx+1)+')</span></div>' : '')+
-        '<div><b>'+sTxt+'</b><span>strikes en Survivor</span></div>'+
-      '</div>'+
-      (p.fan || hasFans ? '<p class="me-say">Afición: <b>'+esc(groups[p.group].label)+'</b>, '+ord(groups[p.group].rank)+' de '+G.length+' en la tabla de aficiones.</p>' : '')+
-      commentsFor(p.name).map(function(c){ return '<p class="me-q"><b>El Comish dice:</b> '+esc(c.texto)+'</p>'; }).join('')+
-      '<p class="me-say">'+esc(line)+' '+esc(wonTxt)+(p.dropIdx<0 || SEASON_WEEKS-WEEK<=0 ? '' : (p.drop===0 ? ' Ya usaste tu semana que se cae: la semana '+(p.dropIdx+1)+' en ceros. Si se te olvida otra, esa sí cuenta.' : ' Tu piso es '+p.drop+': cualquier semana abajo de eso se vuelve la que se cae y tus '+p.drop+' regresan al total.'))+'</p>';
-  }
-  function choose(name, save){
-    var p = byName[name];
-    current = p ? name : "";
-    var me = document.getElementById("me");
-    document.querySelectorAll("[data-name]").forEach(function(n){
-      var on = n.dataset.name===name;
-      if (n.tagName.toLowerCase()==="circle"){
-        n.setAttribute("stroke", on?C.text:"none"); n.setAttribute("stroke-width", on?"3":"0");
-        if (on){ n.setAttribute("r","6.5"); n.parentNode.appendChild(n); } else n.setAttribute("r","4.5");
-      } else {
-        n.classList.toggle("sel", on);
-        if (on && n.classList.contains("bl")) n.parentNode.appendChild(n);
-      }
-    });
-    if (!p){ me.classList.remove("on"); me.innerHTML=""; return; }
-    me.innerHTML = meCard(p); me.classList.add("on");
-    if (save){ try{ localStorage.setItem("fab-me", name); }catch(e){} }
-  }
-  drawBump();
-  sel.addEventListener("change", function(){ choose(sel.value, true); });
+  // ?yo=Name and #Name open the panel. A remembered name only fills the label.
   var start = "";
-  try{
+  try {
     var q = new URLSearchParams(location.search).get("yo");
     if (q) start = q; else if (location.hash) start = decodeURIComponent(location.hash.slice(1));
-  }catch(e){}
-  if (!byName[start]){ try{ start = localStorage.getItem("fab-me") || ""; }catch(e){ start=""; } }
-  if (byName[start]){ sel.value = start; choose(start, false); }
-  // Apps Script web app: the page runs in an iframe, so read ?yo=Name (or #Name) from the parent URL
-  try{
-    if (window.google && google.script && google.script.url){
-      google.script.url.getLocation(function(loc){
-        var y = (loc.parameter && loc.parameter.yo) || (loc.hash ? decodeURIComponent(loc.hash) : "");
-        if (byName[y]){ sel.value = y; choose(y, false); }
-      });
-    }
-  }catch(e){}
+  } catch(e){}
+  var startP = null;
+  M.players.forEach(function(p){ if (!startP && normName(p.name)===normName(start)) startP = p; });
+  if (startP) openSheet(startP.name, false);
+  else {
+    var saved = ""; try { saved = localStorage.getItem("fab-me") || ""; } catch(e){}
+    if (M.byName[saved]) setLabel(saved);
+  }
+  M.openSheet = openSheet;
+  return M;
 }
+
+// ---------------------------------------------------------------------------
+// Loading: ?ed=N reads the frozen edition, anything else reads the live data.json
+// ---------------------------------------------------------------------------
+function seed(){ return JSON.parse(document.getElementById("seed").textContent); }
+function getJSON(url){
+  return fetch(url, {cache:"no-store"}).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); });
+}
+function edParam(){
+  try {
+    var v = new URLSearchParams(location.search).get("ed");
+    return v && /^\d{1,2}$/.test(v) ? Number(v) : 0;
+  } catch(e){ return 0; }
+}
+function load(){
+  if (!window.fetch) return Promise.resolve({D:seed(), ed:0});
+  var ed = edParam(), t = "?t="+Date.now();
+  var first = ed ? getJSON("editions/semana-"+pad2(ed)+".json"+t).then(function(d){ return {D:d, ed:ed}; }) : Promise.reject(new Error("no ed"));
+  return first.catch(function(){ return getJSON("data.json"+t).then(function(d){ return {D:d, ed:0}; }); })
+    .catch(function(){ return {D:seed(), ed:0}; });
+}
+function weeksIndex(){
+  if (!window.fetch) return Promise.resolve([]);
+  return getJSON("editions/index.json?t="+Date.now()).then(function(j){ return Array.isArray(j.weeks) ? j.weeks : []; }).catch(function(){ return []; });
+}
+
+window.__tribune = T;
+T.render = render;
+T.TZ = TZ;
+Promise.all([load(), weeksIndex()]).then(function(r){
+  try { window.__model = render(r[0].D, {ed:r[0].ed, weeks:r[1]}); }
+  catch(e){ document.getElementById("p-head").textContent = "No se pudo leer la edición"; document.getElementById("p-deck").textContent = "Recarga la página."; throw e; }
+});
 })();
 </script>
 </body>

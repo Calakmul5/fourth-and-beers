@@ -1,0 +1,150 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="color-scheme" content="only light"><title>Fourth and Beers Tribune</title><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:ital,wght@0,400;0,700;1,400;1,700&family=Libre+Franklin:wght@600;700;800;900&display=swap"><style>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+:root{
+  color-scheme:only light;
+  --paper:#F3EEE3;--paper2:#E9E2D3;--ink:#161514;--ink2:#3B3834;--muted:#6B655C;--rule:#161514;--hair:#B9B0A0;
+  --red:#A3191F;
+  --head:"Playfair Display",Georgia,serif;--body:"Source Serif 4",Georgia,serif;--sans:"Libre Franklin",Arial,sans-serif;
+}
+html,body{background:var(--paper) !important;color:var(--ink) !important;margin:0}
+body{font-variant-numeric:lining-nums;font-family:var(--body);font-size:15.5px;line-height:1.45;display:flex;gap:12px;align-items:flex-start;width:max-content;background:#CFC7B6 !important}
+.page{width:390px;box-sizing:border-box;padding:12px 16px 24px;background:var(--paper)}
+.dateline{display:flex;justify-content:space-between;font:600 10.5px var(--sans);letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);padding-bottom:6px;border-bottom:1px solid var(--rule)}
+.mast{font:400 44px/0.95 "UnifrakturMaguntia",serif;text-align:center;margin:10px 0 2px;color:var(--ink)}
+.mast span{display:block;font-size:60px}
+.tag{text-align:center;font:italic 400 12.5px var(--body);color:var(--ink2);padding:4px 0 6px}
+.rules{border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);height:3px;margin:0 0 12px}
+.pick{display:flex;align-items:center;justify-content:space-between;height:46px;box-sizing:border-box;padding:0 12px;border:1px solid var(--ink);background:var(--paper);font:600 14px var(--sans);color:var(--ink2);width:100%}
+.pick b{color:var(--ink)}
+.kicker{font:800 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--red)}
+.head{font:900 46px/0.95 var(--head);margin:6px 0 8px;letter-spacing:-.01em}
+.deck{font:italic 400 19px/1.3 var(--body);color:var(--ink2);margin:0 0 8px}
+.by{font:700 10.5px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding-bottom:12px;border-bottom:1px solid var(--hair)}
+.sec{font:800 13px var(--sans);text-transform:uppercase;letter-spacing:.16em;margin:18px 0 10px;padding:6px 0;border-top:3px solid var(--rule);border-bottom:1px solid var(--rule);text-align:center}
+.col p{margin:0 0 10px;font:17px/1.42 var(--body)}
+
+.col .sig{font:italic 700 14px var(--head);text-align:right}
+.ads{columns:2;column-gap:14px;column-rule:1px solid var(--hair)}
+.ad{break-inside:avoid;font:13px/1.38 var(--body);padding:0 0 8px;margin-bottom:8px;border-bottom:1px solid var(--hair)}
+.ad b{display:block;font:900 15px var(--sans);letter-spacing:.06em}
+.cifra{display:flex;gap:14px;align-items:center;background:var(--ink);color:var(--paper);padding:12px 14px;margin-bottom:6px}
+.cifra .n{font:900 70px/0.85 var(--head)}
+.cifra .k{font:800 10.5px var(--sans);letter-spacing:.14em;text-transform:uppercase;color:#E7B9B2}
+.cifra p{margin:3px 0 0;font:14.5px/1.35 var(--body)}
+.fact{display:flex;gap:12px;align-items:baseline;padding:9px 0;border-bottom:1px solid var(--hair)}
+.fact .v{flex:0 0 70px;font:900 26px/1 var(--head);text-align:right}
+.fact .t{font:14.5px/1.38 var(--body)}
+.fact .t b{display:block;font:800 10.5px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--red);margin-bottom:2px}
+.fact.ej{border:1px dashed var(--muted);padding:9px 10px;margin-top:8px}
+.fact.ej .v,.fact.ej .t{color:var(--muted)}
+.ejtag{display:inline-block;font:700 9.5px var(--sans);letter-spacing:.06em;color:var(--paper);background:var(--muted);padding:1px 5px;margin-left:6px}
+.box{border:1px solid var(--ink);padding:10px 12px;margin-bottom:10px;background:var(--paper)}
+.box .h{display:flex;align-items:center;gap:8px;font:800 11px var(--sans);letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px;padding-bottom:5px;border-bottom:1px solid var(--hair)}
+.pill{font:700 9.5px var(--sans);letter-spacing:.06em;border:1px solid currentColor;padding:1px 5px;color:var(--red)}
+.pill.soon{color:var(--muted)}
+.pzr{display:flex;align-items:baseline;gap:10px;padding:3px 0}
+.pzr .r{font:900 20px var(--head);width:28px}
+.pzr .n{flex:1;font:16px var(--body)}
+.pzr .m{font:900 21px var(--head)}
+.note{font:italic 13.5px/1.4 var(--body);color:var(--ink2);margin-top:5px}
+.big{font:900 32px/1 var(--head);margin:2px 0}
+.box.pizza .h{color:var(--red)}
+.grid18{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin:4px 0 8px}
+.g{position:relative;height:54px;display:flex;flex-direction:column-reverse;padding-top:14px;box-sizing:border-box;align-items:center;justify-content:center;font:700 9.5px var(--sans);letter-spacing:.04em;color:var(--muted)}
+.g b{font:900 18px/1.05 var(--head)}
+.g.done{background:var(--ink);color:#BDB5A6}
+.g.done b{color:var(--paper)}
+.g.now{outline:2px solid var(--red);outline-offset:2px}
+.g.next{border:1px dashed var(--hair)}
+.g.next b{font:700 12px var(--sans);color:var(--muted)}
+.tm{position:absolute;top:2px;right:2px;box-shadow:0 0 0 1px #F3EEE3;font:900 8.5px/1 var(--sans);letter-spacing:.02em;padding:2px 2px;border-radius:2px}
+.foot{margin-top:14px;padding-top:8px;border-top:1px solid var(--rule);font:12px var(--sans);color:var(--ink2);text-align:center;line-height:1.7}
+.foot a{color:var(--ink)}
+.afi .row{display:grid;grid-template-columns:34px 122px 1fr 46px;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--hair)}
+.afi .row:last-of-type{border-bottom:0}
+.afi .bd{font:900 9.5px/1 var(--sans);text-align:center;padding:5px 0;border-radius:3px}
+.afi .nm{font:14.5px var(--body);white-space:nowrap}
+.afi .nm small{font:700 11px var(--sans);color:var(--muted)}
+.afi .tr{height:12px;background:var(--paper2);position:relative}
+.afi .tr i{position:absolute;left:0;top:0;bottom:0;background:var(--ink)}
+.afi .amt{font:900 18px var(--head);text-align:right}
+.afi .zero{color:var(--muted)}
+.lg{display:block;object-fit:contain;font:700 8px var(--sans);color:var(--muted)}
+.afi .lg{width:30px;height:30px;font-size:9px}
+.g .lg{position:absolute;top:3px;right:3px;width:18px;height:18px;padding:1px;border-radius:50%;background:#F3EEE3}
+.afi .row{grid-template-columns:34px 30px 1fr 46px !important}
+.afi .cnt{font:700 12px var(--sans);color:var(--muted)}
+</style></head><body>
+<div class="page" id="p1">
+  <div class="dateline"><span>Edición 5</span><span>15 de octubre de 2026</span><span>Una chela</span></div>
+  <div class="mast">Fourth and Beers <span>Tribune</span></div>
+  <div class="tag">La quiniela más grande del mundo. Información que nadie pidió.</div>
+  <div class="rules"></div>
+  <button class="pick"><span>¿Quién eres? <b>Escoge tu nombre</b></span><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2 4l4 4 4-4" fill="none" stroke="#161514" stroke-width="2"></path></svg></button>
+  <div class="kicker" style="margin-top:16px">Última hora</div>
+  <h1 class="head">Del sótano a la azotea</h1>
+  <p class="deck">Abogado sube nueve lugares en una semana. Nadie pidió explicaciones.</p>
+  <div class="by">Por el Comish, que sigue líder y no piensa disculparse</div>
+  <div class="sec">Columna del Comish</div>
+  <div class="col">
+    <p>12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16.</p>
+    <p>El Comish hizo 50 y sigue líder. La peor semana se tira. Qué regla tan sabia.</p>
+    <p>Del 12º al 2º en una semana. No fue trampa, fue trámite.</p>
+    <div class="sig">El Comish</div>
+  </div>
+  <div class="sec">Clasificados</div>
+  <div class="ads">
+    <div class="ad"><b>SE VENDE</b>Semana de 73 puntos, casi nueva. Llegó tarde para Survivor. Andrea’s Picks.</div>
+    <div class="ad"><b>SE RENTA</b>Lugar 10, recién desocupado. Juan1768 se mudó al 16.</div>
+    <div class="ad"><b>SE BUSCA</b>Alguien que le gane a Silverback. Recompensa: $1,050.</div>
+    <div class="ad"><b>SE REGALA</b>Una semana de 40 puntos. Mean Machine ya la tiró.</div>
+  </div>
+</div>
+<div class="page" id="p2">
+  <div class="sec" style="margin-top:4px">Datos que nadie pidió</div>
+  <div class="cifra"><div class="n">+60</div><div><div class="k">La cifra de la semana</div><p>KinkyKing hizo 23 en la semana 4 y 83 en la 5. Nadie ha rebotado tanto.</p></div></div>
+  <div class="fact"><div class="v">0/15</div><div class="t"><b>Aficiones</b>Hay 15 fans de Bears y Dallas. Ninguno cobra hoy. Los que cobran le van a Pittsburgh y San Francisco.</div></div>
+  <div class="fact"><div class="v">+36</div><div class="t"><b>4 semanas en ascenso</b>MVP21: 35, 38, 53 y 71. Cada semana mejor que la anterior.</div></div>
+  <div class="fact"><div class="v">17º→1º</div><div class="t"><b>Remontada</b>El Comish era 17º después de la semana 1. Lleva tres semanas de líder. Nadie lo vio venir, ni él.</div></div>
+  <div class="fact"><div class="v">×3</div><div class="t"><b>Fotocopia</b>Osos de Grayslake, Mean Machine y Jorge_B: 281 cada uno.</div></div>
+  <div class="fact"><div class="v">4</div><div class="t"><b>Survivor</b>La semana 4 sacó a cuatro de Survivor de un jalón.</div></div>
+  <div class="fact ej"><div class="v">−[x]</div><div class="t"><b>Lealtad cara<span class="ejtag">EJEMPLO, REQUIERE PICKS DE QUINIELA</span></b>[Jugador] le fue a [equipo] en la quiniela [n] semanas seguidas. Perdió las [n]. Le costó [x] puntos de confianza.</div></div>
+</div>
+<div class="page" id="p3">
+  <div class="sec" style="margin-top:4px">Premios, pizzas y carne asada</div>
+  <div class="box"><div class="h">Quiniela regular <span class="pill">en juego</span></div>
+    <div class="pzr"><span class="r">1º</span><span class="n">Silverback, 304</span><span class="m">$1,050</span></div>
+    <div class="pzr"><span class="r">2º</span><span class="n">Abogado, 289</span><span class="m">$350</span></div>
+    <div class="note">King of The North está a 2 puntos del dinero. Faltan 13 semanas.</div></div>
+  <div class="box"><div class="h">Premio semanal, $50 <span class="pill">5 de 18</span></div>
+    <div class="grid18"><div class="g done"><img class="lg" src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Cloud9_logo.svg" alt="Video Juegos">S1<b>JB</b></div><div class="g done"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/pit.png" alt="Steelers">S2<b>SI</b></div><div class="g done"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/pit.png" alt="Steelers">S3<b>SI</b></div><div class="g done"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/chi.png" alt="Bears">S4<b>KN</b></div><div class="g done now"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/sf.png" alt="49ers">S5<b>AB</b></div><div class="g next">S6<b>$50</b></div><div class="g next">S7<b>$50</b></div><div class="g next">S8<b>$50</b></div><div class="g next">S9<b>$50</b></div><div class="g next">S10<b>$50</b></div><div class="g next">S11<b>$50</b></div><div class="g next">S12<b>$50</b></div><div class="g next">S13<b>$50</b></div><div class="g next">S14<b>$50</b></div><div class="g next">S15<b>$50</b></div><div class="g next">S16<b>$50</b></div><div class="g next">S17<b>$50</b></div><div class="g next">S18<b>$50</b></div></div>
+    <div class="note" style="font-style:normal;font-size:12.5px">JB Jorge_B · SI Silverback · KN King of The North · AB Abogado</div></div>
+  <div class="box afi"><div class="h">La tabla de las aficiones</div><div class="row"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/pit.png" alt="Steelers"><span class="cnt">×3</span><span class="tr"><i style="width:100.0%"></i></span><span class="amt">$100</span></div><div class="row"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/sf.png" alt="49ers"><span class="cnt">×2</span><span class="tr"><i style="width:50.0%"></i></span><span class="amt">$50</span></div><div class="row"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/chi.png" alt="Bears"><span class="cnt">×7</span><span class="tr"><i style="width:50.0%"></i></span><span class="amt">$50</span></div><div class="row"><img class="lg" src="https://upload.wikimedia.org/wikipedia/commons/f/f7/Cloud9_logo.svg" alt="Video Juegos"><span class="cnt">×1</span><span class="tr"><i style="width:50.0%"></i></span><span class="amt">$50</span></div><div class="row"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/dal.png" alt="Cowboys"><span class="cnt">×8</span><span class="tr"><i style="width:0.0%"></i></span><span class="amt zero">$0</span></div><div class="row"><img class="lg" src="https://a.espncdn.com/i/teamlogos/nfl/500/gb.png" alt="Packers"><span class="cnt">×1</span><span class="tr"><i style="width:0.0%"></i></span><span class="amt zero">$0</span></div><div class="note">Premios ya cobrados, sumados por afición. Los 8 de Dallas todavía no ven un peso.</div></div><div class="box"><div class="h">Survivor <span class="pill">16 vivos</span></div>
+    <div class="pzr"><span class="r">1º</span><span class="n">El último en pie</span><span class="m">$1,050</span></div>
+    <div class="pzr"><span class="r">2º</span><span class="n">El penúltimo</span><span class="m">$350</span></div>
+    <div class="note">Dura hasta el Super Bowl. Juan1768 sigue sin strikes.</div></div>
+  <div class="box"><div class="h">Quiniela de playoffs <span class="pill soon">en enero</span></div>
+    <div class="pzr"><span class="r">1º</span><span class="n">Todos empiezan en cero</span><span class="m">$700</span></div>
+    <div class="note">Solo paga primer lugar.</div></div>
+  <div class="box pizza"><div class="h">Hoy pagaría las pizzas</div><div class="big">Steel Man</div><div class="note">179 puntos, a 32 del 21º. Último las cinco semanas.</div></div>
+  <div class="box"><div class="h">Organiza la carne asada</div><div class="big">KinkyKing</div><div class="note">Primero fuera de Survivor, semana 3. Ya es oficial.</div></div>
+  <div class="foot">Ediciones anteriores: <a href="#">1</a> · <a href="#">2</a> · <a href="#">3</a> · <a href="#">4</a><br>La tabla completa vive en <a href="#">Yahoo</a>.</div>
+</div>
+</body></html>

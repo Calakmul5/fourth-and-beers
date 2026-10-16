@@ -13,7 +13,7 @@ function pad(rows) {
 /** A sheet backed by a plain array of rows. Writes are kept, formatting calls are recorded on sheet.log. */
 function makeSheet(name, rows) {
   const data = rows.map(r => r.slice());
-  const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [] };
+  const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [], validations: [], cleared: [] };
   function range(row, col, nr, nc) {
     const self = {
       setValues(vals) {
@@ -27,6 +27,12 @@ function makeSheet(name, rows) {
       setFontWeight(w) { log.bold.push([row, col, nr, nc, w]); return self; },
       insertCheckboxes() { log.checkboxes.push('r' + row + 'c' + col); return self; },
       setWrap() { log.wrap.push('r' + row + 'c' + col); return self; },
+      setDataValidation(rule) { log.validations.push({ at: 'r' + row + 'c' + col, rule }); return self; },
+      clearContent() {
+        log.cleared.push([row, col, nr, nc]);
+        for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { const line = data[row + i - 1]; if (line && col + j - 1 < line.length) line[col + j - 1] = ''; }
+        return self;
+      },
     };
     return self;
   }
@@ -54,29 +60,37 @@ function makeWorkbook(name, sheets) {
     getUrl: () => 'https://example.test/' + name,
     getSheets: () => sheets,
     insertSheet(n) { const sh = makeSheet(n, []); sheets.push(sh); return sh; },
+    deleteSheet(sh) { const i = sheets.indexOf(sh); if (i >= 0) sheets.splice(i, 1); },
   };
 }
 
-/** A fake repo holding one file. state.file is {text, sha} or null. state.puts records every commit. */
-function makeGithub(initialText) {
-  const state = { file: initialText == null ? null : { text: initialText, sha: 'sha0' }, puts: [], gets: 0, n: 0 };
+/**
+ * A fake repo. state.files maps a repo path to {text, sha}. state.file is data.json, kept for short tests.
+ * state.puts records every commit, in order, with its path.
+ */
+function makeGithub(initialText, extra) {
+  const state = { files: {}, puts: [], gets: 0, n: 0 };
+  if (initialText != null) state.files['data.json'] = { text: initialText, sha: 'sha0' };
+  Object.keys(extra || {}).forEach(p => { state.files[p] = { text: extra[p], sha: 'sha-' + p }; });
+  Object.defineProperty(state, 'file', { get: () => state.files['data.json'] || null });
   function reply(code, obj) { return { getResponseCode: () => code, getContentText: () => JSON.stringify(obj) }; }
   function fetch(url, opts) {
     opts = opts || {};
+    const path = /\/contents\/([^?]+)/.exec(url)[1];
+    const cur = state.files[path] || null;
     if (String(opts.method || 'get').toLowerCase() === 'put') {
       const body = JSON.parse(opts.payload);
-      if (state.file && body.sha !== state.file.sha) return reply(409, { message: 'sha mismatch' });
-      if (!state.file && body.sha) return reply(422, { message: 'unexpected sha' });
-      const created = !state.file;
-      state.file = { text: Buffer.from(body.content, 'base64').toString('utf8'), sha: 'sha' + (++state.n) };
-      state.puts.push({ message: body.message, branch: body.branch, hadSha: !!body.sha, text: state.file.text, auth: opts.headers && opts.headers.Authorization });
-      return reply(created ? 201 : 200, {});
+      if (cur && body.sha !== cur.sha) return reply(409, { message: 'sha mismatch' });
+      if (!cur && body.sha) return reply(422, { message: 'unexpected sha' });
+      state.files[path] = { text: Buffer.from(body.content, 'base64').toString('utf8'), sha: 'sha' + (++state.n) };
+      state.puts.push({ path, message: body.message, branch: body.branch, hadSha: !!body.sha, text: state.files[path].text, auth: opts.headers && opts.headers.Authorization });
+      return reply(cur ? 200 : 201, {});
     }
     state.gets++;
-    if (!state.file) return reply(404, { message: 'Not Found' });
+    if (!cur) return reply(404, { message: 'Not Found' });
     // The real API wraps base64 every 60 characters with newlines.
-    const b64 = Buffer.from(state.file.text, 'utf8').toString('base64').replace(/(.{60})/g, '$1\n');
-    return reply(200, { sha: state.file.sha, content: b64 });
+    const b64 = Buffer.from(cur.text, 'utf8').toString('base64').replace(/(.{60})/g, '$1\n');
+    return reply(200, { sha: cur.sha, content: b64 });
   }
   return { state, fetch };
 }
@@ -93,7 +107,14 @@ function loadPublisher(opts) {
     Logger: { log: m => logs.push(String(m)) },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null) }) },
     LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
-    SpreadsheetApp: { openById: id => { if (!books[id]) throw new Error('unknown workbook ' + id); return books[id]; } },
+    SpreadsheetApp: {
+      openById: id => { if (!books[id]) throw new Error('unknown workbook ' + id); return books[id]; },
+      newDataValidation: () => {
+        const rule = {};
+        const b = { requireValueInList(list, dropdown) { rule.list = list; rule.dropdown = dropdown; return b; }, setAllowInvalid(v) { rule.allowInvalid = v; return b; }, build: () => rule };
+        return b;
+      },
+    },
     UrlFetchApp: { fetch: opts.github.fetch },
     Utilities: {
       Charset: { UTF_8: 'UTF-8' },

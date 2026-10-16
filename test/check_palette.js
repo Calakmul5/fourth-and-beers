@@ -1,7 +1,8 @@
 'use strict';
-// Static check on index.html:
+// Static check on index.html, the newsprint page:
 //   1. No hex or rgb()/hsl() color anywhere outside the :root token block (CSS, inline styles, JS, SVG strings, meta tags).
-//   2. The palette tokens read well: --text and --muted at least 4.5:1 on --bg and --surface.
+//   2. Light only: one scheme, no dark media query, so iOS dark mode cannot invert the page.
+//   3. The ink tokens read well on the paper: 4.5:1 for text, 3:1 for the chart colors.
 const fs = require('fs');
 const path = require('path');
 const A = require('./assert');
@@ -32,11 +33,16 @@ function lum(c) {
 function contrast(a, b) { const x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
 
 A.run('Palette', [
-  ['the token block exists and defines the palette', () => {
+  ['the token block exists and defines the newsprint palette', () => {
     A.ok(rootStart > 0 && rootEnd > rootStart, ':root block found');
     const t = tokens();
-    ['bg', 'surface', 'surface2', 'line', 'text', 'muted', 'accent', 'accent-soft', 'on-accent', 'red', 'green'].forEach(k => A.ok(t[k], '--' + k));
-    A.ok(!/--amber/.test(HTML), 'old --amber names are gone');
+    A.deep(
+      ['paper', 'paper2', 'ink', 'ink2', 'muted', 'rule', 'hair', 'red'].map(k => t[k]),
+      ['#F3EEE3', '#E9E2D3', '#161514', '#3B3834', '#6B655C', '#161514', '#B9B0A0', '#A3191F'], 'the approved tokens');
+    A.equal(t.up, '#2E7D4F', 'climber green');
+    A.equal(t.down, '#C2610C', 'drop burnt orange');
+    ['blush', 'stone'].forEach(k => A.ok(t[k], '--' + k));
+    ['bg', 'surface', 'accent', 'amber', 'on-accent'].forEach(k => A.ok(!new RegExp('--' + k + '\\b').test(HTML), 'old --' + k + ' is gone'));
   }],
   ['no hex color outside the :root block', () => {
     const hits = (REST.match(HEX) || []);
@@ -46,25 +52,26 @@ A.run('Palette', [
     const hits = (REST.match(FUNC) || []);
     A.equal(hits.length, 0, 'color functions outside :root: ' + hits.slice(0, 5).join(', '));
   }],
-  ['dark is forced: one scheme, no light overrides', () => {
-    A.ok(/color-scheme:\s*dark/.test(ROOT), 'color-scheme dark in :root');
-    A.ok(!/prefers-color-scheme:\s*light/.test(HTML), 'no light media query');
-    A.ok(/<meta name="color-scheme" content="dark">/.test(HTML), 'color-scheme meta');
+  ['light only: one scheme, no dark override, explicit backgrounds', () => {
+    A.ok(/color-scheme:\s*only light/.test(ROOT), 'color-scheme only light in :root');
+    A.ok(/<meta name="color-scheme" content="only light">/.test(HTML), 'color-scheme meta');
+    A.ok(!/prefers-color-scheme/.test(HTML), 'no media query for dark mode');
+    A.ok(/html,body\{[^}]*background:var\(--paper\) !important/.test(HTML), 'html and body have an explicit paper background');
+    A.ok(/\.pick select\{[^}]*background:var\(--paper\)/.test(HTML), 'the native select has an explicit background');
   }],
-  ['--text and --muted reach 4.5:1 on --bg and --surface', () => {
+  ['ink and muted reach 4.5:1 on the paper', () => {
     const t = tokens();
-    ['text', 'muted'].forEach(fg => ['bg', 'surface'].forEach(bg => {
-      const c = contrast(t[fg], t[bg]);
-      A.ok(c >= 4.5, '--' + fg + ' on --' + bg + ' is ' + c.toFixed(2) + ':1, needs 4.5');
-    }));
+    // --paper2 only paints the empty bar track, so no text sits on it besides ink.
+    ['ink', 'ink2', 'muted'].forEach(fg => {
+      const c = contrast(t[fg], t.paper);
+      A.ok(c >= 4.5, '--' + fg + ' on --paper is ' + c.toFixed(2) + ':1, needs 4.5');
+    });
+    ['ink', 'ink2'].forEach(fg => A.ok(contrast(t[fg], t.paper2) >= 4.5, '--' + fg + ' on --paper2'));
   }],
-  ['accent, red and green stay legible on the grounds they sit on (3:1, the large-text and UI floor)', () => {
+  ['red labels, the reversed blocks and the chart colors stay legible', () => {
     const t = tokens();
-    A.ok(contrast(t['on-accent'], t.accent) >= 4.5, '--on-accent on --accent ' + contrast(t['on-accent'], t.accent).toFixed(2));
-    ['accent', 'red', 'green'].forEach(fg => ['bg', 'surface'].forEach(bg => {
-      const c = contrast(t[fg], t[bg]);
-      A.ok(c >= 3, '--' + fg + ' on --' + bg + ' is ' + c.toFixed(2) + ':1');
-    }));
-    A.ok(contrast(t.muted, t.surface2) >= 4.5, '--muted on --surface2 (selected row) ' + contrast(t.muted, t.surface2).toFixed(2));
+    ['paper', 'paper2'].forEach(bg => A.ok(contrast(t.red, t[bg]) >= 4.5, '--red on --' + bg + ' ' + contrast(t.red, t[bg]).toFixed(2)));
+    ['paper', 'stone', 'blush'].forEach(fg => A.ok(contrast(t[fg], t.ink) >= 4.5, '--' + fg + ' on --ink (the cifra and the winner tiles) ' + contrast(t[fg], t.ink).toFixed(2)));
+    ['up', 'down'].forEach(fg => A.ok(contrast(t[fg], t.paper) >= 3, '--' + fg + ' on --paper is ' + contrast(t[fg], t.paper).toFixed(2) + ':1, the 3:1 floor for lines and large text'));
   }],
 ]);

@@ -1,37 +1,55 @@
-// Fourth & Beers 2026 - publish the leaderboard page data to GitHub Pages
-// v1.4.0 c1.1.0
+// Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
+// v2.0.0 c1.2.0
 //
 // What it does
-//   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the model workbook.
+//   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
 //   2. Reads Survivor strikes from the model's Field tab.
-//   3. Builds data.json and commits it to the GitHub repo. GitHub Pages republishes the page by itself.
-//   4. Keeps the Survivor elimination order (who went out, which week) by carrying it over from the last data.json.
-//   5. Reads the "Fan of" column from the participants list (call signs only, never emails).
-//   6. Reads the Comentarios tab and publishes the rows checked for the current week.
-//   7. Reads the Premios tab and publishes the awards checked for the current week.
-//   It only commits when the numbers changed, so running it often is harmless.
+//   3. Reads the "Fan of" column from the participants list (call signs only, never emails).
+//   4. Reads the Tribune tab and publishes the rows checked for the current week:
+//      Portada, Columna, Clasificado and Dato.
+//   5. Keeps the Survivor elimination order (who went out, which week) by carrying it over from the last data.json.
+//   6. Builds data.json and commits it to the GitHub repo. GitHub Pages republishes the page by itself.
+//   7. Archives the week: editions/semana-NN.json is a full copy of that week's data.json and
+//      editions/index.json lists the weeks. A week that has moved on is never touched again.
+//   It only commits when something other than "updated" changed, so running it often is harmless.
 //
 // One-time setup (Project Settings > Script properties)
 //   GITHUB_TOKEN  fine-grained token, this one repo only, permission Contents: Read and write
 //   GITHUB_REPO   owner/repo, for example yourname/fourth-and-beers
-//   SHEET_ID        workbook that holds the PickEm_Board tab (participants workbook)
+//   SHEET_ID        workbook that holds the PickEm_Board and Tribune tabs (participants workbook)
 //   MODEL_SHEET_ID  model workbook that holds the Field tab (Survivor strikes). Optional, defaults to SHEET_ID.
 // Then run installTriggers() once from the editor and approve the permissions.
-// Run setupComentarios() once to create the Comentarios tab with checkboxes.
-// Run setupPremios() once to create the Premios tab with checkboxes and the week 3 examples.
+// Run setupTribuneTab() once to create the Tribune tab with its dropdown and checkboxes.
+// Moving from the old tabs: run migrateToTribune(true) to see what would move, then migrateToTribune(false).
+// Once the migration has run, migrateToTribune and LEGACY_TABS can be deleted.
 
 var CFG = {
   boardTab: 'PickEm_Board',   // paste Yahoo's weekly performance table here, header row included
-  commentsTab: 'Comentarios', // Semana | Para | Texto | Publicar (checkbox), in the participants workbook
-  awardsTab: 'Premios',       // Semana | Titulo | Para | Texto | Publicar (checkbox), in the participants workbook
+  tribuneTab: 'Tribune',      // Semana | Sección | Para | Título | Texto | Publicar (checkbox), in the participants workbook
   fieldTab: 'Field',          // model tab with Entrant / Strikes columns
   path: 'data.json',
+  editionsDir: 'editions',
   branch: 'main',
   season: 2026,
-  weeks: 18,
-  pays: [1050, 350],          // Pick'em 1st and 2nd, from the reglamento
-  weeklyPrize: 50
+  weeks: 18
 };
+
+// Prize money from the reglamento, published as data.json "prizes". After the weekly $50s the pot splits
+// 30/10 regular, 30/10 Survivor and 20 playoffs. This is the only place the amounts are written.
+var PRIZES = {
+  regular: [1050, 350],
+  survivor: [1050, 350],
+  playoffs: [700],
+  weekly: 50,
+  weeks: 18
+};
+
+// Values of the Sección dropdown in the Tribune tab.
+var SECTIONS = ['Portada', 'Columna', 'Clasificado', 'Dato'];
+var TRIBUNE_HEADER = ['Semana', 'Sección', 'Para', 'Título', 'Texto', 'Publicar'];
+
+// Old tabs, read only by migrateToTribune.
+var LEGACY_TABS = { comments: 'Comentarios', awards: 'Premios' };
 
 // Survivor call sign -> Pick'em call sign. Only the names that differ. Update if Yahoo names change.
 var SURVIVOR_TO_PICKEM = {
@@ -68,74 +86,120 @@ function publishLeaderboard_() {
   var ss = SpreadsheetApp.openById(String(sheetId).trim());
   var modelId = props.getProperty('MODEL_SHEET_ID');
   var model = modelId ? SpreadsheetApp.openById(String(modelId).trim()) : ss;
-  var cur = readCurrent_(repo, token);
+  var cur = readFile_(repo, token, CFG.path);
   var data = buildData_(ss, model, cur ? cur.data : null);
-  var result = commitIfChanged_(repo, token, data, cur);
+  var result = commitAll_(repo, token, data, cur);
   Logger.log(result);
   return result;
 }
 
-/** Installable onEdit: publishes after a paste into PickEm_Board or a change in Comentarios or Premios. */
+/** Installable onEdit: publishes after a paste into PickEm_Board or a change in Tribune. */
 function onBoardEdit(e) {
   if (!e || !e.range) return;
   var name = e.range.getSheet().getName().trim().toLowerCase();
-  if (name !== CFG.boardTab.toLowerCase() && name !== CFG.commentsTab.toLowerCase() && name !== CFG.awardsTab.toLowerCase()) return;
+  if (name !== CFG.boardTab.toLowerCase() && name !== CFG.tribuneTab.toLowerCase()) return;
   Utilities.sleep(5000); // let a large paste or a few quick checkbox clicks land
   publishLeaderboard();
 }
 
-/** Run once. Creates the Comentarios tab in the participants workbook with a checkbox column. */
-function setupComentarios() {
+/** Run once, safe to repeat. Creates the Tribune tab with its header, Sección dropdown and Publicar checkboxes. */
+function setupTribuneTab() {
   var ss = SpreadsheetApp.openById(String(PropertiesService.getScriptProperties().getProperty('SHEET_ID')).trim());
-  var sh = findTab_(ss, CFG.commentsTab) || ss.insertSheet(CFG.commentsTab);
-  sh.getRange(1, 1, 1, 4).setValues([['Semana', 'Para', 'Texto', 'Publicar']]).setFontWeight('bold');
+  setupTribune_(ss);
+  Logger.log('Tribune tab ready in ' + ss.getName());
+}
+
+function setupTribune_(ss) {
+  var sh = findTab_(ss, CFG.tribuneTab) || ss.insertSheet(CFG.tribuneTab);
+  sh.getRange(1, 1, 1, 6).setValues([TRIBUNE_HEADER]).setFontWeight('bold');
   sh.setFrozenRows(1);
-  sh.getRange('D2:D1000').insertCheckboxes();
-  sh.setColumnWidth(1, 70); sh.setColumnWidth(2, 170); sh.setColumnWidth(3, 520); sh.setColumnWidth(4, 80);
-  sh.getRange('C2:C1000').setWrap(true);
-  Logger.log('Comentarios tab ready in ' + ss.getName());
+  var rule = SpreadsheetApp.newDataValidation().requireValueInList(SECTIONS, true).setAllowInvalid(false).build();
+  sh.getRange('B2:B1000').setDataValidation(rule);
+  sh.getRange('F2:F1000').insertCheckboxes();
+  sh.setColumnWidth(1, 70); sh.setColumnWidth(2, 110); sh.setColumnWidth(3, 170);
+  sh.setColumnWidth(4, 190); sh.setColumnWidth(5, 520); sh.setColumnWidth(6, 80);
+  sh.getRange('E2:E1000').setWrap(true);
+  return sh;
 }
 
 /**
- * Run once. Creates the Premios tab in the participants workbook with a checkbox column.
- * An empty tab also gets the week 3 awards the page used to compute, checked, as examples.
- * A tab that already has rows is left alone.
+ * One-off. Moves the old tabs into Tribune: Comentarios rows become Columna, Premios rows become Clasificado.
+ * dryRun true (the default): logs row counts per source and per week, writes nothing.
+ * dryRun false: appends to Tribune, checks the counts, and only on a match deletes Comentarios and Premios.
+ * On a mismatch the appended rows are cleared again and nothing is deleted.
+ * Sheets version history is the backup. Returns a report object.
  */
-function setupPremios() {
+function migrateToTribune(dryRun) {
   var ss = SpreadsheetApp.openById(String(PropertiesService.getScriptProperties().getProperty('SHEET_ID')).trim());
-  var sh = findTab_(ss, CFG.awardsTab) || ss.insertSheet(CFG.awardsTab);
-  var hasRows = sh.getDataRange().getValues().slice(1).some(function (r) {
-    return r.some(function (c) { return String(c).trim() !== ''; });
-  });
-  sh.getRange(1, 1, 1, 5).setValues([['Semana', 'Titulo', 'Para', 'Texto', 'Publicar']]).setFontWeight('bold');
-  sh.setFrozenRows(1);
-  sh.getRange('E2:E1000').insertCheckboxes();
-  sh.setColumnWidth(1, 70); sh.setColumnWidth(2, 170); sh.setColumnWidth(3, 170); sh.setColumnWidth(4, 520); sh.setColumnWidth(5, 80);
-  sh.getRange('D2:D1000').setWrap(true);
-  if (!hasRows) {
-    sh.getRange(2, 1, PREMIOS_SEED.length, 5).setValues(PREMIOS_SEED.map(function (r) { return r.concat([true]); }));
-    Logger.log('Premios tab ready in ' + ss.getName() + ', seeded with ' + PREMIOS_SEED.length + ' week 3 awards.');
-  } else {
-    Logger.log('Premios tab ready in ' + ss.getName() + ', it already has rows so nothing was seeded.');
-  }
+  return migrate_(ss, dryRun !== false);
 }
 
-// The five awards the page used to compute, exactly as it rendered them in week 3.
-// setupPremios() writes them to an empty Premios tab so the commissioner has examples to copy.
-var PREMIOS_SEED = [
-  [3, "Montaña rusa", "Jorge_B", "De 93 a 39. 54 puntos entre su mejor y su peor semana. Abróchense el cinturón, este juego mecánico no tiene frenos."],
-  [3, "Reloj suizo", "Chitown’DemBoyz", "60, 63, 60. Solo 3 puntos de diferencia en 3 semanas. Ni muy muy, ni tan tan. Puntual como la cobranza del Comish."],
-  [3, "Foto finish", "Jorge_B", "Ganó la semana 1 por 1 punto. Un pick de confianza 1 y los $50 eran de alguien más. Así se ganan las semanas: sufriendo hasta el lunes en la noche."],
-  [3, "Doble amenaza", "Juan1768, Cyber70, Jorge_B, Osos de Grayslake", "Top 10 en la quiniela y sin un solo strike en Survivor. Los demás ya andan copiando picks. Ni así."],
-  [3, "Nadie está muerto", "Todos", "Del 1º al 22º hay 85 puntos. La mejor semana hasta ahora fue de 101. Una semana buena y te metes a la pelea."]
-];
+function migrate_(ss, dryRun) {
+  var src = [
+    { key: 'comments', tab: LEGACY_TABS.comments, sh: findTab_(ss, LEGACY_TABS.comments) },
+    { key: 'awards', tab: LEGACY_TABS.awards, sh: findTab_(ss, LEGACY_TABS.awards) }
+  ];
+  var rows = [], report = { dryRun: dryRun, ok: true, counts: {}, byWeek: {}, deleted: [] };
+  src.forEach(function (s) {
+    var out = [];
+    if (s.sh) {
+      var values = s.sh.getDataRange().getValues();
+      for (var r = 1; r < values.length; r++) {
+        var v = values[r];
+        if (!v.some(function (c) { return String(c).trim() !== ''; })) continue;
+        // Comentarios: Semana, Para, Texto, Publicar.  Premios: Semana, Titulo, Para, Texto, Publicar.
+        out.push(s.key === 'comments'
+          ? [v[0], 'Columna', v[1], '', v[2], v[3]]
+          : [v[0], 'Clasificado', v[2], v[1], v[3], v[4]]);
+      }
+    }
+    report.counts[s.tab] = out.length;
+    var wk = {};
+    out.forEach(function (o) { var k = String(o[0]).trim() || '(sin semana)'; wk[k] = (wk[k] || 0) + 1; });
+    report.byWeek[s.tab] = wk;
+    Logger.log(s.tab + ': ' + (s.sh ? out.length + ' rows' : 'tab not found') + ' ' + JSON.stringify(wk));
+    rows = rows.concat(out);
+  });
+  if (dryRun) { Logger.log('Dry run, nothing written. ' + rows.length + ' rows would move to ' + CFG.tribuneTab + '.'); return report; }
+  if (!rows.length) { Logger.log('Nothing to move.'); return report; }
+
+  var tr = setupTribune_(ss);
+  var start = lastRow_(tr) + 1;
+  tr.getRange(start, 1, rows.length, 6).setValues(rows);
+
+  // Read back what landed and compare it with the sources, per Sección and week, text included.
+  var landed = tr.getDataRange().getValues().slice(start - 1).filter(function (o) {
+    return o.some(function (c) { return String(c).trim() !== ''; });
+  });
+  var sig = function (list) {
+    return list.map(function (o) { return [o[0], o[1], o[2], o[3], o[4]].map(function (c) { return String(c).trim(); }).join('|'); }).sort();
+  };
+  if (JSON.stringify(sig(rows)) !== JSON.stringify(sig(landed))) {
+    tr.getRange(start, 1, rows.length, 6).clearContent();
+    report.ok = false;
+    Logger.log('Counts do not match (expected ' + rows.length + ' rows, found ' + landed.length + '). Rows cleared from ' + CFG.tribuneTab + ', nothing deleted.');
+    return report;
+  }
+  src.forEach(function (s) {
+    if (s.sh) { ss.deleteSheet(s.sh); report.deleted.push(s.tab); }
+  });
+  Logger.log('Moved ' + rows.length + ' rows to ' + CFG.tribuneTab + ' and deleted ' + (report.deleted.join(', ') || 'no tabs') + '.');
+  return report;
+}
+
+/** Last row with anything in it (the header is row 1). */
+function lastRow_(sh) {
+  var v = sh.getDataRange().getValues(), last = 1;
+  for (var i = 0; i < v.length; i++) if (v[i].some(function (c) { return String(c).trim() !== ''; })) last = i + 1;
+  return last;
+}
 
 /** Run once. Replaces any earlier triggers from this project. */
 function installTriggers() {
   var sheetId = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
   if (!sheetId) throw new Error('Set SHEET_ID in Script properties first.');
   ScriptApp.getProjectTriggers().forEach(function (t) { ScriptApp.deleteTrigger(t); });
-  // 1) publish when the board tab is edited (your weekly paste)
+  // 1) publish when the board or the Tribune tab is edited (your weekly paste, the checkbox clicks)
   ScriptApp.newTrigger('onBoardEdit').forSpreadsheet(sheetId).onEdit().create();
   // 2) daily sweep, catches Survivor strike changes the model writes by script
   ScriptApp.newTrigger('publishLeaderboard').timeBased().everyDays(1).atHour(7).create();
@@ -152,14 +216,12 @@ function buildData_(ss, model, prev) {
   return {
     survivorOut: survivorOut_(prev, strikes, board.week),
     fans: readFans_(ss, board.names),
-    comments: readComments_(ss, board.week, board.names),
-    awards: readAwards_(ss, board.week, board.names),
+    tribune: readTribune_(ss, board.week, board.names),
     season: CFG.season,
     week: board.week,
     weeks: CFG.weeks,
     updated: new Date().toISOString(),
-    pays: CFG.pays,
-    weeklyPrize: CFG.weeklyPrize,
+    prizes: JSON.parse(JSON.stringify(PRIZES)),
     pickem: board.rows,
     strikes: strikes
   };
@@ -263,7 +325,8 @@ function checkSetup() {
   var mid = PropertiesService.getScriptProperties().getProperty('MODEL_SHEET_ID');
   var model = mid ? SpreadsheetApp.openById(String(mid).trim()) : ss;
   Logger.log('Model workbook: ' + model.getName());
-  Logger.log('PickEm_Board found: ' + !!findTab_(ss, CFG.boardTab) + '   Field found: ' + !!findTab_(model, CFG.fieldTab));
+  Logger.log('PickEm_Board found: ' + !!findTab_(ss, CFG.boardTab) + '   Tribune found: ' + !!findTab_(ss, CFG.tribuneTab) +
+    '   Field found: ' + !!findTab_(model, CFG.fieldTab));
 }
 
 // NFL teams by abbreviation, plus city and nickname lookups for free-text "Fan of" values.
@@ -301,7 +364,7 @@ function parseFan_(text) {
   return out;
 }
 
-/** Fan info keyed by Pick'em name, read from the tab that has "Call Sign PickEm" and "Fan of". */
+/** Fan info keyed by Pick'em name, read from the tab that has "Call Sign PickEm" and "Fan of" columns. */
 function readFans_(ss, pickemNames) {
   var out = {};
   var byNorm = {};
@@ -325,52 +388,60 @@ function readFans_(ss, pickemNames) {
   return out;
 }
 
-/** Checked rows in Comentarios for this week. Para matches a Pick'em name, or blank / Todos for everyone. */
-function readComments_(ss, week, pickemNames) {
-  var sh = findTab_(ss, CFG.commentsTab);
-  if (!sh) return [];
+/**
+ * Checked rows in Tribune for this week, grouped by Sección, in sheet order.
+ * Para is one or several Pick'em call signs separated by commas, or blank / Todos for everyone (published as '').
+ * An unknown name is logged and published as typed. A missing tab gives an empty Tribune and the page uses its fallbacks.
+ */
+function readTribune_(ss, week, pickemNames) {
+  var out = { portada: null, columna: [], clasificados: [], datos: [] };
+  var sh = findTab_(ss, CFG.tribuneTab);
+  if (!sh) return out;
+  var values = sh.getDataRange().getDisplayValues();
+  if (!values.length) return out;
+  var head = values[0].map(plain_);
+  var at = function (name, fallback) { var i = head.indexOf(name); return i >= 0 ? i : fallback; };
+  var cW = at('semana', 0), cS = at('seccion', 1), cP = at('para', 2), cT = at('titulo', 3), cX = at('texto', 4), cK = at('publicar', 5);
   var byNorm = {};
   pickemNames.forEach(function (n) { byNorm[norm_(n)] = n; });
-  var values = sh.getDataRange().getDisplayValues();
-  var out = [];
+
   for (var r = 1; r < values.length; r++) {
-    var v = values[r];
-    var wk = toNum_(v[0]), para = String(v[1] || '').trim(), texto = String(v[2] || '').trim();
-    var ok = /^(true|x|s[ií]|yes)$/i.test(String(v[3] || '').trim());
-    if (!ok || !texto || wk !== week) continue;
-    var who = byNorm[norm_(para)] || '';
-    if (para && !who && !/^todos$/i.test(para)) Logger.log('Comentarios: "' + para + '" is not a Pick\'em name, showing it to everyone.');
-    out.push({ para: who, texto: texto });
+    var v = values[r], row = r + 1;
+    var ok = /^(true|x|s[ií]|yes)$/i.test(String(v[cK] || '').trim());
+    if (!ok || toNum_(v[cW]) !== week) continue;
+    var sec = plain_(v[cS]);
+    var titulo = String(v[cT] || '').trim(), texto = String(v[cX] || '').trim();
+    var para = resolvePara_(v[cP], byNorm, row);
+    if (sec === 'portada') {
+      if (!titulo) { Logger.log('Tribune row ' + row + ' is a checked Portada without a Título, skipping it.'); continue; }
+      if (out.portada) { Logger.log('Tribune row ' + row + ': only one Portada per week, skipping this one.'); continue; }
+      out.portada = { titulo: titulo, texto: texto, para: para };
+    } else if (sec === 'columna') {
+      if (!texto) { Logger.log('Tribune row ' + row + ' is a checked Columna without Texto, skipping it.'); continue; }
+      out.columna.push({ para: para, texto: texto });
+    } else if (sec === 'clasificado' || sec === 'dato') {
+      if (!titulo || !texto) { Logger.log('Tribune row ' + row + ' is checked but has no Título or no Texto, skipping it.'); continue; }
+      (sec === 'dato' ? out.datos : out.clasificados).push({ titulo: titulo, para: para, texto: texto });
+    } else {
+      Logger.log('Tribune row ' + row + ' is checked but its Sección "' + String(v[cS]).trim() + '" is not one of ' + SECTIONS.join(', ') + ', skipping it.');
+    }
   }
   return out;
 }
 
-/**
- * Checked rows in Premios for this week, in sheet order. Para is one or several Pick'em call signs
- * separated by commas, or blank / Todos for everyone. An unknown name is logged and published as typed.
- */
-function readAwards_(ss, week, pickemNames) {
-  var sh = findTab_(ss, CFG.awardsTab);
-  if (!sh) return [];
-  var byNorm = {};
-  pickemNames.forEach(function (n) { byNorm[norm_(n)] = n; });
-  var values = sh.getDataRange().getDisplayValues();
-  var out = [];
-  for (var r = 1; r < values.length; r++) {
-    var v = values[r];
-    var wk = toNum_(v[0]), titulo = String(v[1] || '').trim(), para = String(v[2] || '').trim(), texto = String(v[3] || '').trim();
-    var ok = /^(true|x|s[ií]|yes)$/i.test(String(v[4] || '').trim());
-    if (!ok || wk !== week) continue;
-    if (!titulo || !texto) { Logger.log('Premios row ' + (r + 1) + ' is checked but has no Titulo or no Texto, skipping it.'); continue; }
-    var who = para.split(',').map(function (t) { return t.trim(); }).filter(function (t) { return t; }).map(function (t) {
-      if (/^todos$/i.test(t)) return 'Todos';
-      var hit = byNorm[norm_(t)];
-      if (!hit) Logger.log('Premios: "' + t + "\" is not a Pick'em name, publishing it as typed.");
-      return hit || t;
-    });
-    out.push({ titulo: titulo, para: (who.length && !who.every(function (t) { return t === 'Todos'; })) ? who.join(', ') : 'Todos', texto: texto });
-  }
-  return out;
+/** Pick'em call signs from a Para cell. Todos and blank mean everyone and come back as ''. */
+function resolvePara_(cell, byNorm, row) {
+  var who = String(cell || '').split(',').map(function (t) { return t.trim(); }).filter(function (t) { return t && !/^todos$/i.test(t); });
+  return who.map(function (t) {
+    var hit = byNorm[norm_(t)];
+    if (!hit) Logger.log('Tribune row ' + row + ': "' + t + "\" is not a Pick'em name, publishing it as typed.");
+    return hit || t;
+  }).join(', ');
+}
+
+/** Lowercase without accents, for matching headers and Sección values. */
+function plain_(s) {
+  return String(s || '').trim().toLowerCase().replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o').replace(/[úùü]/g, 'u');
 }
 
 /** Elimination order. Keeps earlier entries, drops anyone whose strikes were corrected below 3, adds new outs with this week. */
@@ -384,7 +455,7 @@ function survivorOut_(prev, strikes, week) {
 }
 
 function toNum_(s) { var n = Number(String(s).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? 0 : n; }
-function norm_(s) { return String(s).replace(/[\u2018\u2019`\u00b4]/g, "'").trim().toLowerCase(); }
+function norm_(s) { return String(s).replace(/[‘’`´]/g, "'").trim().toLowerCase(); }
 
 // ---------------------------------------------------------------------------
 // GitHub commit
@@ -398,14 +469,14 @@ function ghHeaders_(token) {
   };
 }
 
-function ghUrl_(repo) { return 'https://api.github.com/repos/' + repo + '/contents/' + CFG.path; }
+function ghUrl_(repo, path) { return 'https://api.github.com/repos/' + repo + '/contents/' + path; }
 
-/** Current data.json in the repo, or null if it does not exist yet. */
-function readCurrent_(repo, token) {
-  var get = UrlFetchApp.fetch(ghUrl_(repo) + '?ref=' + CFG.branch, { headers: ghHeaders_(token), muteHttpExceptions: true });
+/** A file in the repo, or null if it does not exist yet. */
+function readFile_(repo, token, path) {
+  var get = UrlFetchApp.fetch(ghUrl_(repo, path) + '?ref=' + CFG.branch, { headers: ghHeaders_(token), muteHttpExceptions: true });
   var code = get.getResponseCode();
   if (code === 404) return null;
-  if (code !== 200) throw new Error('GitHub read failed (' + code + '): ' + get.getContentText());
+  if (code !== 200) throw new Error('GitHub read failed (' + code + ') for ' + path + ': ' + get.getContentText());
   var cur = JSON.parse(get.getContentText());
   var text = Utilities.newBlob(Utilities.base64Decode(cur.content.replace(/\n/g, ''))).getDataAsString('UTF-8');
   var data = null;
@@ -413,21 +484,50 @@ function readCurrent_(repo, token) {
   return { sha: cur.sha, text: text, data: data };
 }
 
-function commitIfChanged_(repo, token, data, cur) {
-  if (cur && sameNumbers_(cur.text, data)) return 'No changes, nothing committed (week ' + data.week + ').';
+function writeFile_(repo, token, path, obj, message, cur) {
   var body = {
-    message: 'Semana ' + data.week + ': tabla actualizada',
-    content: Utilities.base64Encode(JSON.stringify(data, null, 1), Utilities.Charset.UTF_8),
+    message: message,
+    content: Utilities.base64Encode(JSON.stringify(obj, null, 1), Utilities.Charset.UTF_8),
     branch: CFG.branch
   };
   if (cur) body.sha = cur.sha;
-  var put = UrlFetchApp.fetch(ghUrl_(repo), {
+  var put = UrlFetchApp.fetch(ghUrl_(repo, path), {
     method: 'put', headers: ghHeaders_(token), contentType: 'application/json',
     payload: JSON.stringify(body), muteHttpExceptions: true
   });
   var code = put.getResponseCode();
-  if (code !== 200 && code !== 201) throw new Error('GitHub write failed (' + code + '): ' + put.getContentText());
-  return 'Committed data.json for week ' + data.week + '.';
+  if (code !== 200 && code !== 201) throw new Error('GitHub write failed (' + code + ') for ' + path + ': ' + put.getContentText());
+}
+
+function editionPath_(week) { return CFG.editionsDir + '/semana-' + (week < 10 ? '0' : '') + week + '.json'; }
+
+/**
+ * Writes the week's edition, the edition index and data.json, in that order, so the page never points at
+ * an edition that is not there. Each file is committed only when something other than "updated" changed.
+ * Editions of earlier weeks are never touched.
+ */
+function commitAll_(repo, token, data, cur) {
+  var done = [];
+  var epath = editionPath_(data.week);
+  var ed = readFile_(repo, token, epath);
+  if (!ed || !sameNumbers_(ed.text, data)) {
+    writeFile_(repo, token, epath, data, 'Semana ' + data.week + ': edición archivada', ed);
+    done.push(epath);
+  }
+  var ipath = CFG.editionsDir + '/index.json';
+  var idx = readFile_(repo, token, ipath);
+  var weeks = (idx && idx.data && idx.data.weeks) ? idx.data.weeks.slice() : [];
+  if (weeks.indexOf(data.week) < 0) {
+    weeks.push(data.week);
+    weeks.sort(function (a, b) { return a - b; });
+    writeFile_(repo, token, ipath, { weeks: weeks }, 'Semana ' + data.week + ': índice de ediciones', idx);
+    done.push(ipath);
+  }
+  if (!cur || !sameNumbers_(cur.text, data)) {
+    writeFile_(repo, token, CFG.path, data, 'Semana ' + data.week + ': tabla actualizada', cur);
+    done.push(CFG.path);
+  }
+  return done.length ? 'Committed ' + done.join(', ') + ' (week ' + data.week + ').' : 'No changes, nothing committed (week ' + data.week + ').';
 }
 
 /** Ignores the timestamp so a rerun with the same numbers does not create a commit. */

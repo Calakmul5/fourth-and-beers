@@ -1,0 +1,429 @@
+{
+ "survivorOut": [
+  {
+   "name": "KinkyKing",
+   "week": 3
+  },
+  {
+   "name": "Rastaman",
+   "week": 4
+  },
+  {
+   "name": "Billy Beaner",
+   "week": 4
+  },
+  {
+   "name": "Andrea’s Picks",
+   "week": 4
+  },
+  {
+   "name": "Manolito’s winning picks",
+   "week": 4
+  },
+  {
+   "name": "X-Men Let’s go Boys",
+   "week": 5
+  }
+ ],
+ "fans": {
+  "Rastaman": {
+   "nfl": "DAL"
+  },
+  "Conquistador": {
+   "nfl": "DAL"
+  },
+  "MVP21": {
+   "nfl": "PIT"
+  },
+  "This is our year": {
+   "nfl": "DAL"
+  },
+  "King of The North": {
+   "nfl": "CHI"
+  },
+  "Niners": {
+   "nfl": "SF"
+  },
+  "Abogado": {
+   "nfl": "SF"
+  },
+  "KinkyKing": {
+   "nfl": "GB"
+  },
+  "Steel Man": {
+   "nfl": "PIT"
+  },
+  "Silverback": {
+   "nfl": "PIT"
+  },
+  "Osos de Grayslake": {
+   "nfl": "CHI"
+  },
+  "Chitown’DemBoyz": {
+   "nfl": "DAL"
+  },
+  "Puto el que lo lea": {
+   "nfl": "CHI"
+  },
+  "Cyber70": {
+   "nfl": "DAL"
+  },
+  "Billy Beaner": {
+   "nfl": "CHI",
+   "ncaa": "Michigan"
+  },
+  "Mean Machine": {
+   "nfl": "DAL"
+  },
+  "Manolito’s winning picks": {
+   "nfl": "CHI"
+  },
+  "Jorge_B": {
+   "random": true,
+   "other": "League of Legends"
+  },
+  "Andrea’s Picks": {
+   "nfl": "CHI",
+   "ncaa": "Wisconsin"
+  },
+  "Juan1768": {
+   "nfl": "CHI"
+  },
+  "SinCasco": {
+   "nfl": "DAL"
+  },
+  "X-Men Let’s go Boys": {
+   "nfl": "DAL"
+  }
+ },
+ "comments": [
+  {
+   "para": "",
+   "texto": "12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16."
+  },
+  {
+   "para": "Silverback",
+   "texto": "El Comish hizo 50 y sigue líder. La peor semana se tira. Qué regla tan sabia."
+  },
+  {
+   "para": "Abogado",
+   "texto": "Del 12º al 2º en una semana. No fue trampa, fue trámite."
+  }
+ ],
+ "awards": [
+  {
+   "titulo": "Fotocopia",
+   "para": "Osos de Grayslake, Mean Machine, Jorge_B",
+   "texto": "281, 281 y 281. Tres listas distintas y el mismo total."
+  },
+  {
+   "titulo": "Disco rayado",
+   "para": "This is our year",
+   "texto": "65, 65 y 65. Dice que este es su año. Parece la misma semana."
+  },
+  {
+   "titulo": "Lo que da, quita",
+   "para": "Andrea’s Picks",
+   "texto": "Su mejor semana, 73. Esa misma semana Dallas la sacó de Survivor."
+  }
+ ],
+ "season": 2026,
+ "week": 5,
+ "weeks": 18,
+ "updated": "2026-10-15T12:48:41.715Z",
+ "pays": [
+  1050,
+  350
+ ],
+ "weeklyPrize": 50,
+ "pickem": [
+  {
+   "name": "Silverback",
+   "weeks": [
+    57,
+    76,
+    101,
+    70,
+    50
+   ],
+   "total": 304,
+   "dropped": 50
+  },
+  {
+   "name": "Abogado",
+   "weeks": [
+    63,
+    52,
+    75,
+    57,
+    94
+   ],
+   "total": 289,
+   "dropped": 52
+  },
+  {
+   "name": "King of The North",
+   "weeks": [
+    66,
+    68,
+    49,
+    90,
+    63
+   ],
+   "total": 287,
+   "dropped": 49
+  },
+  {
+   "name": "Cyber70",
+   "weeks": [
+    70,
+    56,
+    79,
+    60,
+    77
+   ],
+   "total": 286,
+   "dropped": 56
+  },
+  {
+   "name": "Osos de Grayslake",
+   "weeks": [
+    69,
+    69,
+    48,
+    61,
+    82
+   ],
+   "total": 281,
+   "dropped": 48
+  },
+  {
+   "name": "Mean Machine",
+   "weeks": [
+    92,
+    40,
+    52,
+    70,
+    67
+   ],
+   "total": 281,
+   "dropped": 40
+  },
+  {
+   "name": "Jorge_B",
+   "weeks": [
+    93,
+    39,
+    56,
+    69,
+    63
+   ],
+   "total": 281,
+   "dropped": 39
+  },
+  {
+   "name": "Niners",
+   "weeks": [
+    60,
+    63,
+    51,
+    77,
+    74
+   ],
+   "total": 274,
+   "dropped": 51
+  },
+  {
+   "name": "Billy Beaner",
+   "weeks": [
+    78,
+    74,
+    50,
+    50,
+    63
+   ],
+   "total": 265,
+   "dropped": 50
+  },
+  {
+   "name": "Chitown’DemBoyz",
+   "weeks": [
+    60,
+    63,
+    60,
+    77,
+    56
+   ],
+   "total": 260,
+   "dropped": 56
+  },
+  {
+   "name": "Conquistador",
+   "weeks": [
+    55,
+    46,
+    69,
+    41,
+    82
+   ],
+   "total": 252,
+   "dropped": 41
+  },
+  {
+   "name": "This is our year",
+   "weeks": [
+    57,
+    65,
+    65,
+    65,
+    56
+   ],
+   "total": 252,
+   "dropped": 56
+  },
+  {
+   "name": "Rastaman",
+   "weeks": [
+    64,
+    58,
+    54,
+    56,
+    71
+   ],
+   "total": 249,
+   "dropped": 54
+  },
+  {
+   "name": "KinkyKing",
+   "weeks": [
+    51,
+    59,
+    52,
+    23,
+    83
+   ],
+   "total": 245,
+   "dropped": 23
+  },
+  {
+   "name": "MVP21",
+   "weeks": [
+    83,
+    35,
+    38,
+    53,
+    71
+   ],
+   "total": 245,
+   "dropped": 35
+  },
+  {
+   "name": "Juan1768",
+   "weeks": [
+    81,
+    42,
+    73,
+    34,
+    40
+   ],
+   "total": 236,
+   "dropped": 34
+  },
+  {
+   "name": "SinCasco",
+   "weeks": [
+    65,
+    50,
+    73,
+    36,
+    44
+   ],
+   "total": 232,
+   "dropped": 36
+  },
+  {
+   "name": "Puto el que lo lea",
+   "weeks": [
+    47,
+    59,
+    32,
+    58,
+    66
+   ],
+   "total": 230,
+   "dropped": 32
+  },
+  {
+   "name": "Manolito’s winning picks",
+   "weeks": [
+    72,
+    49,
+    54,
+    51,
+    52
+   ],
+   "total": 229,
+   "dropped": 49
+  },
+  {
+   "name": "Andrea’s Picks",
+   "weeks": [
+    61,
+    54,
+    39,
+    30,
+    73
+   ],
+   "total": 227,
+   "dropped": 30
+  },
+  {
+   "name": "X-Men Let’s go Boys",
+   "weeks": [
+    71,
+    41,
+    50,
+    47,
+    43
+   ],
+   "total": 211,
+   "dropped": 41
+  },
+  {
+   "name": "Steel Man",
+   "weeks": [
+    45,
+    47,
+    43,
+    44,
+    40
+   ],
+   "total": 179,
+   "dropped": 40
+  }
+ ],
+ "strikes": {
+  "Silverback": 2,
+  "Rastaman": 3,
+  "Conquistador": 2,
+  "MVP21": 2,
+  "This is our year": 1,
+  "King of The North": 2,
+  "Niners": 2,
+  "Abogado": 2,
+  "KinkyKing": 3,
+  "Steel Man": 2,
+  "Osos de Grayslake": 1,
+  "Chitown’DemBoyz": 2,
+  "Puto el que lo lea": 2,
+  "Cyber70": 1,
+  "Billy Beaner": 3,
+  "Andrea’s Picks": 3,
+  "X-Men Let’s go Boys": 3,
+  "Jorge_B": 1,
+  "Manolito’s winning picks": 3,
+  "Juan1768": 0,
+  "SinCasco": 2,
+  "Mean Machine": 2
+ }
+}
