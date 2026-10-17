@@ -7,7 +7,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 - `index.html`: the page. GitHub Pages serves the repo root from `main`. It fetches `data.json` (or `editions/semana-NN.json` for `?ed=N`) and falls back to a seed copy embedded in the page.
 - `data.json` and `editions/`: written ONLY by Publish.gs through the GitHub Contents API. Never edit, regenerate or commit them locally. Always take the remote version. `editions/semana-NN.json` is a full copy of that week's data.json, `editions/index.json` lists the weeks. A week that has moved on is never rewritten.
 - `gas/`: the one Apps Script project, bound to the participants workbook (a Sheets button can only call a bound script), managed with clasp. `Publish.js` is `Publish.gs` in the editor, `Code.js` holds the Publicar button (`publishNow`, the Tribune menu, `setupPublishButton`). The project holds only `Publish.js`, `Code.js` and `appsscript.json`. `gas/.clasp.json` carries the workbook id, so it is gitignored (`.clasp.json.example` is the template). `assets/publicar.png` is the button image, served by Pages, drawn by `tools/make_publicar_button.ps1`. The project used to be standalone: its old clasp binding is in git history, and the old project is to be archived. History: the old web app host was undeployed and deleted on 2026-10-01.
-- `.github/workflows/`: `tests.yml` (the suite on pushes that touch code, page, docs or tests, never on the publisher's data.json and editions commits, and on pull requests) and `clasp-push.yml` (tests, then `clasp push -f` when `gas/` changes). Secrets CLASP_JSON (the contents of `gas/.clasp.json`) and CLASPRC_JSON (the contents of `~/.clasprc.json`) live in the repository settings, never in files.
+- `.github/workflows/tests.yml`: runs the suite on GitHub on pull requests and on pushes that touch code, page, docs or tests, never on the publisher's own data.json and editions commits. It needs no secrets. There is no workflow that pushes to Apps Script: deploys go through `deploy.bat` from the PC (a clasp push from GitHub would need a Google refresh token stored there, which was rejected).
 - `docs/LEADERBOARD_ARCHITECTURE.html`: architecture doc. Same layout and diagram conventions as the model's `ARCHITECTURE.html` in `..\Model`.
 - `docs/mockups/tribune-dia.html`: the approved mockup of the Tribune. Reference for layout, type, colors and copy tone.
 - `test/`: Node tests. No live Google or GitHub access. `test/fixtures/week5.json` is the real week 5 data.json in the current schema, `week5-old.json` is the same week in the old schema, `week5-grouppicks.txt` is the real week 5 Yahoo Group Picks table (pipe separated, with the expected Winner row and Yahoo's +/- marks, for assertions only) and `test/picks_fixture.js` turns it into both paste shapes.
@@ -36,7 +36,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 ## Rules
 
 - Versioning: every file carries `v major.minor.bug c major.minor.bug`. v tracks functionality, c tracks content. `index.html` (footer), `Publish.js` (header comment) and the doc (masthead and footer) version independently. Bump on every change.
-- Deploy only with `deploy.bat` (it pushes `gas/` and stops if `gas/.clasp.json` is missing). Never run `clasp push`, `git push` or `git commit` by hand. The `clasp-push.yml` workflow pushes `gas/` too when a push to main changes it, which is not by hand.
+- Deploy only with `deploy.bat` (it pushes `gas/` and stops if `gas/.clasp.json` is missing). Never run `clasp push`, `git push` or `git commit` by hand.
 - `test.bat` must pass before any deploy.
 - When a tab, data.json field, flow function, trigger or page section is added, renamed or retired, update the architecture doc in the same change and bump its version.
 - Page: one self-contained HTML file, vanilla JS, no build step, mobile first. Newsprint, light only: `color-scheme: only light` plus explicit backgrounds so iOS dark mode cannot invert it. Every color is a token in the `:root` block and nowhere else. Every number and sentence is computed from data.json in the browser. The fact engine is deterministic rules, never a model call.
@@ -52,7 +52,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 - index.html v4.1.0 c2.4.0
 - Publish.js v3.1.2 c1.9.0
 - gas/Code.js v1.1.0 c1.0.0
-- docs/LEADERBOARD_ARCHITECTURE.html v4.4.0 c4.4.0
+- docs/LEADERBOARD_ARCHITECTURE.html v4.4.1 c4.4.1
 
 ## Roadmap
 

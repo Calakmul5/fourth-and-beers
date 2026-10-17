@@ -170,18 +170,14 @@ A.run('Publicar button (bound project)', [
     });
   }],
 
-  ['workflows: tests on every code push, clasp push only for gas/, credentials only from secrets and always removed', () => {
-    const wf = f => fs.readFileSync(path.join(ROOT, '.github', 'workflows', f), 'utf8');
-    const t = wf('tests.yml'), c = wf('clasp-push.yml');
+  ['workflows: tests.yml runs the suite, a publish does not start it, and nothing pushes to Apps Script from GitHub', () => {
+    const dir = path.join(ROOT, '.github', 'workflows');
+    A.deep(fs.readdirSync(dir), ['tests.yml'], 'tests.yml is the only workflow');
+    const t = fs.readFileSync(path.join(dir, 'tests.yml'), 'utf8');
     A.match(t, /node test\/run_all\.js/);
     A.ok(!/data\.json|editions/.test(t.replace(/#.*$/gm, '')), 'a publish (data.json, editions/) does not start the tests');
-    A.match(c, /paths: \['gas\/\*\*'\]/);
-    A.ok(c.indexOf('node test/run_all.js') < c.indexOf('clasp push -f'), 'tests before the push');
-    A.match(c, /secrets\.CLASP_JSON/);
-    A.match(c, /secrets\.CLASPRC_JSON/);
-    A.match(c, /if: always\(\)\s+run: rm -f gas\/\.clasp\.json/);
-    A.match(c, /@google\/clasp@\d+\.\d+\.\d+/, 'clasp version pinned');
-    [t, c].forEach(x => A.ok(!/[A-Za-z0-9_-]{40,}/.test(x), 'no id or token in a workflow'));
+    A.ok(!/secrets\.|clasp/.test(t.replace(/#.*$/gm, '')), 'no secrets and no clasp');
+    A.ok(!/[A-Za-z0-9_-]{40,}/.test(t), 'no id or token');
   }],
 
   ['the button image is a real 200x48 PNG that Pages serves from assets/', () => {
