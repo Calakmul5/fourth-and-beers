@@ -50,8 +50,8 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 
 - index.html v4.1.0 c2.4.0
 - Publish.js v3.1.1 c1.9.0
-- gas/Code.js v1.0.1 c1.0.0
-- docs/LEADERBOARD_ARCHITECTURE.html v4.3.0 c4.3.0
+- gas/Code.js v1.0.2 c1.0.0
+- docs/LEADERBOARD_ARCHITECTURE.html v4.3.1 c4.3.1
 
 ## Roadmap
 

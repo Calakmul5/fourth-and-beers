@@ -20,7 +20,7 @@ function load(opts) {
   const sheet = {
     getImages: () => images,
     insertImage(url, col, row, ox, oy) {
-      const img = { url, col, row, ox, oy, script: null, assignScript(fn) { img.script = fn; return img; }, getScriptAssigned: () => img.script, remove() { images.splice(images.indexOf(img), 1); events.push('remove'); } };
+      const img = { url, col, row, ox, oy, script: null, alt: '', assignScript(fn) { img.script = fn; return img; }, setAltTextTitle(t) { img.alt = t; return img; }, getAltTextTitle: () => img.alt, remove() { images.splice(images.indexOf(img), 1); events.push('remove'); } };
       images.push(img); events.push('insert');
       return img;
     },
@@ -100,11 +100,12 @@ A.run('Publicar button (bound project)', [
     A.equal(img.col, 11, 'column K');
     A.equal(img.row, 1);
     A.equal(img.script, 'publishNow');
+    A.equal(img.alt, 'Publicar button');
     A.match(img.url, /^https:\/\/[a-z0-9-]+\.github\.io\/fourth-and-beers\/assets\/publicar\.png$/);
   }],
 
   ['setupPublishButton is repeatable: it replaces its own button and leaves other images alone', () => {
-    const other = { script: 'otraCosa', getScriptAssigned: () => 'otraCosa', remove() { throw new Error('touched a foreign image'); } };
+    const other = { script: 'otraCosa', getAltTextTitle: () => '', remove() { throw new Error('touched a foreign image'); } };
     const ctx = load({});
     ctx._images.push(other);
     ctx.setupPublishButton(); ctx.setupPublishButton();
