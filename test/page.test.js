@@ -12,6 +12,10 @@ const SEED = JSON.parse(/<script type="application\/json" id="seed">([\s\S]*?)<\
 const W5 = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'week5.json'), 'utf8'));
 const W5_OLD = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'week5-old.json'), 'utf8'));
 const clone = x => JSON.parse(JSON.stringify(x));
+const PF = require('./picks_fixture');
+const PICK_RULES = ['lealtad', 'mismoequipo', 'costalazo', 'llanero', 'borregada', 'empate', 'olvido', 'rachapicks', 'perros', 'corriente'];
+/** Week 5 data.json with the picks the publisher builds from the real Group Picks paste. */
+const P5 = () => { const d = clone(W5); d.picks = PF.picks5().picks; return d; };
 
 // ---- Page harness -----------------------------------------------------------
 
@@ -871,5 +875,177 @@ A.run('index.html', [
 
   ['the page has no Claude API call and no Google or GitHub access', async () => {
     A.noMatch(HTML, /anthropic|api\.openai|script\.google|api\.github|googleusercontent/i);
+  }],
+
+  // ---- v3.2: pick-level facts and "Tus picks" ------------------------------------
+
+  ['week 5 with picks: the pick facts run, stay short and follow the copy rules', async () => {
+    const c = await load(P5());
+    common(c, 'week 5 with picks');
+    const picks = c.M.pk.all.filter(f => PICK_RULES.indexOf(f.rule) >= 0);
+    A.ok(picks.length >= 5, 'several pick rules fire on week 5');
+    picks.forEach(f => { lint(f.texto + ' ' + f.titulo, f.rule); A.ok(f.texto.length <= 140, f.rule + ' is ' + f.texto.length + ' characters'); });
+    A.equal(c.M.pk.picks.length, 6, 'still 6 facts');
+    const fact = r => c.M.pk.all.filter(f => f.rule === r)[0];
+    A.equal(fact('llanero'), undefined, 'week 5: no side picked by 1 or 2 covered');
+    A.equal(fact('empate'), undefined, 'no pushes in week 5');
+    Object.keys(c.T.TPL).filter(k => /^(lealtad|mismo|costal|llanero|borregada|empate|olvido|rachaPicks|fuertes|perros|corriente)/.test(k))
+      .forEach(k => c.T.TPL[k].forEach(t => lint(t.replace(/\{\w+\}/g, 'x'), 'TPL.' + k)));
+  }],
+
+  ['Costalazo week 5: 10 players lost a 15 and LAR sank 4 of them', async () => {
+    const c = await load(P5());
+    const f = c.M.pk.all.filter(x => x.rule === 'costalazo')[0];
+    A.equal(f.data.conf, 15);
+    A.equal(f.data.total, 10);
+    A.equal(f.data.team, 'LAR');
+    A.deep(f.data.names.slice().sort(), ['Niners', 'Osos de Grayslake', 'Steel Man', 'X-Men Let’s go Boys']);
+    A.deep(f.sujetos, [], 'four players are not named, so the last place budget is untouched');
+    A.match(f.texto, /4 jugadores le pusieron su 15 a los Rams/);
+    A.match(f.texto, /10 perdieron un 15/);
+  }],
+
+  ['Borregada week 5: Cle picked by 16 of 21, NYJ covered', async () => {
+    const c = await load(P5());
+    const f = c.M.pk.all.filter(x => x.rule === 'borregada')[0];
+    A.equal(f.data.team, 'CLE');
+    A.equal(f.data.k, 16);
+    A.equal(f.data.total, 21);
+    A.equal(f.data.covered, 'NYJ');
+    A.equal(f.valor, '16/21');
+  }],
+
+  ['Llanero solitario: a side with 1 or 2 pickers that covered, and not the lone NO pick that lost', async () => {
+    const d = P5();
+    const c = await load(d);
+    A.equal(c.M.pk.all.filter(x => x.rule === 'llanero').length, 0, 'the lone NO pick by Niners lost');
+    const flipped = clone(d);
+    flipped.picks['5'].g[6][3] = 'U';                       // NO covers after all
+    const c2 = await load(flipped);
+    const f = c2.M.pk.all.filter(x => x.rule === 'llanero')[0];
+    A.ok(f, 'now it fires');
+    A.deep(f.data.names, ['Niners']);
+    A.equal(f.data.team, 'NO');
+    A.deep(f.sujetos, ['Niners']);
+  }],
+
+  ['Empate: points lost to a push', async () => {
+    const d = P5();
+    d.picks['5'].g[6][3] = 'P';
+    const c = await load(d);
+    const f = c.M.pk.all.filter(x => x.rule === 'empate')[0];
+    A.ok(f, 'fires when a game pushes');
+    A.equal(f.data.picks, 22, 'everyone had a pick on it');
+    lint(f.texto, 'empate');
+  }],
+
+  ['Se le olvidó: the empty cells and what they were worth', async () => {
+    const c = await load(P5());
+    const f = c.M.pk.all.filter(x => x.rule === 'olvido')[0];
+    A.deep(f.data.names.slice().sort(), ['Andrea’s Picks', 'Niners']);
+    A.equal(f.data.left, 8, 'Niners had the 1 left over, Andrea the 7');
+    A.match(f.texto, /hasta 8 puntos/);
+  }],
+
+  ['Racha de picks: correct picks in a row, in kickoff order', async () => {
+    const c = await load(P5());
+    const f = c.M.pk.all.filter(x => x.rule === 'rachapicks')[0];
+    A.equal(f.data.run, 6);
+    A.match(f.texto, /seis picks seguidos|Racha de seis aciertos/);
+  }],
+
+  ['Lealtad cara skips Jorge_B and the Suiza players', async () => {
+    const withFans = await load(P5());
+    const f = withFans.M.pk.all.filter(x => x.rule === 'lealtad')[0];
+    A.ok(f, 'fires with fan teams');
+    A.ok(['Jorge_B'].indexOf(f.data.name) < 0);
+    const d = P5();
+    d.fans = { 'Jorge_B': { random: true, other: 'League of Legends' } };      // everybody else is Suiza
+    const c = await load(d);
+    A.equal(c.M.pk.all.filter(x => x.rule === 'lealtad').length, 0, 'random and Suiza never qualify');
+    const d2 = P5();
+    Object.keys(d2.fans).forEach(n => { if (n !== 'Billy Beaner') delete d2.fans[n]; });
+    const c2 = await load(d2);
+    A.deep(c2.M.pk.all.filter(x => x.rule === 'lealtad').map(x => x.data.name), ['Billy Beaner']);
+  }],
+
+  ['Mismo equipo, Amante de los perros and Contra la corriente behave on a second week', async () => {
+    const d = P5();
+    const w4 = clone(d.picks['5']);                           // week 4 is the same table, so every pick repeats
+    d.picks['4'] = w4;
+    const c = await load(d);
+    const same = c.M.pk.all.filter(x => x.rule === 'mismoequipo')[0];
+    A.ok(same, 'the same team in weeks 4 and 5');
+    A.equal(same.data.weeks, 2);
+    lint(same.texto, 'mismoequipo');
+    const dog = c.M.pk.all.filter(x => x.rule === 'perros')[0];
+    A.ok(dog && dog.data.picks >= 8, 'underdog lover');
+    A.ok(c.M.pk.all.filter(x => x.rule === 'corriente')[0], 'against the grain');
+    const t = c.T.truncate(d, 4);
+    A.deep(Object.keys(t.picks), ['4'], 'the league as it stood in week 4 has no week 5 picks');
+  }],
+
+  ['Tus picks, Silverback with week 5 only', async () => {
+    const c = await load(P5());
+    const lines = c.T.tusPicks(c.M, 'Silverback');
+    A.equal(lines.length, 4);
+    A.match(lines[0].t, /^1 de 3/, 'top 3: GB 15 covered, LAR 14 and Cle 13 did not');
+    A.match(lines[1].t, /9 de tus 15 picks fueron underdogs y pegaron 4\. Con favoritos, 2 de 6\./);
+    A.match(lines[2].t, /Packers te dieron más puntos \(\+15\)/);
+    A.match(lines[2].t, /Rams te costaron más \(−14\)/);
+    A.match(lines[3].t, /Con los Steelers: 1 de 1, \+7 puntos\. Contra ellos: nunca\./);
+    lines.forEach(l => lint(l.k + ' ' + l.t, 'tus picks'));
+    c.M.openSheet('Silverback', false);
+    A.equal(c.doc.querySelector('#pkbox').hidden, false);
+    A.deep(all(c.doc, '#panel .sub').map(s => s.textContent), ['Subidas y bajadas', 'Tus picks', 'Survivor: strikes']);
+    A.equal(all(c.doc, '#pkbox p.pk').length, 4);
+    A.ok(c.doc.querySelector('#bumpbox').compareDocumentPosition(c.doc.querySelector('#pkbox')) & 4, 'between the chart');
+    A.ok(c.doc.querySelector('#pkbox').compareDocumentPosition(c.doc.querySelector('#svbox')) & 4, 'and the strikes');
+    A.deep(c.errors, []);
+  }],
+
+  ['Tus picks: no team line for Jorge_B or a Suiza player, an arrow when the last 3 weeks differ from the season', async () => {
+    const c = await load(P5());
+    A.equal(c.T.tusPicks(c.M, 'Jorge_B').length, 3, 'no Tu equipo for the player who picks at random');
+    A.ok(c.T.tusPicks(c.M, 'Silverback').some(l => l.k === 'Tu equipo'));
+    const d = P5();
+    delete d.fans['Silverback'];
+    const c2 = await load(d);
+    A.equal(c2.T.tusPicks(c2.M, 'Silverback').length, 3, 'a Suiza player has no team line');
+    // five weeks of the same table, with week 1 flipped (Silverback's top 3 hit 2 of 3 there, 1 of 3 elsewhere)
+    const d3 = P5();
+    const real = d3.picks['5'];
+    [1, 2, 3, 4].forEach(w => { d3.picks[String(w)] = clone(real); });
+    d3.picks['1'].g.forEach(g => { g[3] = g[3] === 'F' ? 'U' : 'F'; });
+    const c3 = await load(d3);
+    const l = c3.T.tusPicks(c3.M, 'Silverback')[0];
+    A.match(l.t, /en la temporada\. .* en las últimas 3 semanas\./);
+    A.ok(l.a === 'up' || l.a === 'down' || l.a === '', 'arrow is up, down or none');
+    A.equal(l.a, 'down', 'the last 3 weeks (1 of 3 each) trail a season that includes the better flipped week');
+  }],
+
+  ['Tus picks is hidden without picks, and the panel looks as it does today', async () => {
+    const c = await load(W5);
+    c.M.openSheet('Silverback', false);
+    A.equal(c.doc.querySelector('#pkbox').hidden, true);
+    A.equal(c.doc.querySelector('#pkbox').innerHTML, '');
+    A.deep(all(c.doc, '#panel .sub').map(s => s.textContent), ['Subidas y bajadas', 'Survivor: strikes'], 'only the chart and the strikes');
+    const d = P5();
+    Object.keys(d.picks['5'].g).forEach(i => { d.picks['5'].g[i][3] = null; });          // picks without results
+    const c2 = await load(d);
+    c2.M.openSheet('Silverback', false);
+    A.equal(c2.doc.querySelector('#pkbox').hidden, true, 'no week with results, no block');
+    A.equal(c2.M.pk.all.filter(f => PICK_RULES.indexOf(f.rule) >= 0).length, 0, 'and no pick facts');
+    A.deep(c2.errors, []);
+  }],
+
+  ['picks with an unknown call sign or a malformed week do not break the page', async () => {
+    const d = P5();
+    d.picks['5'].p['Fantasma'] = d.picks['5'].p['Abogado'];
+    d.picks['9'] = { g: [], p: {} };
+    d.picks['x'] = null;
+    const c = await load(d);
+    common(c, 'odd picks');
+    A.equal(c.M.pk.picks.length, 6);
   }],
 ]);

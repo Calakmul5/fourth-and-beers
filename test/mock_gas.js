@@ -14,7 +14,7 @@ function pad(rows) {
 function makeSheet(name, rows) {
   const data = rows.map(r => r.slice());
   const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [], validations: [], cleared: [], writes: 0, inserted: [] };
-  let maxCols = 0;
+  let maxCols = 0, maxRows = 0;
   const bgs = {};
   const vmap = {};                 // 'row,col' -> data validation (a checkbox is 'checkbox')
   const each = (row, col, nr, nc, fn) => { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) fn((row + i) + ',' + (col + j), row + i, col + j); };
@@ -53,8 +53,9 @@ function makeSheet(name, rows) {
     getName: () => name,
     setName(n) { name = n; },
     getMaxColumns: () => Math.max(maxCols || 0, ...data.map(r => r.length), 1),
-    getMaxRows: () => Math.max(data.length, 1000),
+    getMaxRows: () => Math.max(data.length, 1000, maxRows),
     vmap: (r, c) => vmap[r + ',' + c] || null,
+    insertRowsAfter(r, n) { for (let i = 0; i < n; i++) data.splice(r, 0, []); maxRows = Math.max(maxRows, r + n); },
     insertColumnAfter(c) {
       log.inserted.push(c);
       // Like Sheets: columns right of c shift, and the new column copies the format (background, validation) of column c.

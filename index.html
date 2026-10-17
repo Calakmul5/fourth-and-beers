@@ -137,6 +137,9 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
 .bl.up .ln{stroke:var(--up);stroke-opacity:1;stroke-width:2.5}.bl.up circle{fill:var(--up);fill-opacity:1}.bl.up text{fill:var(--up);font-weight:700}
 .bl.down .ln{stroke:var(--down);stroke-opacity:1;stroke-width:2.5}.bl.down circle{fill:var(--down);fill-opacity:1}.bl.down text{fill:var(--down);font-weight:700}
 .bl.sel .ln{stroke:var(--red);stroke-opacity:1;stroke-width:4}.bl.sel circle{fill:var(--red);fill-opacity:1}.bl.sel text{fill:var(--red);font-weight:800}
+.pk{margin:8px 0 0;font:14px/1.4 var(--body)}
+.pk b{display:block;font:800 11px var(--sans);letter-spacing:.08em;text-transform:uppercase;color:var(--ink2)}
+.pk .u{color:var(--up);font-weight:700}.pk .d{color:var(--down);font-weight:700}
 .tally{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .tally div{border:1px solid var(--ink);padding:6px 10px;font:600 12px var(--sans)}
 .tally b{font:900 22px var(--head);margin-right:6px}
@@ -176,7 +179,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v3.1.1 c2.1.0
+      v3.2.0 c2.2.0
     </div>
   </div>
 </div>
@@ -196,6 +199,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     </div>
     <div class="movers" id="movers"></div>
     <div class="bumpbox" id="bumpbox"></div>
+    <div id="pkbox" hidden></div>
     <div id="svbox">
       <div class="sub">Survivor: strikes</div>
       <p class="hint">Tres strikes y para afuera. Círculo verde es vida, rojo es strike.</p>
@@ -355,6 +359,7 @@ T.normalize = function(D){
     edicion: t.edicion && (t.edicion.titulo || t.edicion.texto) ? {titulo:t.edicion.titulo||"", texto:t.edicion.texto||"", tema:String(t.edicion.tema||"").trim().toLowerCase()} : null
   };
   d.apodos = d.apodos || {};
+  d.picks = d.picks && typeof d.picks === "object" ? d.picks : {};
   d.strikes = d.strikes || {};
   d.fans = d.fans || {};
   d.survivorOut = d.survivorOut || [];
@@ -371,6 +376,8 @@ T.truncate = function(D, k){
     return {name:p.name, weeks:w, total:s-drop, dropped:drop};
   });
   d.survivorOut = (D.survivorOut||[]).filter(function(o){ return o.week==null || o.week<=k; });
+  d.picks = {};
+  Object.keys(D.picks||{}).forEach(function(w){ if (Number(w)<=k) d.picks[w] = D.picks[w]; });
   var later = {};
   (D.survivorOut||[]).forEach(function(o){ if (o.week!=null && o.week>k) later[normName(o.name)] = 1; });
   d.strikes = {};
@@ -795,7 +802,413 @@ function fSotano(M){
   return fact("sotano", "+"+lp.gap, "Cuentas del sótano", fill(rot(M,TPL.sotano),v), 52, true, {names:lp.names, gap:lp.gap, total:lp.total}, lp.names);
 }
 
-var RULES = [fRebote,fArriba,fFotocopia,fDisco,fRacha,fRecord,fRemontada,fSiempre,fPeor,fSurvivor,fAficiones,fSotano];
+// ---------------------------------------------------------------------------
+// Pick-level facts (rules 16 to 25) and "Tus picks". They read data.json "picks". A game without a known result is
+// skipped, a missed pick is left out, and a confidence 0 pick counts for loyalty and herd facts but never for points.
+// ---------------------------------------------------------------------------
+TPL.lealtadFor = [
+  "{n} va {w} de {c} con {team}: {net} puntos. Querer tanto cuesta.",
+  "Apostar por {team} le cuesta {x} puntos a {n} este año. El amor es ciego y los picks también."
+];
+TPL.lealtadAgainst = [
+  "{n} le fue en contra a {team} y ganó {x} puntos. Traición bien pagada.",
+  "Contra {team}, {n} suma {x} puntos. La traición sí cobra."
+];
+TPL.mismoUp = [
+  "{n} lleva {cw} semanas seguidas con {team}. Hasta hoy le ha dejado {x} puntos.",
+  "{cw} semanas con {team} en la boleta de {n}. Van {x} puntos a favor."
+];
+TPL.mismoDown = [
+  "{n} lleva {cw} semanas seguidas con {team}. Hasta hoy le ha costado {x} puntos.",
+  "{cw} semanas con {team} en la boleta de {n}. Van {x} puntos en contra."
+];
+TPL.costalazo1 = [
+  "{names} le puso su {c} a {team} y lo perdió. Fue el costalazo de la semana.{tail}",
+  "Un {c} de {names} en {team}. No cubrieron y el piso se sintió.{tail}"
+];
+TPL.costaloN = [
+  "{k} jugadores le pusieron su {c} a {team} y lo perdieron. Costalazo colectivo.{tail}",
+  "{k} jugadores pusieron su {c} en {team} y se hundieron. Nadie salió ileso.{tail}"
+];
+TPL.llanero1 = [
+  "{names} fue el único con {team} y cubrió. {c} puntos bien puestos.",
+  "Nadie más escogió a {team}. {names} sí, y cobró {c} puntos."
+];
+TPL.llanero2 = [
+  "{names} fueron los únicos con {team} y cubrieron. {c} puntos entre los dos.",
+  "Solo {names} escogieron a {team}. Cubrieron y cobraron {c} puntos."
+];
+TPL.borregada = [
+  "{k} de {t} escogieron a {team}. Cubrieron {other}. La mayoría también se equivoca.",
+  "{k} de {t} se fueron con {team} y no cubrieron. {Other} sí. Así se pierde en manada."
+];
+TPL.empate1 = [
+  "{game} cayó justo en el spread. {k} jugadores se quedaron sin {c} puntos de confianza.",
+  "{game} empató contra el spread. {c} puntos de confianza se fueron a ningún lado."
+];
+TPL.empateN = [
+  "{cw} juegos cayeron justo en el spread. {c} puntos de confianza se fueron a ningún lado."
+];
+TPL.olvido1 = [
+  "{names} dejó vacío el juego {line}. Esa casilla valía hasta {m} puntos.",
+  "{names} no puso pick en {line}. Eran hasta {m} puntos."
+];
+TPL.olvidoN = [
+  "{names} dejaron picks vacíos. Eran hasta {m} puntos en total.",
+  "Casillas vacías de {names}. Hasta {m} puntos que nadie cobró."
+];
+TPL.rachaPicks = [
+  "{n} acertó {cw} picks seguidos, de {a} a {b}. Tardó en ser genio, pero llegó.",
+  "Racha de {cw} aciertos para {n}, de {a} a {b}. Luego volvió a ser humano."
+];
+TPL.fuertesUp = [
+  "{n} acierta {rl}% de sus picks fuertes en 3 semanas, contra {rs}% en el año. Se le prendió el foco."
+];
+TPL.fuertesDown = [
+  "{n} acierta {rl}% de sus picks fuertes en 3 semanas, contra {rs}% en el año. Se le apagó el foco."
+];
+TPL.perros = [
+  "{n} se fue con el underdog en {k} de {t} picks y acertó {h}. {coda}",
+  "{pct}% de los picks de {n} son underdogs. Pegó {h} de {k}. {coda}"
+];
+TPL.corriente = [
+  "{n} se fue con la minoría en {m} de {t} picks y sumó {p} puntos con ellos.",
+  "{m} de {t} picks de {n} fueron contra la manada. Dejaron {p} puntos."
+];
+
+function tm(code){ return NFL[code] ? "los "+NFL[code] : code; }
+function sgn(n){ return (n<0 ? "−" : "+")+Math.abs(n); }
+function decided(r){ return !!(r && r.res && r.side); }
+function pickPts(r){ return r.won===true ? r.conf : r.won===false ? -r.conf : 0; }
+function fanTeam(M, name){ var p = M.byName[name]; return p && NFL[p.group] ? p.group : null; }
+
+// The picks of every week up to the current one, with Yahoo's results inferred by the publisher.
+// pm.W[w].p[name] is one record or null per game, in kickoff order. pm.R are the weeks with every result known.
+T.pickModel = function(M){
+  if (M.pm !== undefined) return M.pm;
+  M.pm = null;
+  var raw = M.D.picks;
+  if (!raw || typeof raw !== "object") return null;
+  var weeks = Object.keys(raw).map(Number).filter(function(w){ return w>=1 && w<=M.N && raw[w] && raw[w].g && raw[w].p; }).sort(function(a,b){return a-b});
+  if (!weeks.length) return null;
+  var pm = {weeks:weeks, W:{}, R:[], recs:{}}, byNorm = {};
+  M.players.forEach(function(p){ byNorm[normName(p.name)] = p.name; });
+  weeks.forEach(function(w){
+    var e = raw[w];
+    var games = e.g.map(function(g,i){ return {i:i, fav:String(g[0]||""), spread:g[1], dog:String(g[2]||""), res:g[3]==="F"||g[3]==="U"||g[3]==="P" ? g[3] : null}; });
+    var W = {w:w, games:games, solved:games.length>0 && games.every(function(g){return g.res}), p:{}};
+    Object.keys(e.p).forEach(function(n){
+      var name = byNorm[normName(n)];
+      if (!name) return;
+      W.p[name] = games.map(function(g,i){
+        var c = e.p[n][i];
+        if (!c) return null;
+        var team = String(c[0]).toUpperCase(), side = team===g.fav ? "F" : team===g.dog ? "U" : null;
+        var r = {w:w, i:i, g:g, team:team, conf:Number(c[1])||0, side:side, res:g.res, won:null, push:g.res==="P"};
+        if (g.res && side && g.res!=="P") r.won = g.res===side;
+        return r;
+      });
+      pm.recs[name] = (pm.recs[name]||[]).concat(W.p[name].filter(Boolean));
+    });
+    pm.W[w] = W;
+    if (W.solved) pm.R.push(w);
+  });
+  return M.pm = pm;
+};
+
+// This week's solved picks, or null when the week has none.
+function thisWeek(M){
+  var pm = T.pickModel(M);
+  var W = pm && pm.W[M.N];
+  return W && W.solved ? W : null;
+}
+
+// Hits on the 3 highest confidence picks of each week in `weeks`: {h, t}.
+function topHits(pm, name, weeks){
+  var h = 0, t = 0;
+  weeks.forEach(function(w){
+    var l = ((pm.W[w].p[name])||[]).filter(function(r){ return decided(r) && r.conf>0; }).sort(function(a,b){ return b.conf-a.conf; }).slice(0,3);
+    l.forEach(function(r){ t++; if (r.won) h++; });
+  });
+  return {h:h, t:t};
+}
+
+function fLealtad(M){
+  var pm = T.pickModel(M), best = null;
+  if (!pm) return null;
+  M.players.forEach(function(p){
+    var ft = fanTeam(M, p.name), s = {fw:0,fc:0,fn:0,aw:0,ac:0,an:0};
+    if (!ft) return;
+    (pm.recs[p.name]||[]).forEach(function(r){
+      if (!decided(r) || (r.g.fav!==ft && r.g.dog!==ft)) return;
+      var f = r.team===ft;
+      s[f?"fc":"ac"]++;
+      if (r.won) s[f?"fw":"aw"]++;
+      s[f?"fn":"an"] += pickPts(r);
+    });
+    [{kind:"for", net:s.fn, w:s.fw, c:s.fc, ok:s.fn<=-12}, {kind:"against", net:s.an, w:s.aw, c:s.ac, ok:s.an>=12}].forEach(function(c){
+      if (c.ok && (!best || Math.abs(c.net)>Math.abs(best.net))){ c.p = p; c.team = ft; best = c; }
+    });
+  });
+  if (!best) return null;
+  var v = {n:who(best.p.name), w:best.w, c:best.c, team:tm(best.team), net:sgn(best.net), x:Math.abs(best.net)};
+  var f = fact("lealtad", sgn(best.net), best.kind==="for" ? "Lealtad cara" : "Traición que paga",
+    fill(rot(M, best.kind==="for" ? TPL.lealtadFor : TPL.lealtadAgainst), v), 70, true,
+    {name:best.p.name, team:best.team, net:best.net, kind:best.kind}, [best.p.name]);
+  return f;
+}
+
+function fMismoEquipo(M){
+  var pm = T.pickModel(M), best = null;
+  if (!pm) return null;
+  M.players.forEach(function(p){
+    var by = {};
+    (pm.recs[p.name]||[]).forEach(function(r){
+      if (!decided(r) || r.conf<=0) return;
+      (by[r.team] = by[r.team]||{})[r.w] = r;
+    });
+    Object.keys(by).forEach(function(t){
+      var L = 0, net = 0, w = 0, c = 0, k = M.N;
+      while (by[t][k] && pm.W[k].solved){ L++; net += pickPts(by[t][k]); c++; if (by[t][k].won) w++; k--; }
+      if (L>=2 && net!==0 && (!best || L>best.L || (L===best.L && Math.abs(net)>Math.abs(best.net)))) best = {p:p, team:t, L:L, net:net, w:w, c:c};
+    });
+  });
+  if (!best) return null;
+  var v = {n:who(best.p.name), cw:nw(best.L), team:tm(best.team), x:Math.abs(best.net)};
+  return fact("mismoequipo", sgn(best.net), "Mismo equipo", fill(rot(M, best.net>0 ? TPL.mismoUp : TPL.mismoDown), v), 58, true,
+    {name:best.p.name, team:best.team, weeks:best.L, net:best.net}, [best.p.name]);
+}
+
+function fCostalazo(M){
+  var W = thisWeek(M);
+  if (!W) return null;
+  var lost = [], top = 0;
+  M.players.forEach(function(p){
+    (W.p[p.name]||[]).forEach(function(r){
+      if (decided(r) && r.won===false && r.conf>0){ lost.push({name:p.name, r:r}); top = Math.max(top, r.conf); }
+    });
+  });
+  if (!top) return null;
+  var atTop = lost.filter(function(x){return x.r.conf===top}), by = {};
+  atTop.forEach(function(x){ (by[x.r.team] = by[x.r.team]||[]).push(x.name); });
+  var team = Object.keys(by).sort(function(a,b){ return by[b].length-by[a].length || (a<b ? -1 : 1); })[0];
+  var names = by[team], k = names.length, tail = atTop.length>k ? " En total, "+atTop.length+" perdieron un "+top+"." : "";
+  var v = {names:J(names.map(who)), k:k, c:top, team:tm(team), tail:tail};
+  var small = k===1;
+  return fact("costalazo", "−"+top, "Costalazo", fill(rot(M, small ? TPL.costalazo1 : TPL.costaloN), v), 74, true,
+    {conf:top, team:team, names:names, total:atTop.length}, small ? names : []);
+}
+
+function fLlanero(M){
+  var W = thisWeek(M);
+  if (!W) return null;
+  var best = null;
+  W.games.forEach(function(g,i){
+    if (g.res==="P") return;
+    var by = {};
+    M.players.forEach(function(p){
+      var r = (W.p[p.name]||[])[i];
+      if (r && r.side) (by[r.side] = by[r.side]||[]).push(r);
+    });
+    var s = g.res, list = by[s]||[];
+    if (list.length<1 || list.length>2) return;
+    var conf = sum(list.map(function(r){return r.conf}));
+    if (!best || conf>best.conf) best = {team:list[0].team, names:list.map(function(r){ return M.players.filter(function(p){ return (W.p[p.name]||[])[i]===r; })[0].name; }), conf:conf};
+  });
+  if (!best) return null;
+  var v = {names:J(best.names.map(who)), team:tm(best.team), c:best.conf};
+  return fact("llanero", best.names.length===1 ? "1 solo" : "2 solos", "Llanero solitario", fill(rot(M, best.names.length===1 ? TPL.llanero1 : TPL.llanero2), v), 66+Math.min(8,best.conf/2), false,
+    {team:best.team, names:best.names, conf:best.conf}, best.names);
+}
+
+function fBorregada(M){
+  var W = thisWeek(M);
+  if (!W) return null;
+  var best = null;
+  W.games.forEach(function(g,i){
+    if (g.res==="P") return;
+    var n = {F:0, U:0}, t = 0;
+    M.players.forEach(function(p){
+      var r = (W.p[p.name]||[])[i];
+      if (r && r.side){ n[r.side]++; t++; }
+    });
+    var side = n.F>n.U ? "F" : "U", k = n[side];
+    if (t<4 || k/t<0.7 || g.res===side) return;
+    if (!best || k/t>best.k/best.t) best = {g:g, side:side, k:k, t:t};
+  });
+  if (!best) return null;
+  var team = best.side==="F" ? best.g.fav : best.g.dog, other = best.side==="F" ? best.g.dog : best.g.fav;
+  return fact("borregada", best.k+"/"+best.t, "Borregada", fill(rot(M,TPL.borregada), {k:best.k, t:best.t, team:tm(team), other:tm(other), Other:tm(other).replace(/^./,function(c){return c.toUpperCase()})}), 68, true,
+    {team:team, k:best.k, total:best.t, covered:other});
+}
+
+function fEmpate(M){
+  var W = thisWeek(M);
+  if (!W) return null;
+  var games = W.games.filter(function(g){return g.res==="P"});
+  if (!games.length) return null;
+  var c = 0, k = 0;
+  games.forEach(function(g){
+    M.players.forEach(function(p){
+      var r = (W.p[p.name]||[])[g.i];
+      if (r && r.side){ c += r.conf; k++; }
+    });
+  });
+  var one = games.length===1;
+  var v = {game:games[0].fav+" contra "+games[0].dog, k:k, c:c, cw:nw(games.length).replace(/^./,function(x){return x.toUpperCase()})};
+  return fact("empate", String(c), "Empate", fill(rot(M, one ? TPL.empate1 : TPL.empateN), v), 68, true, {games:games.length, conf:c, picks:k});
+}
+
+function fOlvido(M){
+  var W = thisWeek(M);
+  if (!W) return null;
+  var G = W.games.length, list = [];
+  M.players.forEach(function(p){
+    var rs = W.p[p.name];
+    if (!rs) return;
+    var miss = [], used = {}, zero = false;
+    rs.forEach(function(r,i){ if (!r) miss.push(i); else if (r.conf===0) zero = true; else used[r.conf] = 1; });
+    if (!miss.length || zero) return;
+    var left = 0, cnt = 0;
+    for (var c=1;c<=G;c++) if (!used[c]){ left += c; cnt++; }
+    if (cnt===miss.length) list.push({name:p.name, m:left, game:W.games[miss[0]], k:miss.length});
+  });
+  if (!list.length) return null;
+  var m = sum(list.map(function(x){return x.m})), names = list.map(function(x){return x.name});
+  var one = list.length===1 && list[0].k===1;
+  var line = one ? list[0].game.fav+" -"+list[0].game.spread : "";
+  var v = {names:J(names.map(who)), m:m, line:line};
+  return fact("olvido", String(m), "Se le olvidó", fill(rot(M, one ? TPL.olvido1 : TPL.olvidoN), v), 62, true, {names:names, left:m}, names);
+}
+
+function fRachaPicks(M){
+  var pm = T.pickModel(M), best = null;
+  if (!pm) return null;
+  var W = thisWeek(M);
+  if (W) M.players.forEach(function(p){
+    var rs = W.p[p.name];
+    if (!rs) return;
+    var run = [];
+    rs.concat([null]).forEach(function(r){
+      if (r && decided(r) && r.won){ run.push(r); return; }
+      if (run.length>=5 && (!best || run.length>best.run.length || (run.length===best.run.length && sum(run.map(function(x){return x.conf}))>sum(best.run.map(function(x){return x.conf}))))) best = {p:p, run:run};
+      run = [];
+    });
+  });
+  var streak = best ? {score:58+Math.min(12,(best.run.length-5)*3), best:best} : null;
+  // top 3 confidence hit rate over the last 3 weeks against the season
+  var swing = null;
+  if (pm.R.length>=4){
+    var last = pm.R.slice(-3);
+    M.players.forEach(function(p){
+      var a = topHits(pm, p.name, pm.R), b = topHits(pm, p.name, last);
+      if (b.t<9 || a.t<12) return;
+      var d = b.h/b.t-a.h/a.t;
+      if (Math.abs(d)>=0.25 && (!swing || Math.abs(d)>Math.abs(swing.d))) swing = {p:p, d:d, a:a, b:b};
+    });
+  }
+  if (swing && (!streak || streak.score<66)){
+    var v2 = {n:who(swing.p.name), rl:Math.round(swing.b.h/swing.b.t*100), rs:Math.round(swing.a.h/swing.a.t*100)};
+    return fact("rachapicks", v2.rl+"%", "Picks fuertes", fill(rot(M, swing.d>0 ? TPL.fuertesUp : TPL.fuertesDown), v2), 66, true,
+      {name:swing.p.name, last3:swing.b, season:swing.a}, [swing.p.name]);
+  }
+  if (!streak) return null;
+  var run = streak.best.run, v = {n:who(streak.best.p.name), cw:nw(run.length), a:tm(run[0].team), b:tm(run[run.length-1].team)};
+  return fact("rachapicks", String(run.length), "Racha de picks", fill(rot(M,TPL.rachaPicks), v), streak.score, true,
+    {name:streak.best.p.name, run:run.length}, [streak.best.p.name]);
+}
+
+function fPerros(M){
+  var pm = T.pickModel(M), best = null;
+  if (!pm) return null;
+  M.players.forEach(function(p){
+    var rs = (pm.recs[p.name]||[]).filter(function(r){ return r.side && r.res; });
+    var dogs = rs.filter(function(r){return r.side==="U"}), hit = dogs.filter(function(r){return r.won}).length;
+    if (rs.length<8 || dogs.length/rs.length<0.6) return;
+    var share = dogs.length/rs.length;
+    if (!best || share>best.share) best = {p:p, share:share, k:dogs.length, t:rs.length, h:hit, dec:dogs.filter(function(r){return r.res!=="P"}).length};
+  });
+  if (!best) return null;
+  var v = {n:who(best.p.name), k:best.k, t:best.t, h:best.h, pct:Math.round(best.share*100), coda: best.h*2>=best.k ? "Los perros sí muerden." : "Ladran más de lo que muerden."};
+  return fact("perros", Math.round(best.share*100)+"%", "Amante de los perros", fill(rot(M,TPL.perros), v), 56, true,
+    {name:best.p.name, underdogs:best.k, picks:best.t, hits:best.h}, [best.p.name]);
+}
+
+function fCorriente(M){
+  var pm = T.pickModel(M), best = null;
+  if (!pm) return null;
+  var minor = {};
+  pm.weeks.forEach(function(w){
+    var W = pm.W[w];
+    if (!W.solved) return;
+    W.games.forEach(function(g,i){
+      var n = {F:0, U:0};
+      M.players.forEach(function(p){ var r = (W.p[p.name]||[])[i]; if (r && r.side) n[r.side]++; });
+      if (n.F===n.U) return;
+      minor[w+"/"+i] = n.F<n.U ? "F" : "U";
+    });
+  });
+  M.players.forEach(function(p){
+    var t = 0, m = 0, pts = 0;
+    (pm.recs[p.name]||[]).forEach(function(r){
+      if (!decided(r)) return;
+      var side = minor[r.w+"/"+r.i];
+      if (!side) return;
+      t++;
+      if (r.side===side){ m++; if (r.won) pts += r.conf; }
+    });
+    if (t<8) return;
+    var share = m/t;
+    if (share>=0.3 && (!best || share>best.share)) best = {p:p, share:share, m:m, t:t, pts:pts};
+  });
+  if (!best) return null;
+  return fact("corriente", Math.round(best.share*100)+"%", "Contra la corriente", fill(rot(M,TPL.corriente), {n:who(best.p.name), m:best.m, t:best.t, p:best.pts}), 54, true,
+    {name:best.p.name, minority:best.m, picks:best.t, points:best.pts}, [best.p.name]);
+}
+
+// "Tus picks" in the name panel: up to 4 short lines from the weeks with results. null hides the block.
+T.tusPicks = function(M, name){
+  var pm = T.pickModel(M);
+  if (!pm || !pm.R.length) return null;
+  var recs = (pm.recs[name]||[]).filter(function(r){ return decided(r) && r.conf>0 && pm.W[r.w].solved; });
+  if (!recs.length) return null;
+  var out = [];
+  // 1. the 3 highest confidence picks of each week
+  var all = topHits(pm, name, pm.R);
+  if (all.t){
+    if (pm.R.length>3){
+      var l3 = topHits(pm, name, pm.R.slice(-3)), a = "";
+      if (l3.t && all.t){ var d = l3.h/l3.t-all.h/all.t; a = d>0.0001 ? "up" : d<-0.0001 ? "down" : ""; }
+      out.push({k:"Tus picks fuertes", t:all.h+" de "+all.t+" en la temporada. "+l3.h+" de "+l3.t+" en las últimas 3 semanas.", a:a});
+    } else out.push({k:"Tus picks fuertes", t:all.h+" de "+all.t+" en tus 3 picks más altos de cada semana.", a:""});
+  }
+  // 2. favorites or underdogs
+  var dogs = recs.filter(function(r){return r.side==="U"}), favs = recs.filter(function(r){return r.side==="F"});
+  var hits = function(l){ return l.filter(function(r){return r.won}).length; };
+  out.push({k:"Favoritos o underdogs", t:dogs.length+" de tus "+recs.length+" picks fueron underdogs y pegaron "+hits(dogs)+". Con favoritos, "+hits(favs)+" de "+favs.length+".", a:""});
+  // 3. the team that paid the most and the one that cost the most
+  var pay = {}, cost = {};
+  recs.forEach(function(r){
+    if (r.won===true) pay[r.team] = (pay[r.team]||0)+r.conf;
+    else if (r.won===false) cost[r.team] = (cost[r.team]||0)+r.conf;
+  });
+  var topOf = function(m){ var k = Object.keys(m).sort(function(a,b){ return m[b]-m[a] || (a<b ? -1 : 1); })[0]; return k ? {t:k, n:m[k]} : null; };
+  var tp = topOf(pay), tc = topOf(cost);
+  out.push({k:"El que más te pagó", t:(tp ? tm(tp.t).replace(/^./,function(c){return c.toUpperCase()})+" te dieron más puntos (+"+tp.n+")." : "Todavía nadie te ha pagado.")+" "+(tc ? tm(tc.t).replace(/^./,function(c){return c.toUpperCase()})+" te costaron más (−"+tc.n+")." : "Ninguno te ha costado."), a:""});
+  // 4. your team
+  var ft = fanTeam(M, name);
+  if (ft){
+    var f = recs.filter(function(r){ return r.team===ft; }), g = recs.filter(function(r){ return r.team!==ft && (r.g.fav===ft || r.g.dog===ft); });
+    var net = function(l){ return sum(l.map(pickPts)); };
+    if (f.length || g.length){
+      out.push({k:"Tu equipo", t:"Con "+tm(ft)+": "+(f.length ? hits(f)+" de "+f.length+", "+sgn(net(f))+" puntos." : "nunca.")+" Contra ellos: "+(g.length ? hits(g)+" de "+g.length+", "+sgn(net(g))+" puntos." : "nunca."), a:""});
+    }
+  }
+  return out;
+};
+
+var RULES = [fRebote,fArriba,fFotocopia,fDisco,fRacha,fRecord,fRemontada,fSiempre,fPeor,fSurvivor,fAficiones,fSotano,
+  fLealtad,fMismoEquipo,fCostalazo,fLlanero,fBorregada,fEmpate,fOlvido,fRachaPicks,fPerros,fCorriente];
 T.facts = function(M){
   var out = [];
   RULES.forEach(function(f){ var r = f(M); if (r) out.push(r); });
@@ -1190,6 +1603,14 @@ function render(D, opts){
     });
   });
 
+  function drawPicks(name){
+    var box = $("pkbox"), lines = T.tusPicks(M, name);
+    if (!lines){ box.hidden = true; box.innerHTML = ""; return; }
+    box.innerHTML = '<div class="sub">Tus picks</div>'+lines.map(function(l){
+      return '<p class="pk"><b>'+esc(l.k)+'</b>'+esc(l.t)+(l.a ? ' <span class="'+(l.a==="up" ? "u" : "d")+'" aria-label="'+(l.a==="up" ? "arriba" : "abajo")+'">'+(l.a==="up" ? "▲" : "▼")+'</span>' : '')+'</p>';
+    }).join("");
+    box.hidden = false;
+  }
   function drawSurvivor(){
     var box = $("svbox");
     if (!M.hasStrikes){ box.hidden = true; return; }
@@ -1217,6 +1638,7 @@ function render(D, opts){
     $("sh-name").textContent = name;
     $("sh-line").textContent = line;
     drawBump();
+    drawPicks(name);
     drawSurvivor();
     var sh = $("sheet");
     if (sh.hidden){ lastFocus = document.activeElement; sh.hidden = false; document.documentElement.classList.add("locked"); $("close").focus(); }

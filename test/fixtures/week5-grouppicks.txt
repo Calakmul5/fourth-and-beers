@@ -1,0 +1,26 @@
+Favored|Dal|Jax|Chi|Hou|Cin|NE|Min|NYJ|Pit|Was|Den|Det|Sea|Atl|LAR
+Spread|8.5|7.5|2.5|7.5|7.5|3.5|1.5|2.5|2.5|3.5|3.5|5.5|3.0|3.5|3.0
+Underdog|TB|Phi|GB|Ten|Mia|LV|NO|Cle|Ind|NYG|LAC|Ari|SF|Bal|Buf
+Winner|TB|Phi|GB|Hou|Mia|NE|Min|NYJ|Pit|NYG|Den|Det|SF|Bal|Buf
+Abogado|TB(6)+|Phi(7)+|Chi(5)-|Hou(4)+|Mia(3)+|NE(2)+|Min(14)+|Cle(9)-|Pit(8)+|NYG(15)+|Den(13)+|Det(10)+|SF(12)+|Atl(11)-|LAR(1)-|94
+KinkyKing|Dal(2)-|Jax(3)-|GB(1)+|Hou(4)+|Cin(10)-|NE(5)+|Min(12)+|NYJ(6)+|Pit(7)+|Was(8)-|Den(9)+|Det(11)+|Sea(14)-|Bal(13)+|Buf(15)+|83
+Conquistador|Dal(8)-|Phi(10)+|Chi(2)-|Ten(9)-|Cin(7)-|NE(5)+|Min(15)+|NYJ(3)+|Pit(6)+|NYG(4)+|Den(14)+|Ari(11)-|Sea(1)-|Bal(12)+|Buf(13)+|82
+Osos de Grayslake|TB(4)+|Phi(1)+|Chi(9)-|Ten(2)-|Mia(3)+|LV(5)-|Min(6)+|Cle(7)-|Pit(8)+|NYG(10)+|Den(11)+|Det(12)+|SF(13)+|Bal(14)+|LAR(15)-|82
+Cyber70|Dal(14)-|Phi(7)+|Chi(8)-|Hou(9)+|Cin(10)-|LV(5)-|Min(6)+|Cle(4)-|Pit(3)+|Was(2)-|Den(11)+|Det(15)+|SF(13)+|Bal(1)+|Buf(12)+|77
+Niners||Phi(4)+|GB(13)+|Ten(11)-|Mia(14)+|NE(6)+|NO(2)-|NYJ(10)+|Pit(12)+|NYG(7)+|LAC(8)-|Ari(9)-|SF(3)+|Bal(5)+|LAR(15)-|74
+Andrea’s Picks|Dal(9)-|Phi(1)+|Chi(5)-|Hou(10)+|Cin(11)-|NE(3)+|Min(8)+||Pit(6)+|NYG(12)+|Den(13)+|Det(14)+|Sea(15)-|Bal(4)+|Buf(2)+|73
+MVP21|TB(5)+|Phi(14)+|GB(15)+|Hou(1)+|Mia(11)+|LV(7)-|Min(6)+|Cle(9)-|Pit(3)+|NYG(4)+|Den(2)+|Ari(8)-|Sea(12)-|Bal(10)+|LAR(13)-|71
+Rastaman|TB(8)+|Phi(4)+|GB(10)+|Ten(7)-|Mia(14)+|LV(2)-|Min(9)+|NYJ(15)+|Ind(1)-|Was(11)-|LAC(13)-|Ari(12)-|SF(5)+|Atl(3)-|Buf(6)+|71
+Mean Machine|Dal(10)-|Phi(9)+|GB(8)+|Ten(7)-|Cin(6)-|NE(5)+|Min(15)+|NYJ(1)+|Pit(2)+|NYG(3)+|LAC(4)-|Det(11)+|Sea(12)-|Bal(13)+|LAR(14)-|67
+Puto el que lo lea|Dal(1)-|Jax(8)-|Chi(14)-|Hou(2)+|Cin(7)-|LV(6)-|Min(11)+|Cle(5)-|Ind(10)-|NYG(12)+|Den(15)+|Det(13)+|SF(4)+|Atl(3)-|Buf(9)+|66
+Jorge_B|TB(2)+|Jax(10)-|GB(4)+|Ten(11)-|Cin(13)-|NE(1)+|Min(12)+|Cle(9)-|Ind(6)-|NYG(8)+|LAC(5)-|Det(14)+|SF(7)+|Atl(3)-|Buf(15)+|63
+Billy Beaner|Dal(1)-|Phi(2)+|Chi(15)-|Ten(3)-|Mia(4)+|NE(5)+|Min(6)+|Cle(7)-|Ind(8)-|NYG(9)+|LAC(10)-|Det(11)+|SF(12)+|Atl(13)-|Buf(14)+|63
+King of The North|TB(1)+|Jax(3)-|Chi(14)-|Ten(4)-|Mia(2)+|LV(6)-|Min(15)+|Cle(13)-|Ind(12)-|NYG(8)+|Den(7)+|Ari(5)-|SF(9)+|Bal(10)+|Buf(11)+|63
+This is our year|TB(5)+|Jax(4)-|GB(3)+|Ten(12)-|Mia(7)+|LV(14)-|Min(13)+|Cle(15)-|Pit(1)+|NYG(9)+|LAC(2)-|Ari(6)-|SF(8)+|Atl(11)-|Buf(10)+|56
+Chitown’DemBoyz|Dal(8)-|Jax(7)-|Chi(10)-|Ten(6)-|Cin(9)-|LV(5)-|Min(11)+|Cle(4)-|Ind(3)-|Was(12)-|Den(2)+|Det(13)+|SF(14)+|Bal(1)+|Buf(15)+|56
+Manolito’s winning picks|Dal(15)-|Jax(0)-|Chi(13)-|Hou(9)+|Cin(14)-|LV(12)-|Min(5)+|Cle(4)-|Ind(2)-|NYG(3)+|Den(11)+|Det(6)+|SF(10)+|Atl(7)-|Buf(8)+|52
+Silverback|Dal(9)-|Jax(10)-|GB(15)+|Ten(8)-|Mia(11)+|LV(5)-|Min(12)+|Cle(13)-|Pit(7)+|NYG(4)+|LAC(3)-|Ari(2)-|Sea(6)-|Bal(1)+|LAR(14)-|50
+SinCasco|Dal(15)-|Jax(13)-|Chi(7)-|Hou(11)+|Cin(12)-|NE(10)+|Min(8)+|Cle(9)-|Pit(6)+|Was(5)-|Den(4)+|Det(3)+|SF(2)+|Atl(1)-|LAR(14)-|44
+X-Men Let’s go Boys|Dal(12)-|Jax(7)-|Chi(13)-|Ten(1)-|Cin(9)-|NE(11)+|Min(8)+|Cle(6)-|Pit(10)+|Was(5)-|LAC(2)-|Det(14)+|Sea(3)-|Atl(4)-|LAR(15)-|43
+Juan1768|Dal(13)-|Jax(10)-|Chi(12)-|Hou(14)+|Cin(15)-|LV(7)-|Min(5)+|Cle(9)-|Ind(8)-|Was(6)-|Den(11)+|Det(4)+|SF(3)+|Bal(2)+|Buf(1)+|40
+Steel Man|Dal(4)-|Phi(3)+|Chi(5)-|Hou(1)+|Mia(6)+|NE(2)+|Min(7)+|Cle(8)-|Pit(9)+|Was(10)-|LAC(11)-|Ari(13)-|SF(12)+|Atl(14)-|LAR(15)-|40

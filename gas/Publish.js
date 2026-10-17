@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.5.0 c1.3.0
+// v2.6.0 c1.4.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -14,6 +14,9 @@
 //      editions/index.json lists the weeks. A week that has moved on is never touched again.
 //   8. Lists warnings in the Tribune tab (H:J, one per row: color, text, week, with a blank separator column G) and tints the rows involved when the last place
 //      is named more than once, or in two weeks in a row, and so on. It never blocks a publish or edits your text.
+//   9. Reads Yahoo's Group Picks table from Picks_Board, infers its week from the Points column, infers each game's
+//      result from the paste itself (Points must equal the confidence of the correct picks) and keeps the week in
+//      Picks_Log. data.json "picks" is rebuilt from Picks_Log on every publish.
 //   It only commits when something other than "updated" changed, so running it often is harmless.
 //
 // One-time setup (Project Settings > Script properties)
@@ -25,14 +28,17 @@
 // Run setupTribuneTab() once to create the Tribune tab with its dropdown and checkboxes. Safe to repeat: it also
 // adds the Edición option to an existing dropdown, renames Sheet1 to Participantes, and inserts the Apodo column
 // between G and H of the participants list.
-// Moving from the old tabs: run migrateToTribune(true) to see what would move, then migrateToTribune(false).
-// Once the migration has run, migrateToTribune and LEGACY_TABS can be deleted.
+// Setup also creates Picks_Board (paste Yahoo's Group Picks table there) and Picks_Log (durable, never wiped).
+// Tabs this script touches in the participants workbook: PickEm_Board, Tribune, Participantes, Picks_Board, Picks_Log.
+// Anything else in the workbook (the commissioner's money table, say) is never read, written, renamed or deleted.
 
 var CFG = {
   boardTab: 'PickEm_Board',   // paste Yahoo's weekly performance table here, header row included
   participantsTab: 'Participantes',  // the participants list; setup renames an old Sheet1 to this
   tribuneTab: 'Tribune',     // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | (blank separator) | Color | Warnings | Warning week, in the participants workbook
   fieldTab: 'Field',          // model tab with Entrant / Strikes columns
+  picksTab: 'Picks_Board',    // Yahoo Group Picks table pasted at A1, header rows included
+  logTab: 'Picks_Log',        // durable: one row per pick set and game, never cleared or deleted by any routine
   path: 'data.json',
   editionsDir: 'editions',
   branch: 'main',
@@ -64,9 +70,6 @@ var WARN_COLORS = ['#f4cccc', '#fff2cc', '#d9ead3', '#cfe2f3', '#d9d2e9', '#fce5
 var APODO_AFTER = 7;          // the Apodo column is inserted after column G of the participants list
 // Themes the page knows. Add one here and in index.html (THEMES and its CSS block).
 var THEMES_KNOWN = ['muertos'];
-
-// Old tabs, read only by migrateToTribune.
-var LEGACY_TABS = { comments: 'Comentarios', awards: 'Premios' };
 
 // Survivor call sign -> Pick'em call sign. Only the names that differ. Update if Yahoo names change.
 var SURVIVOR_TO_PICKEM = {
@@ -104,18 +107,19 @@ function publishLeaderboard_() {
   var modelId = props.getProperty('MODEL_SHEET_ID');
   var model = modelId ? SpreadsheetApp.openById(String(modelId).trim()) : ss;
   var cur = readFile_(repo, token, CFG.path);
-  var data = buildData_(ss, model, cur ? cur.data : null);
-  try { reviewTribune_(ss, data); } catch (e) { Logger.log('Warnings skipped: ' + e); }
+  var picksWarn = [];
+  var data = buildData_(ss, model, cur ? cur.data : null, picksWarn);
+  try { reviewTribune_(ss, data, picksWarn); } catch (e) { Logger.log('Warnings skipped: ' + e); }
   var result = commitAll_(repo, token, data, cur);
   Logger.log(result);
   return result;
 }
 
-/** Installable onEdit: publishes after a paste into PickEm_Board or a change in Tribune. */
+/** Installable onEdit: publishes after a paste into PickEm_Board or Picks_Board, or a change in Tribune. */
 function onBoardEdit(e) {
   if (!e || !e.range) return;
   var name = e.range.getSheet().getName().trim().toLowerCase();
-  if (name !== CFG.boardTab.toLowerCase() && name !== CFG.tribuneTab.toLowerCase()) return;
+  if ([CFG.boardTab, CFG.picksTab, CFG.tribuneTab].every(function (t) { return name !== t.toLowerCase(); })) return;
   Utilities.sleep(5000); // let a large paste or a few quick checkbox clicks land
   publishLeaderboard();
 }
@@ -124,7 +128,8 @@ function onBoardEdit(e) {
 function setupTribuneTab() {
   var ss = SpreadsheetApp.openById(String(PropertiesService.getScriptProperties().getProperty('SHEET_ID')).trim());
   setupTribune_(ss);
-  Logger.log('Tribune tab ready in ' + ss.getName());
+  setupPicks_(ss);
+  Logger.log('Tribune, ' + CFG.picksTab + ' and ' + CFG.logTab + ' tabs ready in ' + ss.getName());
 }
 
 function setupTribune_(ss) {
@@ -161,78 +166,6 @@ function addApodoHeader_(ss) {
   f.sh.getRange(f.h + 1, col, 1, 1).setValues([['Apodo']]).setFontWeight('bold');
 }
 
-/**
- * One-off. Moves the old tabs into Tribune: Comentarios rows become Columna, Premios rows become Clasificado.
- * dryRun true (the default): logs row counts per source and per week, writes nothing.
- * dryRun false: appends to Tribune, checks the counts, and only on a match deletes Comentarios and Premios.
- * On a mismatch the appended rows are cleared again and nothing is deleted.
- * Sheets version history is the backup. Returns a report object.
- */
-function migrateToTribune(dryRun) {
-  var ss = SpreadsheetApp.openById(String(PropertiesService.getScriptProperties().getProperty('SHEET_ID')).trim());
-  return migrate_(ss, dryRun !== false);
-}
-
-function migrate_(ss, dryRun) {
-  var src = [
-    { key: 'comments', tab: LEGACY_TABS.comments, sh: findTab_(ss, LEGACY_TABS.comments) },
-    { key: 'awards', tab: LEGACY_TABS.awards, sh: findTab_(ss, LEGACY_TABS.awards) }
-  ];
-  var rows = [], report = { dryRun: dryRun, ok: true, counts: {}, byWeek: {}, deleted: [] };
-  src.forEach(function (s) {
-    var out = [];
-    if (s.sh) {
-      var values = s.sh.getDataRange().getValues();
-      for (var r = 1; r < values.length; r++) {
-        var v = values[r];
-        if (!v.some(function (c) { return String(c).trim() !== ''; })) continue;
-        // Comentarios: Semana, Para, Texto, Publicar.  Premios: Semana, Titulo, Para, Texto, Publicar.
-        out.push(s.key === 'comments'
-          ? [v[0], 'Columna', v[1], '', v[2], v[3]]
-          : [v[0], 'Clasificado', v[2], v[1], v[3], v[4]]);
-      }
-    }
-    report.counts[s.tab] = out.length;
-    var wk = {};
-    out.forEach(function (o) { var k = String(o[0]).trim() || '(sin semana)'; wk[k] = (wk[k] || 0) + 1; });
-    report.byWeek[s.tab] = wk;
-    Logger.log(s.tab + ': ' + (s.sh ? out.length + ' rows' : 'tab not found') + ' ' + JSON.stringify(wk));
-    rows = rows.concat(out);
-  });
-  if (dryRun) { Logger.log('Dry run, nothing written. ' + rows.length + ' rows would move to ' + CFG.tribuneTab + '.'); return report; }
-  if (!rows.length) { Logger.log('Nothing to move.'); return report; }
-
-  var tr = setupTribune_(ss);
-  var start = lastRow_(tr) + 1;
-  tr.getRange(start, 1, rows.length, 6).setValues(rows);
-
-  // Read back what landed and compare it with the sources, per Sección and week, text included.
-  var landed = tr.getDataRange().getValues().slice(start - 1).filter(function (o) {
-    return o.some(function (c) { return String(c).trim() !== ''; });
-  });
-  var sig = function (list) {
-    return list.map(function (o) { return [o[0], o[1], o[2], o[3], o[4]].map(function (c) { return String(c).trim(); }).join('|'); }).sort();
-  };
-  if (JSON.stringify(sig(rows)) !== JSON.stringify(sig(landed))) {
-    tr.getRange(start, 1, rows.length, 6).clearContent();
-    report.ok = false;
-    Logger.log('Counts do not match (expected ' + rows.length + ' rows, found ' + landed.length + '). Rows cleared from ' + CFG.tribuneTab + ', nothing deleted.');
-    return report;
-  }
-  src.forEach(function (s) {
-    if (s.sh) { ss.deleteSheet(s.sh); report.deleted.push(s.tab); }
-  });
-  Logger.log('Moved ' + rows.length + ' rows to ' + CFG.tribuneTab + ' and deleted ' + (report.deleted.join(', ') || 'no tabs') + '.');
-  return report;
-}
-
-/** Last row with anything in it (the header is row 1). */
-function lastRow_(sh) {
-  var v = sh.getDataRange().getValues(), last = 1;
-  for (var i = 0; i < v.length; i++) if (v[i].some(function (c) { return String(c).trim() !== ''; })) last = i + 1;
-  return last;
-}
-
 /** Run once. Replaces any earlier triggers from this project. */
 function installTriggers() {
   var sheetId = PropertiesService.getScriptProperties().getProperty('SHEET_ID');
@@ -249,8 +182,9 @@ function installTriggers() {
 // Build data.json
 // ---------------------------------------------------------------------------
 
-function buildData_(ss, model, prev) {
+function buildData_(ss, model, prev, picksWarn) {
   var board = readBoard_(ss);
+  syncPicks_(ss, board, picksWarn || []);
   var strikes = readStrikes_(model || ss, board.names);
   return {
     survivorOut: survivorOut_(prev, strikes, board.week),
@@ -263,8 +197,18 @@ function buildData_(ss, model, prev) {
     updated: new Date().toISOString(),
     prizes: JSON.parse(JSON.stringify(PRIZES)),
     pickem: board.rows,
-    strikes: strikes
+    strikes: strikes,
+    picks: readPicksLog_(ss)
   };
+}
+
+/** The tab as rows of trimmed strings. A paste that landed as tab-separated text in column A is split into columns. */
+function gridOf_(sh) {
+  return sh.getDataRange().getDisplayValues().map(function (r) {
+    var cells = r.map(function (c) { return String(c).trim(); });
+    var filled = cells.filter(function (c) { return c !== ''; });
+    return (filled.length === 1 && filled[0].indexOf('\t') >= 0) ? filled[0].split('\t').map(function (c) { return c.trim(); }) : cells;
+  });
 }
 
 /** Parses Yahoo's table. Works whether the paste split into columns or landed as tab-separated text in column A. */
@@ -273,11 +217,7 @@ function readBoard_(ss) {
   if (!sh) throw new Error('Tab "' + CFG.boardTab + '" not found in workbook "' + ss.getName() + '". Tabs it sees: ' +
     ss.getSheets().map(function (t) { return JSON.stringify(t.getName()); }).join(', ') +
     '. If this is the wrong workbook, fix SHEET_ID in Script properties.');
-  var values = sh.getDataRange().getDisplayValues().map(function (r) {
-    var cells = r.map(function (c) { return String(c).trim(); });
-    var filled = cells.filter(function (c) { return c !== ''; });
-    return (filled.length === 1 && filled[0].indexOf('\t') >= 0) ? filled[0].split('\t').map(function (c) { return c.trim(); }) : cells;
-  });
+  var values = gridOf_(sh);
 
   var h = -1;
   for (var i = 0; i < values.length; i++) {
@@ -365,7 +305,8 @@ function checkSetup() {
   var mid = PropertiesService.getScriptProperties().getProperty('MODEL_SHEET_ID');
   var model = mid ? SpreadsheetApp.openById(String(mid).trim()) : ss;
   Logger.log('Model workbook: ' + model.getName());
-  Logger.log('PickEm_Board found: ' + !!findTab_(ss, CFG.boardTab) + '   Tribune found: ' + !!findTab_(ss, CFG.tribuneTab) +
+  Logger.log('PickEm_Board found: ' + !!findTab_(ss, CFG.boardTab) + '   Picks_Board found: ' + !!findTab_(ss, CFG.picksTab) +
+    '   Picks_Log found: ' + !!findTab_(ss, CFG.logTab) + '   Tribune found: ' + !!findTab_(ss, CFG.tribuneTab) +
     '   Field found: ' + !!findTab_(model, CFG.fieldTab));
 }
 
@@ -404,9 +345,12 @@ function parseFan_(text) {
   return out;
 }
 
-/** The participants list: the tab that has "Call Sign PickEm" and "Fan of" columns. Apodo is optional. */
+/**
+ * The participants list: the tab called Participantes (or its old name Sheet1) with "Call Sign PickEm" and "Fan of"
+ * columns. Apodo is optional. No other tab is opened, so a commissioner-only tab is never read.
+ */
 function fanSheet_(ss) {
-  var sheets = ss.getSheets();
+  var sheets = [findTab_(ss, CFG.participantsTab), findTab_(ss, 'Sheet1')].filter(Boolean);
   for (var i = 0; i < sheets.length; i++) {
     var values = sheets[i].getDataRange().getDisplayValues();
     for (var h = 0; h < Math.min(values.length, 10); h++) {
@@ -560,6 +504,230 @@ function mentions(idx, text) {
 // END NAMES
 
 // ---------------------------------------------------------------------------
+// Picks: Yahoo's Group Picks table -> Picks_Log -> data.json "picks"
+// ---------------------------------------------------------------------------
+
+var LOG_HEADER = ['Semana', 'Pick Set', 'Juego', 'Favorito', 'Spread', 'Underdog', 'Pick', 'Confianza', 'Resultado'];
+var SOLVER_NODES = 3000000;     // a week that needs more search than this is stored without results
+
+/** Creates Picks_Board (empty, the paste goes at A1) and Picks_Log (header only) when missing. Safe to repeat. */
+function setupPicks_(ss) {
+  if (!findTab_(ss, CFG.picksTab)) ss.insertSheet(CFG.picksTab);
+  var log = findTab_(ss, CFG.logTab) || ss.insertSheet(CFG.logTab);
+  if (String(log.getRange(1, 1, 1, 1).getValue() || '').trim() !== LOG_HEADER[0]) {
+    log.getRange(1, 1, 1, LOG_HEADER.length).setValues([LOG_HEADER]).setFontWeight('bold');
+    log.setFrozenRows(1);
+  }
+  return log;
+}
+
+function team_(s) { return String(s || '').replace(/[^A-Za-z]/g, '').toUpperCase(); }
+
+/** One cell, "TB (6)" or "TB" and "(6)" on two lines. '' is a missed pick (null), anything unreadable is false. */
+function parsePick_(cell) {
+  var s = String(cell || '').replace(/\s+/g, ' ').trim();
+  if (!s) return null;
+  var m = /^([A-Za-z][A-Za-z.]*)\s*\(\s*(\d+)\s*\)$/.exec(s);
+  return m ? [team_(m[1]), Number(m[2])] : false;
+}
+
+/**
+ * Yahoo's Group Picks table as rows of strings. Returns {games: [{fav, spread, dog}], sets: [{name, picks, points}]}
+ * where picks has one [TEAM, confidence] or null per game, or null when the table cannot be read.
+ */
+function parsePicksGrid_(values) {
+  var f = -1;
+  for (var i = 0; i < values.length; i++) if (/^favored$/i.test(values[i][0] || '')) { f = i; break; }
+  if (f < 0 || f + 2 >= values.length) return null;
+  var sp = values[f + 1], dg = values[f + 2];
+  if (!/^spread$/i.test(sp[0] || '') || !/^underdog$/i.test(dg[0] || '')) return null;
+  var games = [];
+  for (var j = 1; j < values[f].length && values[f][j] !== ''; j++) {
+    games.push({ fav: team_(values[f][j]), spread: toNum_(sp[j]), dog: team_(dg[j]) });
+  }
+  if (!games.length) return null;
+  var G = games.length, start = f + 3;
+  if (values[start] && /^team name/i.test(values[start][0] || '')) start++;
+  var sets = [];
+  for (var r = start; r < values.length; r++) {
+    var v = values[r], name = String(v[0] || '').trim();
+    if (!name) continue;
+    var picks = [];
+    for (var g = 0; g < G; g++) {
+      var p = parsePick_(v[g + 1]);
+      if (p === false) return null;
+      picks.push(p);
+    }
+    sets.push({ name: name, picks: picks, points: toNum_(v[G + 1]) });
+  }
+  return sets.length ? { games: games, sets: sets } : null;
+}
+
+/** The weeks of PickEm_Board whose scores equal the Points of every pick set that is on the board. */
+function weeksMatching_(sets, board) {
+  var by = {};
+  board.rows.forEach(function (p) { by[norm_(p.name)] = p; });
+  var known = sets.filter(function (s) { return by[norm_(s.name)]; });
+  var out = [];
+  if (!known.length || !known.some(function (s) { return s.points > 0; })) return out;
+  for (var w = 1; w <= board.week; w++) {
+    if (known.every(function (s) { return by[norm_(s.name)].weeks[w - 1] === s.points; })) out.push(w);
+  }
+  return out;
+}
+
+/**
+ * Infers each game's result from the paste: a pick set's Points must equal the confidence of its correct picks.
+ * Depth-first over the games (F = favorite covers, U = underdog covers, P = push), cutting any branch where a set is
+ * already over its Points or can no longer reach them. Returns {status: 'one' | 'none' | 'many' | 'bad', res: ['F'|'U'|'P']}.
+ */
+function solvePicks_(games, sets) {
+  var G = games.length, S = sets.length, side = [], conf = [], suf = [];
+  for (var s = 0; s < S; s++) {
+    side.push([]); conf.push([]); suf.push(new Array(G + 1));
+    for (var g = 0; g < G; g++) {
+      var p = sets[s].picks[g], sd = 0;
+      if (p) {
+        if (p[0] === games[g].fav) sd = 1; else if (p[0] === games[g].dog) sd = 2; else return { status: 'bad', res: [] };
+      }
+      side[s].push(sd); conf[s].push(p ? p[1] : 0);
+    }
+    suf[s][G] = 0;
+    for (var k = G - 1; k >= 0; k--) suf[s][k] = suf[s][k + 1] + conf[s][k];
+  }
+  var tot = [], cur = [], found = [], nodes = 0, over = false;
+  for (s = 0; s < S; s++) { tot.push(0); if (suf[s][0] < sets[s].points) return { status: 'none', res: [] }; }
+  function dfs(gi) {
+    if (found.length > 1 || over) return;
+    if (++nodes > SOLVER_NODES) { over = true; return; }
+    if (gi === G) {
+      for (var a = 0; a < S; a++) if (tot[a] !== sets[a].points) return;
+      found.push(cur.slice());
+      return;
+    }
+    for (var o = 1; o <= 3; o++) {            // 1 favorite, 2 underdog, 3 push
+      var ok = true, a2;
+      for (a2 = 0; a2 < S; a2++) {
+        if (o < 3 && side[a2][gi] === o) tot[a2] += conf[a2][gi];
+        var t = tot[a2];
+        if (t > sets[a2].points || t + suf[a2][gi + 1] < sets[a2].points) ok = false;
+      }
+      if (ok) { cur[gi] = o === 1 ? 'F' : o === 2 ? 'U' : 'P'; dfs(gi + 1); }
+      for (a2 = 0; a2 < S; a2++) if (o < 3 && side[a2][gi] === o) tot[a2] -= conf[a2][gi];
+      if (found.length > 1 || over) return;
+    }
+  }
+  dfs(0);
+  if (over) return { status: 'bad', res: [] };
+  return found.length === 1 ? { status: 'one', res: found[0] } : { status: found.length ? 'many' : 'none', res: [] };
+}
+
+/** The log rows of one week: one per pick set and game. */
+function logRows_(week, games, sets, res) {
+  var rows = [];
+  sets.forEach(function (s) {
+    games.forEach(function (g, i) {
+      var p = s.picks[i];
+      rows.push([week, s.name, i + 1, g.fav, g.spread, g.dog, p ? p[0] : '', p ? p[1] : '', res ? res[i] : '']);
+    });
+  });
+  return rows;
+}
+
+/**
+ * Keeps one week in Picks_Log. Only that week's rows are replaced, every other row stays where it is. Nothing is
+ * cleared or deleted: a shorter log is padded with blanks. Writes only when the week's rows changed. Returns true if written.
+ */
+function writeLogWeek_(ss, week, rows) {
+  var sh = setupPicks_(ss);
+  var vals = sh.getDataRange().getValues();
+  var oldWeek = [], others = [];
+  for (var i = 1; i < vals.length; i++) {
+    var v = vals[i];
+    if (String(v[0]).trim() === '') continue;
+    (toNum_(v[0]) === week ? oldWeek : others).push(v.slice(0, LOG_HEADER.length));
+  }
+  var sig = function (list) { return JSON.stringify(list.map(function (r) { return r.map(String); })); };
+  if (sig(oldWeek) === sig(rows)) return false;
+  var all = others.concat(rows).map(function (r, i) { return { r: r, i: i }; });
+  all.sort(function (a, b) { return toNum_(a.r[0]) - toNum_(b.r[0]) || a.i - b.i; });
+  var out = all.map(function (x) { return x.r; });
+  var total = Math.max(out.length, vals.length - 1);
+  while (out.length < total) out.push(['', '', '', '', '', '', '', '', '']);
+  if (sh.getMaxRows() < total + 1) sh.insertRowsAfter(sh.getMaxRows(), total + 1 - sh.getMaxRows());
+  sh.getRange(2, 1, total, LOG_HEADER.length).setValues(out);
+  return true;
+}
+
+/**
+ * Reads Picks_Board and, when it holds a week Picks_Log does not have yet (or has differently), stores it.
+ * The week is the one PickEm_Board week whose scores equal the pasted Points. No match or several: nothing is stored.
+ * Problems go to warn as Spanish sentences for the Warnings table. Never throws.
+ */
+function syncPicks_(ss, board, warn) {
+  try {
+    var sh = findTab_(ss, CFG.picksTab);
+    if (!sh) return;
+    var grid = gridOf_(sh);
+    if (!grid.some(function (r) { return r.some(function (c) { return c !== ''; }); })) return;
+    var parsed = parsePicksGrid_(grid);
+    if (!parsed) { warn.push(CFG.picksTab + ': no pude leer la tabla. Pega la tabla completa de Group Picks de Yahoo en A1, encabezados incluidos.'); return; }
+    var weeks = weeksMatching_(parsed.sets, board);
+    if (weeks.length !== 1) {
+      warn.push(CFG.picksTab + (weeks.length ? ': los puntos coinciden con varias semanas de ' + CFG.boardTab + ' (' + weeks.join(', ') + '). No guardé nada.'
+        : ': los puntos no coinciden con ninguna semana de ' + CFG.boardTab + '. Pega primero la tabla de Yahoo ahí y vuelvo a intentar.'));
+      return;
+    }
+    storePicksWeek_(ss, board, weeks[0], parsed, warn);
+  } catch (e) {
+    warn.push(CFG.picksTab + ': falló al guardar (' + e + '). Los demás datos se publicaron igual.');
+    Logger.log('Picks skipped: ' + e);
+  }
+}
+
+/** Stores one parsed week: unknown call signs are skipped with a warning, results are inferred or left blank with a warning. */
+function storePicksWeek_(ss, board, week, parsed, warn) {
+  var by = {};
+  board.rows.forEach(function (p) { by[norm_(p.name)] = p.name; });
+  var unknown = [], sets = [];
+  parsed.sets.forEach(function (s) {
+    if (by[norm_(s.name)]) sets.push({ name: by[norm_(s.name)], picks: s.picks, points: s.points });
+    else unknown.push(s.name);
+  });
+  if (unknown.length) warn.push(CFG.picksTab + ': "' + unknown.join('", "') + '" no está en ' + CFG.boardTab + '. No guardé sus picks.');
+  var sol = solvePicks_(parsed.games, sets);
+  if (sol.status !== 'one') {
+    warn.push(CFG.picksTab + ' semana ' + week + ': ' + (sol.status === 'many' ? 'varias combinaciones de resultados dan los mismos puntos de Yahoo'
+      : sol.status === 'bad' ? 'hay un equipo que no es el favorito ni el underdog de su juego'
+      : 'ninguna combinación de resultados da los puntos de Yahoo') + '. Guardé los picks sin resultado y los datos de picks de esa semana se saltan.');
+  }
+  var written = writeLogWeek_(ss, week, logRows_(week, parsed.games, sets, sol.status === 'one' ? sol.res : null));
+  if (written) Logger.log('Picks_Log: week ' + week + ' stored, results ' + sol.status + '.');
+}
+
+/** data.json "picks" from Picks_Log: {week: {g: [[fav, spread, dog, res|null]], p: {callSign: [[team, conf] | null]}}}. */
+function readPicksLog_(ss) {
+  var out = {};
+  var sh = findTab_(ss, CFG.logTab);
+  if (!sh) return out;
+  var vals = sh.getDataRange().getValues();
+  for (var i = 1; i < vals.length; i++) {
+    var v = vals[i], wk = toNum_(v[0]), gi = toNum_(v[2]) - 1, name = String(v[1] || '').trim();
+    if (!wk || !name || gi < 0) continue;
+    var w = out[wk] || (out[wk] = { g: [], p: {} });
+    var res = String(v[8] || '').trim().toUpperCase();
+    w.g[gi] = [team_(v[3]), toNum_(v[4]), team_(v[5]), res === 'F' || res === 'U' || res === 'P' ? res : null];
+    (w.p[name] = w.p[name] || [])[gi] = String(v[6] || '').trim() ? [team_(v[6]), toNum_(v[7])] : null;
+  }
+  Object.keys(out).forEach(function (k) {
+    var w = out[k], n = w.g.length;
+    for (var g = 0; g < n; g++) if (!w.g[g]) w.g[g] = ['', 0, '', null];
+    Object.keys(w.p).forEach(function (name) { for (var g2 = 0; g2 < n; g2++) if (w.p[name][g2] === undefined) w.p[name][g2] = null; });
+  });
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Warnings: a table in the Tribune tab, never a block
 // ---------------------------------------------------------------------------
 
@@ -575,7 +743,7 @@ function lastPlace_(rows) {
  * Warns when the last place is named in more than one row or Columna paragraph, was also named last week, when there is
  * Columna without a Portada, more than one Edición, or an unknown tema. Returns the list of warning texts.
  */
-function reviewTribune_(ss, data) {
+function reviewTribune_(ss, data, extra) {
   var sh = findTab_(ss, CFG.tribuneTab);
   if (!sh) return [];
   var names = data.pickem.map(function (p) { return p.name; });
@@ -590,6 +758,7 @@ function reviewTribune_(ss, data) {
   var rows = tribuneRows_(sh, data.week);
   var warn = [];
   var add = function (text, list) { warn.push({ text: text, rows: list.map(function (x) { return x.row; }) }); };
+  (extra || []).forEach(function (t) { add(t, []); });        // Picks_Board warnings, no Tribune row to tint
   var rn = function (list) { return list.map(function (x) { return x.row; }).join(', '); };
 
   var hits = rows.filter(namesLast);

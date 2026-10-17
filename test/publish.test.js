@@ -2,6 +2,7 @@
 // Mock-GAS tests for gas/Publish.js. Synthetic call signs only, no live Google or GitHub.
 const A = require('./assert');
 const { makeSheet, makeWorkbook, makeGithub, loadPublisher } = require('./mock_gas');
+const PF = require('./picks_fixture');
 
 // ---- Fixtures ---------------------------------------------------------------
 
@@ -90,32 +91,12 @@ const TRIBUNE = [
   ['3', 'Chisme', 'Jorge_B', 'X', 'Y', 'TRUE'],                                               // row 17, not a Sección
 ];
 
-// The old tabs. Comentarios: Semana | Para | Texto | Publicar. Premios: Semana | Titulo | Para | Texto | Publicar.
-const COMENTARIOS = [
-  ['Semana', 'Para', 'Texto', 'Publicar'],
-  ['3', 'Silverback', 'Se roasteó solo.', 'TRUE'],
-  ['3', 'Todos', 'Buen domingo, mal pick.', 'TRUE'],
-  ['3', 'Jorge_B', 'No marcado.', 'FALSE'],
-  ['2', 'Jorge_B', 'Semana vieja.', true],
-  ['', '', '', ''],
-];
-const PREMIOS = [
-  ['Semana', 'Titulo', 'Para', 'Texto', 'Publicar'],
-  ['3', 'Premio uno', 'Silverback', 'Texto del premio uno.', 'TRUE'],
-  ['3', 'Premio dos', 'Jorge_B, Silverback', 'Varios ganadores.', true],
-  ['3', 'Premio tres', 'Todos', 'Para todos.', 'FALSE'],
-  ['2', 'Premio cuatro', '', 'Sin Para.', 'TRUE'],
-];
-
-/** opts.tribune: rows, or null for no Tribune tab. opts.legacy: add Comentarios and Premios. */
+/** opts.tribune: rows, or null for no Tribune tab. opts.extra: more tabs for the workbook. */
 function participants(boardRows, o) {
   o = o || {};
   const tabs = [makeSheet('PickEm_Board', boardRows || boardGrid()), makeSheet('Sheet1', o.fans || FANS)];
   if (o.tribune !== null) tabs.push(makeSheet('Tribune', o.tribune || TRIBUNE));
-  if (o.legacy) {
-    tabs.push(makeSheet('Comentarios', o.comentarios || COMENTARIOS));
-    tabs.push(makeSheet('Premios', o.premios || PREMIOS));
-  }
+  (o.extra || []).forEach(t => tabs.push(t));
   return makeWorkbook('participants', tabs);
 }
 const model = (rows) => makeWorkbook('model', [makeSheet('Field', rows || FIELD)]);
@@ -158,7 +139,7 @@ A.run('Publish.js', [
     A.deep(grid.pickem[2].weeks, [78, 0, 50], 'a missed week stays a zero in the middle');
     A.equal(grid.pickem[2].dropped, 0, 'Yahoo dropped is canon');
     A.deep(Object.keys(grid).sort(),
-      ['apodos', 'fans', 'pickem', 'prizes', 'season', 'strikes', 'survivorOut', 'tribune', 'updated', 'week', 'weeks'], 'fields: apodos added, no comments, awards, pays or weeklyPrize');
+      ['apodos', 'fans', 'pickem', 'picks', 'prizes', 'season', 'strikes', 'survivorOut', 'tribune', 'updated', 'week', 'weeks'], 'fields: apodos and picks added, no comments, awards, pays or weeklyPrize');
   }],
 
   ['display values with a header only (no scores) throw a clear error', () => {
@@ -400,7 +381,7 @@ A.run('Publish.js', [
     A.match(msg, /GitHub write failed \(409\) for data\.json/);
   }],
 
-  ['onBoardEdit publishes for PickEm_Board and Tribune only', () => {
+  ['onBoardEdit publishes for PickEm_Board, Picks_Board and Tribune only', () => {
     const { ctx, github } = setup();
     const ev = name => ({ range: { getSheet: () => ({ getName: () => name }) } });
     ctx.onBoardEdit(ev('Sheet1'));
@@ -411,8 +392,8 @@ A.run('Publish.js', [
     ctx.onBoardEdit(ev(' pickem_board '));
     A.ok(github.state.gets > gets, 'edit in PickEm_Board reaches the publisher, case and spaces ignored');
     const gets2 = github.state.gets;
-    ['Comentarios', 'Premios', 'Field'].forEach(n => ctx.onBoardEdit(ev(n)));
-    A.equal(github.state.gets, gets2, 'the retired tabs and other tabs are ignored');
+    ['Comentarios', 'Premios', 'Premios de la temporada', 'Picks_Log', 'Field'].forEach(n => ctx.onBoardEdit(ev(n)));
+    A.equal(github.state.gets, gets2, 'the retired tabs, the log and other tabs are ignored');
     ctx.onBoardEdit(undefined);
     A.equal(github.state.gets, gets2, 'no event, no run');
   }],
@@ -447,87 +428,6 @@ A.run('Publish.js', [
     A.equal(tabNames(ws).filter(n => n === 'Tribune').length, 1, 'one Tribune tab');
     A.equal(body(), before, 'rows untouched');
     A.equal(JSON.stringify(ws.getSheets().map(t => t.rows())), once, 'a second run changes nothing');
-  }],
-
-  ['migrateToTribune dry run: logs counts per source and per week, writes nothing', () => {
-    const ws = participants(null, { legacy: true, tribune: null });
-    const { ctx } = setup({ participants: ws });
-    const rep = ctx.migrateToTribune(true);
-    A.deep(JSON.parse(JSON.stringify(rep.counts)), { Comentarios: 4, Premios: 4 });
-    A.deep(JSON.parse(JSON.stringify(rep.byWeek)), { Comentarios: { 3: 3, 2: 1 }, Premios: { 3: 3, 2: 1 } });
-    A.ok(ctx._logs.some(l => /^Comentarios: 4 rows/.test(l)), 'Comentarios logged');
-    A.ok(ctx._logs.some(l => /^Premios: 4 rows/.test(l)), 'Premios logged');
-    A.deep(tabNames(ws), ['PickEm_Board', 'Sheet1', 'Comentarios', 'Premios'], 'no tab created or deleted');
-    const rep2 = ctx.migrateToTribune();
-    A.equal(rep2.dryRun, true, 'dry run is the default');
-    A.deep(tabNames(ws), ['PickEm_Board', 'Sheet1', 'Comentarios', 'Premios']);
-  }],
-
-  ['migrateToTribune: rows land with the right Sección, counts match, legacy tabs are deleted', () => {
-    const existing = [TRIBUNE_HEAD, ['5', 'Dato', '', 'Mío', 'Ya estaba aquí.', true]];
-    const ws = participants(null, { legacy: true, tribune: existing });
-    const { ctx } = setup({ participants: ws });
-    const rep = ctx.migrateToTribune(false);
-    A.equal(rep.ok, true);
-    A.deep(JSON.parse(JSON.stringify(rep.deleted)), ['Comentarios', 'Premios']);
-    A.deep(tabNames(ws), ['PickEm_Board', 'Participantes', 'Tribune'], 'legacy tabs gone');
-    const rows = tab(ws, 'Tribune').rows();
-    A.deep(rows[1], existing[1], 'existing rows stay where they were');
-    A.equal(rows.length, 2 + 8, 'header, the existing row, 4 + 4 migrated');
-    A.deep(rows[2], ['3', 'Columna', 'Silverback', '', 'Se roasteó solo.', 'TRUE'], 'Comentarios row becomes Columna');
-    A.deep(rows[5], ['2', 'Columna', 'Jorge_B', '', 'Semana vieja.', true], 'a checked boolean survives');
-    A.deep(rows[6], ['3', 'Clasificado', 'Silverback', 'Premio uno', 'Texto del premio uno.', 'TRUE'], 'Premios Titulo goes to Título, Para stays Para');
-    A.deep(rows[9], ['2', 'Clasificado', '', 'Premio cuatro', 'Sin Para.', 'TRUE']);
-    A.equal(rows.filter(r => r[1] === 'Columna').length, 4, 'Columna count equals Comentarios');
-    A.equal(rows.filter(r => r[1] === 'Clasificado').length, 4, 'Clasificado count equals Premios');
-    A.ok(ctx._logs.some(l => /Moved 8 rows .* deleted Comentarios, Premios/.test(l)));
-  }],
-
-  ['migrateToTribune: creates the Tribune tab when it does not exist yet', () => {
-    const ws = participants(null, { legacy: true, tribune: null });
-    const { ctx } = setup({ participants: ws });
-    ctx.migrateToTribune(false);
-    const sh = tab(ws, 'Tribune');
-    A.ok(sh, 'created');
-    A.deep(sh.rows()[0].slice(0, 6), TRIBUNE_HEAD);
-    A.equal(sh.rows().length, 9);
-  }],
-
-  ['migrateToTribune: a count mismatch clears what it wrote and deletes nothing', () => {
-    const ws = participants(null, { legacy: true, tribune: [TRIBUNE_HEAD] });
-    const sh = tab(ws, 'Tribune');
-    const orig = sh.getRange;
-    sh.getRange = (a, b, c, d) => {            // the sheet silently drops the last row of a bulk write
-      const r = orig(a, b, c, d);
-      if (typeof a === 'number' && c > 1) { const sv = r.setValues; r.setValues = vals => sv(vals.slice(0, -1)); }
-      return r;
-    };
-    const { ctx } = setup({ participants: ws });
-    const rep = ctx.migrateToTribune(false);
-    A.equal(rep.ok, false);
-    A.deep(JSON.parse(JSON.stringify(rep.deleted)), []);
-    A.deep(tabNames(ws), ['PickEm_Board', 'Participantes', 'Tribune', 'Comentarios', 'Premios'], 'nothing deleted');
-    A.ok(sh.rows().slice(1).every(r => r.every(c => c === '')), 'appended rows cleared again');
-    A.ok(ctx._logs.some(l => /do not match/.test(l)), 'reason logged');
-  }],
-
-  ['migrateToTribune: with no legacy tabs there is nothing to do', () => {
-    const ws = participants();
-    const { ctx } = setup({ participants: ws });
-    const rep = ctx.migrateToTribune(false);
-    A.equal(rep.ok, true);
-    A.deep(JSON.parse(JSON.stringify(rep.deleted)), []);
-    A.equal(tab(ws, 'Tribune').rows().length, TRIBUNE.length, 'Tribune untouched');
-  }],
-
-  ['migrated week 3 rows publish as Columna and Clasificados', () => {
-    const ws = participants(null, { legacy: true, tribune: null });
-    const { ctx } = setup({ participants: ws });
-    ctx.migrateToTribune(false);
-    const t = JSON.parse(JSON.stringify(ctx.buildData_(ws, ctx.SpreadsheetApp.openById('model'), null))).tribune;
-    A.deep(t.columna, [{ titulo: '', para: 'Silverback', texto: 'Se roasteó solo.' }, { titulo: '', para: '', texto: 'Buen domingo, mal pick.' }]);
-    A.deep(t.clasificados.map(x => x.titulo), ['Premio uno', 'Premio dos'], 'only the checked week 3 rows');
-    A.equal(t.portada, null);
   }],
 
   ['nothing in the code reads the retired tabs', () => {
@@ -592,7 +492,7 @@ A.run('Publish.js', [
     A.deep(rows.map(r => r.slice(0, 3)), JSON.parse(before).map(r => r.slice(0, 3)), 'other columns untouched');
     A.deep(rows.slice(1).map(r => r[3] || ''), rows.slice(1).map(() => ''), 'no values written');
     A.equal(sheet1.getName(), 'Participantes', 'Sheet1 is renamed');
-    A.deep(tabNames(ws), ['PickEm_Board', 'Participantes', 'Tribune'], 'and only renamed');
+    A.deep(tabNames(ws), ['PickEm_Board', 'Participantes', 'Tribune', 'Picks_Board', 'Picks_Log'], 'renamed, plus the two Picks tabs');
     const v = tab(ws, 'Tribune').log.validations;
     A.deep(JSON.parse(JSON.stringify(v[v.length - 1].rule.list)).slice(-1), ['Edición'], 'the dropdown is refreshed on the existing tab');
   }],
@@ -831,5 +731,166 @@ A.run('Publish.js', [
     const text = JSON.stringify(build().d);
     A.noMatch(text, /@/, 'email');
     A.noMatch(text, /ghp_|github_pat_|test-token/, 'token');
+  }],
+
+  // ---- v2.6: Picks_Board, Picks_Log, result inference ------------------------------
+
+  ['Picks_Board: both paste shapes parse to 22 pick sets and 15 games', () => {
+    const { ctx } = setup();
+    const grid = ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.paste())));
+    const tabbed = ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.pasteTabbed())));
+    A.deep(JSON.parse(JSON.stringify(tabbed)), JSON.parse(JSON.stringify(grid)), 'same result from both shapes');
+    A.equal(grid.sets.length, 22);
+    A.equal(grid.games.length, 15);
+    A.deep(JSON.parse(JSON.stringify(grid.games[0])), { fav: 'DAL', spread: 8.5, dog: 'TB' }, 'Yahoo case is normalized');
+    const by = n => grid.sets.find(s => s.name === n);
+    A.equal(by('Niners').picks[0], null, 'Niners game 1 is a missed pick');
+    A.equal(by('Andrea’s Picks').picks[7], null, 'Andrea game 8 is a missed pick');
+    A.deep(Array.from(by('Manolito’s winning picks').picks[1]), ['JAX', 0], 'a confidence 0 pick is a pick');
+    A.deep(Array.from(by('Abogado').picks[0]), ['TB', 6], 'team and confidence on two lines');
+    A.equal(by('Abogado').points, 94);
+    A.equal(ctx.parsePicksGrid_([['nada']]), null, 'garbage is not a table');
+    A.equal(ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.paste().map(r => r.map(c => c === 'Phi (7)' ? 'Phi 7' : c))))), null, 'an unreadable cell is not a table');
+  }],
+
+  ['Picks_Board: the week is the one PickEm_Board week the Points match', () => {
+    const { ctx } = setup({ board: PF.board5() });
+    const board = ctx.readBoard_(ctx.SpreadsheetApp.openById('participants'));
+    const parsed = ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.paste())));
+    A.deep(Array.from(ctx.weeksMatching_(parsed.sets, board)), [5]);
+    const off = ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.paste({ points: { 'Abogado': 95 } }))));
+    A.deep(Array.from(ctx.weeksMatching_(off.sets, board)), [], 'one wrong Points value matches no week');
+  }],
+
+  ['Picks_Board: the solver returns the Winner row, every mark matches and the points add up', () => {
+    const { ctx } = setup();
+    const parsed = ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.paste())));
+    const sol = ctx.solvePicks_(parsed.games, parsed.sets);
+    A.equal(sol.status, 'one');
+    A.deep(Array.from(sol.res), PF.WINNER_RES);
+    PF.sets.forEach(s => {
+      let pts = 0;
+      s.cells.forEach((c, g) => {
+        if (!c) return;
+        const won = (c.team.toUpperCase() === PF.favored[g].toUpperCase() ? 'F' : 'U') === sol.res[g];
+        A.equal(won, c.mark === '+', s.name + ' game ' + (g + 1) + ' against the Yahoo mark');
+        if (won) pts += c.conf;
+      });
+      A.equal(pts, s.points, s.name + ' points');
+    });
+    const bad = ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.paste({ points: { 'Abogado': 95 } }))));
+    A.equal(ctx.solvePicks_(bad.games, bad.sets).status, 'none', 'Abogado 95 has no solution');
+    const loose = ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.paste())));
+    loose.sets = loose.sets.slice(0, 1);
+    A.equal(ctx.solvePicks_(loose.games, loose.sets).status, 'many', 'one pick set alone does not pin the results');
+  }],
+
+  ['Picks_Board: a good paste lands in Picks_Log and data.json picks', () => {
+    const ws = participants(PF.board5(), { extra: [makeSheet('Picks_Board', PF.paste())] });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const log = tab(ws, 'Picks_Log');
+    A.deep(log.rows()[0], ['Semana', 'Pick Set', 'Juego', 'Favorito', 'Spread', 'Underdog', 'Pick', 'Confianza', 'Resultado']);
+    A.equal(log.rows().length, 1 + 22 * 15, 'one row per pick set and game');
+    A.deep(log.rows()[1], [5, 'Abogado', 1, 'DAL', 8.5, 'TB', 'TB', 6, 'U']);
+    const niners = log.rows().find(r => r[1] === 'Niners' && r[2] === 1);
+    A.deep(niners.slice(6, 8), ['', ''], 'a missed pick is a row with no pick');
+    const d = JSON.parse(github.state.files['data.json'].text);
+    A.deep(Object.keys(d.picks), ['5']);
+    A.deep(d.picks['5'].g[0], ['DAL', 8.5, 'TB', 'U']);
+    A.deep(d.picks['5'].g.map(g => g[3]), PF.WINNER_RES);
+    A.deep(d.picks['5'].p['Abogado'][0], ['TB', 6]);
+    A.equal(d.picks['5'].p['Niners'][0], null);
+    A.deep(d.picks['5'].p['Manolito’s winning picks'][1], ['JAX', 0]);
+    A.equal(Object.keys(d.picks['5'].p).length, 22);
+    const w = warnTable(tab(ws, 'Tribune'));
+    A.equal(w.filter(x => /Picks_Board/.test(x.text)).length, 0, 'no warnings');
+    const writes = log.log.writes;
+    ctx.publishLeaderboard();
+    A.equal(log.log.writes, writes, 'a second publish does not rewrite the log');
+  }],
+
+  ['Picks_Board: a re-paste replaces only that week in Picks_Log', () => {
+    const ws = participants(PF.board5(), { extra: [makeSheet('Picks_Board', PF.paste())] });
+    const log = makeSheet('Picks_Log', [['Semana', 'Pick Set', 'Juego', 'Favorito', 'Spread', 'Underdog', 'Pick', 'Confianza', 'Resultado'],
+      [6, 'Silverback', 1, 'KC', 3, 'LV', 'KC', 5, 'F'],
+      [4, 'Silverback', 1, 'BUF', 3, 'MIA', 'MIA', 9, 'U'],
+      [5, 'Silverback', 1, 'XXX', 1, 'YYY', 'XXX', 1, 'F'],
+      [5, 'Silverback', 2, 'XXX', 1, 'YYY', 'YYY', 2, 'F']]);
+    ws.getSheets().push(log);
+    const { ctx } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const rows = log.rows().slice(1).filter(r => r[0] !== '');
+    A.equal(rows.length, 22 * 15 + 2, 'old week 5 rows gone, weeks 4 and 6 kept');
+    A.deep(rows[0], [4, 'Silverback', 1, 'BUF', 3, 'MIA', 'MIA', 9, 'U'], 'weeks stay in order, week 4 first');
+    A.deep(rows[rows.length - 1], [6, 'Silverback', 1, 'KC', 3, 'LV', 'KC', 5, 'F'], 'and week 6 last');
+    A.ok(rows.filter(r => r[0] === 5).every(r => r[3] !== 'XXX'), 'week 5 is the new paste');
+    A.equal(tabNames(ws).filter(n => n === 'Picks_Log').length, 1, 'one log tab');
+  }],
+
+  ['Picks_Board: points that match no week store nothing and warn', () => {
+    const ws = participants(PF.board5(), { extra: [makeSheet('Picks_Board', PF.paste({ points: { 'Abogado': 95 } }))] });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const log = tab(ws, 'Picks_Log');
+    A.ok(!log || log.rows().slice(1).every(r => r.every(c => c === '')), 'nothing stored');
+    A.deep(JSON.parse(github.state.files['data.json'].text).picks, {});
+    A.match(warnTable(tab(ws, 'Tribune')).map(x => x.text).join('\n'), /Picks_Board: los puntos no coinciden con ninguna semana de PickEm_Board/);
+  }],
+
+  ['Picks_Board: a week that fits the points but has no solution is stored without results and warns', () => {
+    const { ctx } = setup({ board: PF.board5() });
+    const ss = ctx.SpreadsheetApp.openById('participants');
+    const board = ctx.readBoard_(ss);
+    const parsed = ctx.parsePicksGrid_(ctx.gridOf_(makeSheet('x', PF.paste({ points: { 'Abogado': 95 } }))));
+    const warn = [];
+    ctx.storePicksWeek_(ss, board, 5, parsed, warn);
+    A.match(warn.join('\n'), /Picks_Board semana 5: ninguna combinación de resultados da los puntos de Yahoo\. Guardé los picks sin resultado/);
+    const picks = JSON.parse(JSON.stringify(ctx.readPicksLog_(ss)));
+    A.equal(picks['5'].g.length, 15);
+    A.ok(picks['5'].g.every(g => g[3] === null), 'every Resultado is blank');
+    A.deep(picks['5'].p['Abogado'][0], ['TB', 6], 'the picks are there');
+  }],
+
+  ['Picks_Board: an unknown call sign is a warning, not a crash', () => {
+    const paste = PF.paste();
+    paste.push(['Fantasma'].concat(paste[4].slice(1, 16), ['10']));
+    const ws = participants(PF.board5(), { extra: [makeSheet('Picks_Board', paste)] });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    A.match(warnTable(tab(ws, 'Tribune')).map(x => x.text).join('\n'), /"Fantasma" no está en PickEm_Board/);
+    A.equal(Object.keys(JSON.parse(github.state.files['data.json'].text).picks['5'].p).length, 22, 'the other 22 are stored');
+  }],
+
+  ['Picks_Board: an unreadable paste warns and everything else still publishes', () => {
+    const ws = participants(PF.board5(), { extra: [makeSheet('Picks_Board', [['esto no es la tabla']])] });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    A.match(warnTable(tab(ws, 'Tribune')).map(x => x.text).join('\n'), /Picks_Board: no pude leer la tabla/);
+    A.ok(github.state.files['data.json'], 'published');
+  }],
+
+  ['commissioner-only tabs are never read, written, renamed or deleted', () => {
+    const trap = new Proxy(makeSheet('Premios de la temporada', [['Cuota por participante', '50']]), {
+      get(t, k) { if (k === 'getName') return t.getName; throw new Error('touched Premios de la temporada: ' + String(k)); },
+    });
+    const ws = participants(PF.board5(), { extra: [makeSheet('Picks_Board', PF.paste()), trap] });
+    const { ctx } = setup({ participants: ws });
+    ctx.setupTribuneTab();
+    ctx.publishLeaderboard();
+    ctx.onBoardEdit({ range: { getSheet: () => ({ getName: () => 'Premios de la temporada' }) } });
+    A.ok(tabNames(ws).indexOf('Premios de la temporada') >= 0, 'still there');
+  }],
+
+  ['static: only the allowed tabs are named, nothing is cleared or deleted, no migration code is left', () => {
+    const src = require('fs').readFileSync(require('path').join(__dirname, '..', 'gas', 'Publish.js'), 'utf8');
+    const { ctx } = setup();
+    A.deep([ctx.CFG.boardTab, ctx.CFG.participantsTab, ctx.CFG.tribuneTab, ctx.CFG.picksTab, ctx.CFG.logTab, ctx.CFG.fieldTab],
+      ['PickEm_Board', 'Participantes', 'Tribune', 'Picks_Board', 'Picks_Log', 'Field'], 'tab names');
+    const lookups = src.match(/(?:findTab_|insertSheet)\((?:ss, ?)?[^)]*\)/g) || [];
+    A.ok(lookups.length > 5, 'found the tab lookups');
+    lookups.filter(x => !/^findTab_\(sheet|function/.test(x)).forEach(u => A.match(u, /(CFG\.\w+Tab|name|'Sheet1')\)$/, 'tab lookup ' + u));
+    A.noMatch(src, /deleteSheet|\.clear\(|\.clearContent\(|\.clearContents\(|\.deleteRows?\(|\.deleteColumns?\(|removeSheet/, 'no clear or delete calls');
+    A.noMatch(src, /Premios|Comentarios|migrate|LEGACY_TABS/, 'no retired tabs, no migration');
   }],
 ]);
