@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.1.0 c1.3.0
+// v2.2.0 c1.3.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -23,13 +23,15 @@
 //   MODEL_SHEET_ID  model workbook that holds the Field tab (Survivor strikes). Optional, defaults to SHEET_ID.
 // Then run installTriggers() once from the editor and approve the permissions.
 // Run setupTribuneTab() once to create the Tribune tab with its dropdown and checkboxes. Safe to repeat: it also
-// adds the Edición option to an existing dropdown and the Apodo header to the participants list.
+// adds the Edición option to an existing dropdown, renames Sheet1 to Participantes, and inserts the Apodo column
+// between G and H of the participants list.
 // Moving from the old tabs: run migrateToTribune(true) to see what would move, then migrateToTribune(false).
 // Once the migration has run, migrateToTribune and LEGACY_TABS can be deleted.
 
 var CFG = {
   boardTab: 'PickEm_Board',   // paste Yahoo's weekly performance table here, header row included
-  tribuneTab: 'Tribune',      // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | Revisión, in the participants workbook
+  participantsTab: 'Participantes',  // the participants list; setup renames an old Sheet1 to this
+  tribuneTab: 'Tribune',     // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | Revisión, in the participants workbook
   fieldTab: 'Field',          // model tab with Entrant / Strikes columns
   path: 'data.json',
   editionsDir: 'editions',
@@ -54,6 +56,7 @@ var TRIBUNE_HEADER = ['Semana', 'Sección', 'Para', 'Título', 'Texto', 'Publica
 // Revisión: the label sits in G1, the warnings in H1.
 var REVISION_LABEL = 'Revisión';
 var REVISION_CELL = 'H1';
+var APODO_AFTER = 7;          // the Apodo column is inserted after column G of the participants list
 var REVISION_RED = '#f4cccc';
 // Themes the page knows. Add one here and in index.html (THEMES and its CSS block).
 var THEMES_KNOWN = ['muertos'];
@@ -137,11 +140,20 @@ function setupTribune_(ss) {
   return sh;
 }
 
-/** Adds the Apodo header to the participants list if it is missing. Touches no other cell. */
+/**
+ * Prepares the participants list: renames a tab still called Sheet1 to Participantes, and adds the Apodo header
+ * if it is missing. Apodo goes in a new column between G and H, so whatever sat in H (a table, say) shifts one
+ * column right and keeps its shape. A list narrower than G gets the header in the first free column instead.
+ * Idempotent. The page finds every column by its header, so the position and the tab name carry no meaning.
+ */
 function addApodoHeader_(ss) {
   var f = fanSheet_(ss);
-  if (!f || f.apC >= 0) return;
-  f.sh.getRange(f.h + 1, f.width + 1, 1, 1).setValues([['Apodo']]).setFontWeight('bold');
+  if (!f) return;
+  if (f.sh.getName() === 'Sheet1' && !findTab_(ss, CFG.participantsTab)) f.sh.setName(CFG.participantsTab);
+  if (f.apC >= 0) return;
+  var col = f.width + 1;
+  if (f.sh.getMaxColumns() >= APODO_AFTER) { f.sh.insertColumnAfter(APODO_AFTER); col = APODO_AFTER + 1; }
+  f.sh.getRange(f.h + 1, col, 1, 1).setValues([['Apodo']]).setFontWeight('bold');
 }
 
 /**

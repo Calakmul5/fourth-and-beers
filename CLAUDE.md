@@ -14,7 +14,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 
 ## How it runs
 
-- Inputs, participants workbook: `PickEm_Board` (Yahoo weekly performance table pasted at A1), `Tribune` (Semana, Sección, Para, Título, Texto, Publicar checkbox, plus G1 `Revisión` and the status cell H1) and `Sheet1` (only the columns Call Sign PickEm, Fan of and the optional Apodo). `Sección` is a dropdown: Portada, Columna, Clasificado, Dato, Edición. Row meaning: Portada is the headline (Título) and deck (Texto), Para optional. Columna is one paragraph of the Portada story in sheet order, Título an optional crosshead. Clasificado is an ad (Título is the ad type, `Q.E.P.D.` or `QEPD` in any case makes it an esquela). Dato is a labeled fact. Edición is at most one per week: Título is a banner under the masthead, Texto replaces the tagline, Para is the theme key (only `muertos` exists). `Apodo` holds comma separated nicknames per participant (Kinky for KinkyKing, Osos for Osos de Grayslake, el Comish for Silverback) so the page can bold them. Emails are never published. `Comentarios` and `Premios` are retired: `migrateToTribune(dryRun)` moves them into Tribune and deletes them only when the counts match. Nothing else reads them.
+- Inputs, participants workbook: `PickEm_Board` (Yahoo weekly performance table pasted at A1), `Tribune` (Semana, Sección, Para, Título, Texto, Publicar checkbox, plus G1 `Revisión` and the status cell H1) and `Participantes` (the old Sheet1. Only the columns Call Sign PickEm, Fan of and the optional Apodo, which setup inserts between G and H. Columns are found by header). `Sección` is a dropdown: Portada, Columna, Clasificado, Dato, Edición. Row meaning: Portada is the headline (Título) and deck (Texto), Para optional. Columna is one paragraph of the Portada story in sheet order, Título an optional crosshead. Clasificado is an ad (Título is the ad type, `Q.E.P.D.` or `QEPD` in any case makes it an esquela). Dato is a labeled fact. Edición is at most one per week: Título is a banner under the masthead, Texto replaces the tagline, Para is the theme key (only `muertos` exists). `Apodo` holds comma separated nicknames per participant (Kinky for KinkyKing, Osos for Osos de Grayslake, el Comish for Silverback) so the page can bold them. Emails are never published. `Comentarios` and `Premios` are retired: `migrateToTribune(dryRun)` moves them into Tribune and deletes them only when the counts match. Nothing else reads them.
 - Input, model workbook: `Field` (Entrant, Strikes). Read only.
 - Script properties: `GITHUB_TOKEN`, `GITHUB_REPO`, `SHEET_ID` (participants), `MODEL_SHEET_ID` (model).
 - Revisión: every publish checks the current week's checked Tribune rows and writes Spanish warnings to H1, tinting the rows involved light red. It warns when the last place is named in more than one row or Columna paragraph, was also named last week, when Columna has no Portada, when there is more than one Edición or an unknown tema. It never blocks a publish and never edits text. A clean batch clears H1 and only the tint it set.
@@ -43,8 +43,8 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 ## Current versions
 
 - index.html v3.1.0 c2.1.0
-- Publish.js v2.1.0 c1.3.0
-- docs/LEADERBOARD_ARCHITECTURE.html v3.1.0 c3.1.0
+- Publish.js v2.2.0 c1.3.0
+- docs/LEADERBOARD_ARCHITECTURE.html v3.1.1 c3.1.1
 
 ## Roadmap
 

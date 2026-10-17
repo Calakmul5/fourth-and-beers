@@ -13,7 +13,8 @@ function pad(rows) {
 /** A sheet backed by a plain array of rows. Writes are kept, formatting calls are recorded on sheet.log. */
 function makeSheet(name, rows) {
   const data = rows.map(r => r.slice());
-  const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [], validations: [], cleared: [], writes: 0 };
+  const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [], validations: [], cleared: [], writes: 0, inserted: [] };
+  let maxCols = 0;
   const bgs = {};
   function range(row, col, nr, nc) {
     const self = {
@@ -44,6 +45,9 @@ function makeSheet(name, rows) {
   const sheet = {
     log,
     getName: () => name,
+    setName(n) { name = n; },
+    getMaxColumns: () => Math.max(maxCols || 0, ...data.map(r => r.length), 1),
+    insertColumnAfter(c) { log.inserted.push(c); data.forEach(r => { while (r.length < c) r.push(''); r.splice(c, 0, ''); }); maxCols = Math.max(maxCols || 0, ...data.map(r => r.length)); },
     getDataRange: () => ({
       getDisplayValues: () => pad(data).map(r => r.map(String)),
       getValues: () => pad(data),

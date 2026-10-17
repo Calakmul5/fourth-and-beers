@@ -467,7 +467,7 @@ A.run('Publish.js', [
     const rep = ctx.migrateToTribune(false);
     A.equal(rep.ok, true);
     A.deep(JSON.parse(JSON.stringify(rep.deleted)), ['Comentarios', 'Premios']);
-    A.deep(tabNames(ws), ['PickEm_Board', 'Sheet1', 'Tribune'], 'legacy tabs gone');
+    A.deep(tabNames(ws), ['PickEm_Board', 'Participantes', 'Tribune'], 'legacy tabs gone');
     const rows = tab(ws, 'Tribune').rows();
     A.deep(rows[1], existing[1], 'existing rows stay where they were');
     A.equal(rows.length, 2 + 8, 'header, the existing row, 4 + 4 migrated');
@@ -503,7 +503,7 @@ A.run('Publish.js', [
     const rep = ctx.migrateToTribune(false);
     A.equal(rep.ok, false);
     A.deep(JSON.parse(JSON.stringify(rep.deleted)), []);
-    A.deep(tabNames(ws), ['PickEm_Board', 'Sheet1', 'Tribune', 'Comentarios', 'Premios'], 'nothing deleted');
+    A.deep(tabNames(ws), ['PickEm_Board', 'Participantes', 'Tribune', 'Comentarios', 'Premios'], 'nothing deleted');
     A.ok(sh.rows().slice(1).every(r => r.every(c => c === '')), 'appended rows cleared again');
     A.ok(ctx._logs.some(l => /do not match/.test(l)), 'reason logged');
   }],
@@ -584,11 +584,47 @@ A.run('Publish.js', [
     ctx.setupTribuneTab();
     const rows = sheet1.rows();
     A.equal(rows[0].filter(c => c === 'Apodo').length, 1, 'one Apodo header');
-    A.equal(rows[0][3], 'Apodo', 'in the first free column');
+    A.equal(rows[0][3], 'Apodo', 'a list narrower than G gets it in the first free column');
+    A.deep(sheet1.log.inserted, [], 'no column inserted');
     A.deep(rows.map(r => r.slice(0, 3)), JSON.parse(before).map(r => r.slice(0, 3)), 'other columns untouched');
     A.deep(rows.slice(1).map(r => r[3] || ''), rows.slice(1).map(() => ''), 'no values written');
+    A.equal(sheet1.getName(), 'Participantes', 'Sheet1 is renamed');
+    A.deep(tabNames(ws), ['PickEm_Board', 'Participantes', 'Tribune'], 'and only renamed');
     const v = tab(ws, 'Tribune').log.validations;
     A.deep(JSON.parse(JSON.stringify(v[v.length - 1].rule.list)).slice(-1), ['Edición'], 'the dropdown is refreshed on the existing tab');
+  }],
+
+  ['setupTribuneTab inserts Apodo between G and H, shifting the table in H, and still reads the list by header', () => {
+    const wide = FANS.map((r, i) => {
+      const o = r.slice(0, 3); while (o.length < 7) o.push('');
+      return o.concat([i === 0 ? 'Tabla' : 'x' + i, i === 0 ? 'Total' : String(i)]);   // a table that starts in H
+    });
+    wide[1][5] = 'keep';                                                               // data in F must stay put
+    const ws = participants(null, { fans: wide });
+    const { ctx, github } = setup({ participants: ws });
+    const sh = tab(ws, 'Sheet1');
+    ctx.setupTribuneTab();
+    ctx.setupTribuneTab();
+    const rows = sh.rows();
+    A.deep(sh.log.inserted, [7], 'one column inserted after G, once');
+    A.deep(rows[0].slice(6, 10), ['', 'Apodo', 'Tabla', 'Total'], 'Apodo is column H and the table moved to I');
+    A.equal(rows[1][5], 'keep', 'columns before G untouched');
+    A.deep(rows.slice(1).map(r => r[8] + '|' + r[9]), wide.slice(1).map(r => r[7] + '|' + r[8]), 'table values intact, one column right');
+    A.equal(sh.getName(), 'Participantes');
+    ctx.publishLeaderboard();
+    A.ok(github.state.puts.length >= 1, 'publishes from the renamed, widened list');
+  }],
+
+  ['setupTribuneTab leaves an existing Apodo column where it is and never renames onto an existing Participantes tab', () => {
+    const fans = FANS.map((r, i) => r.slice(0, 3).concat(i === 0 ? ['Apodo'] : ['']));
+    const ws = participants(null, { fans });
+    ws.insertSheet('Participantes');
+    const { ctx } = setup({ participants: ws });
+    const sh = tab(ws, 'Sheet1');
+    ctx.setupTribuneTab();
+    A.deep(sh.log.inserted, [], 'nothing inserted');
+    A.equal(sh.rows()[0].filter(c => c === 'Apodo').length, 1);
+    A.equal(sh.getName(), 'Sheet1', 'name collision, left alone');
   }],
 
   ['name resolver: Publish.js and index.html carry the identical block, and it matches apodos and apostrophes', () => {
