@@ -492,7 +492,7 @@ A.run('Publish.js', [
     A.deep(rows.map(r => r.slice(0, 3)), JSON.parse(before).map(r => r.slice(0, 3)), 'other columns untouched');
     A.deep(rows.slice(1).map(r => r[3] || ''), rows.slice(1).map(() => ''), 'no values written');
     A.equal(sheet1.getName(), 'Participantes', 'Sheet1 is renamed');
-    A.deep(tabNames(ws), ['PickEm_Board', 'Participantes', 'Tribune', 'Picks_Board', 'Picks_Log'], 'renamed, plus the two Picks tabs');
+    A.deep(tabNames(ws), ['Participantes', 'Picks_Board', 'PickEm_Board', 'Tribune', 'Picks_Log'], 'renamed, plus the two Picks tabs, in the agreed order');
     const v = tab(ws, 'Tribune').log.validations;
     A.deep(JSON.parse(JSON.stringify(v[v.length - 1].rule.list)).slice(-1), ['Edición'], 'the dropdown is refreshed on the existing tab');
   }],
@@ -889,29 +889,53 @@ A.run('Publish.js', [
       ['PickEm_Board', 'Participantes', 'Tribune', 'Picks_Board', 'Picks_Log', 'Field'], 'tab names');
     const lookups = src.match(/(?:findTab_|insertSheet)\((?:ss, ?)?[^)]*\)/g) || [];
     A.ok(lookups.length > 5, 'found the tab lookups');
-    lookups.filter(x => !/^findTab_\(sheet|function/.test(x)).forEach(u => A.match(u, /(CFG\.\w+Tab|name|'Sheet1')\)$/, 'tab lookup ' + u));
+    lookups.filter(x => !/^findTab_\(sheet|function/.test(x)).forEach(u => A.match(u, /(CFG\.\w+Tab|name|n|'Sheet1')\)$/, 'tab lookup ' + u));
+    A.match(src, /var mine = \[CFG\.picksTab, CFG\.boardTab, CFG\.tribuneTab, CFG\.logTab\]/, 'the tabs that get moved come from CFG only');
     A.noMatch(src, /deleteSheet|\.clear\(|\.clearContent\(|\.clearContents\(|\.deleteRows?\(|\.deleteColumns?\(|removeSheet/, 'no clear or delete calls');
     A.noMatch(src, /Premios|Comentarios|migrate|LEGACY_TABS/, 'no retired tabs, no migration');
   }],
 
-  ['Picks_Board: instructions sit in column T, come back after a wipe and never break the parse', () => {
+  ['Picks_Board: instructions on top, paste area at A12, a table pasted at A1 is pushed down and never overwritten', () => {
     [PF.paste(), PF.pasteTabbed()].forEach((paste, i) => {
-      const pb = makeSheet('Picks_Board', paste);
+      const pb = makeSheet('Picks_Board', paste);                       // pasted at A1 by habit
       const ws = participants(PF.board5(), { extra: [pb] });
       const { ctx, github } = setup({ participants: ws });
       ctx.publishLeaderboard();
-      A.equal(pb.rows()[0][19], 'Cómo pegar la tabla de Group Picks', 'shape ' + i + ': title in T1');
-      A.match(pb.rows()[1][19], /grouppicks\?week=N/);
-      A.equal(Object.keys(JSON.parse(github.state.files['data.json'].text).picks['5'].p).length, 22, 'shape ' + i + ': parsed with the note next to it');
-      pb.rows().forEach(r => { r[19] = ''; });                      // select all, delete
+      const rows = pb.rows();
+      A.match(rows[0][0], /^PICKS_BOARD: aquí va la tabla de Group Picks/, 'shape ' + i + ': title in A1');
+      A.match(rows[1][0], /grouppicks\?week=N/);
+      A.equal(rows[6][0], 'Estado del último publish');
+      A.match(rows[10][0], /PEGA AQUÍ, en la celda A12/, 'banner in row 11');
+      A.match(rows[11][0], /^Favored/, 'the table starts at A12');
+      A.equal(pb.bg(11, 1), '#fff2cc', 'the banner is colored');
+      A.equal(Object.keys(JSON.parse(github.state.files['data.json'].text).picks['5'].p).length, 22, 'shape ' + i + ': parsed');
+      A.equal(rows.length, 11 + paste.length, 'nothing was lost');
+      const writes = pb.log.writes;
       ctx.publishLeaderboard();
-      A.equal(pb.rows()[0][19], 'Cómo pegar la tabla de Group Picks', 'restored');
+      A.match(rows[11][0], /^Favored/, 'a second publish does not push again');
     });
-    const only = makeSheet('Picks_Board', []);
-    const ws2 = participants(PF.board5(), { extra: [only] });
-    const { ctx: c2 } = setup({ participants: ws2 });
+    // wiped: the whole tab emptied
+    const pb = makeSheet('Picks_Board', []);
+    const ws = participants(PF.board5(), { extra: [pb] });
+    const { ctx } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    A.equal(warnTable(tab(ws, 'Tribune')).filter(x => /Picks_Board/.test(x.text)).length, 0, 'an empty paste area is not an unreadable paste');
+    pb.rows().length = 0;
+    ctx.publishLeaderboard();
+    A.match(pb.rows()[0][0], /^PICKS_BOARD/, 'instructions come back after a wipe');
+    // a proper paste at A12 under the instructions
+    PF.paste().forEach((r, i) => { pb.rows()[11 + i] = r; });
+    const { ctx: c2, github } = setup({ participants: ws });
     c2.publishLeaderboard();
-    A.equal(warnTable(tab(ws2, 'Tribune')).filter(x => /Picks_Board/.test(x.text)).length, 0, 'an empty board with only the note is not an unreadable paste');
+    A.deep(Object.keys(JSON.parse(github.state.files['data.json'].text).picks), ['5'], 'parsed from A12');
+    A.equal(pb.rows()[11][0], 'Favored', 'and not moved');
+    // the first layout: table at A1 with the note and status in column T
+    const old = makeSheet('Picks_Board', PF.paste().map((r, i) => { const o = r.slice(); while (o.length < 19) o.push(''); o.push(i === 0 ? 'Cómo pegar la tabla de Group Picks' : i === 8 ? 'OK viejo' : ''); return o; }));
+    const ws3 = participants(PF.board5(), { extra: [old] });
+    const { ctx: c3 } = setup({ participants: ws3 });
+    c3.publishLeaderboard();
+    A.equal(old.rows()[11][0], 'Favored');
+    A.ok(old.rows().slice(11).every(r => !r[19] || r[19] === ''), 'the old column T note is gone');
   }],
 
   ['status: every publish ends with OK, OK con avisos or the error, in the log, a toast and Picks_Board', () => {
@@ -919,20 +943,19 @@ A.run('Publish.js', [
     const ws = participants(PF.board5(), { extra: [pb] });
     const { ctx } = setup({ participants: ws });
     ctx.publishLeaderboard();
-    const cell = () => pb.rows()[8][19];
-    A.match(cell(), /^OK 20\d\d-\d\d-\d\d \d\d:\d\d\. Semana 5: publicada\. Picks guardados: semana 5\. Avisos: ninguno\.$/);
-    A.equal(pb.rows()[7][19], 'Estado del último publish');
+    const cell = n => pb.rows()[7 + n][0];
+    A.match(cell(0), /^OK 20\d\d-\d\d-\d\d \d\d:\d\d\. Semana 5 publicada\. Picks guardados: semana 5\. Avisos: ninguno\.$/);
+    A.equal(cell(1) || '', '');
     A.ok(ctx._logs.some(l => /^Estado: OK /.test(l)), 'logged');
     A.ok(ws.toasts.some(t => /^OK /.test(t)), 'toast');
     ctx.publishLeaderboard();
-    A.match(cell(), /sin cambios/, 'second run changes nothing');
-    // a warning
+    A.match(cell(0), /Semana 5 sin cambios/, 'second run changes nothing');
     const bad = makeSheet('Picks_Board', PF.paste({ points: { 'Abogado': 95 } }));
     const ws2 = participants(PF.board5(), { extra: [bad] });
     const { ctx: c2 } = setup({ participants: ws2 });
     c2.publishLeaderboard();
-    A.match(bad.rows()[8][19], /^OK CON AVISOS .*Avisos: 1 \(Picks_Board: los puntos no coinciden.*Tribune, columna I\./);
-    // an error
+    A.match(bad.rows()[7][0], /^OK CON AVISOS .*Avisos: 1 \(abajo y en Tribune, columna I\)\.$/);
+    A.match(bad.rows()[8][0], /^• Picks_Board: los puntos no coinciden/);
     const ok = makeSheet('Picks_Board', PF.paste());
     const ws3 = participants(PF.board5(), { extra: [ok] });
     const github = makeGithub(null);
@@ -942,7 +965,21 @@ A.run('Publish.js', [
     let msg = '';
     try { c3.publishLeaderboard(); } catch (e) { msg = e.message; }
     A.match(msg, /GitHub write failed \(401\)/, 'the error still surfaces');
-    A.match(ok.rows()[8][19], /^ERROR 20.*GitHub write failed \(401\).*revisa Executions/);
+    A.match(ok.rows()[7][0], /^ERROR 20.*revisa Executions/);
+    A.match(ok.rows()[8][0], /GitHub write failed \(401\)/);
     A.ok(ws3.toasts.some(t => /^ERROR /.test(t)), 'error toast');
+  }],
+
+  ['tab order: Participantes, the commissioner tab, Picks_Board, PickEm_Board, Tribune, Picks_Log, and the commissioner tab is never touched', () => {
+    const trap = new Proxy(makeSheet('Premios de la temporada', [['Cuota por participante', '50']]), {
+      get(t, k) { if (k === 'getName') return t.getName; throw new Error('touched Premios de la temporada: ' + String(k)); },
+    });
+    const ws = makeWorkbook('participants', [makeSheet('Tribune', TRIBUNE), makeSheet('PickEm_Board', PF.board5()), trap, makeSheet('Picks_Log', [['Semana']]),
+      makeSheet('Participantes', FANS), makeSheet('Picks_Board', PF.paste())]);
+    const { ctx } = setup({ participants: ws });
+    ctx.setupTribuneTab();
+    A.deep(tabNames(ws), ['Participantes', 'Premios de la temporada', 'Picks_Board', 'PickEm_Board', 'Tribune', 'Picks_Log']);
+    ctx.setupTribuneTab();
+    A.deep(tabNames(ws), ['Participantes', 'Premios de la temporada', 'Picks_Board', 'PickEm_Board', 'Tribune', 'Picks_Log'], 'idempotent');
   }],
 ]);

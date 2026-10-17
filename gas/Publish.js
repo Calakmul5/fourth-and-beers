@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.7.0 c1.5.0
+// v2.8.0 c1.6.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -14,9 +14,10 @@
 //      editions/index.json lists the weeks. A week that has moved on is never touched again.
 //   8. Lists warnings in the Tribune tab (H:J, one per row: color, text, week, with a blank separator column G) and tints the rows involved when the last place
 //      is named more than once, or in two weeks in a row, and so on. It never blocks a publish or edits your text.
-//  10. Ends every publish with a status message: a log line, a toast in the workbook and a line in column T of Picks_Board
-//      (OK, OK with warnings, or the error). Column T also holds the instructions for pasting Group Picks. Both are
-//      rewritten if the tab is wiped, and the paste ignores everything from column T on.
+//  10. Ends every publish with a status message: a log line, a toast in the workbook and rows 7 to 10 of Picks_Board
+//      (OK, OK with warnings and the first two, or the error). Rows 1 to 6 hold the instructions for pasting Group Picks and
+//      row 11 marks the paste area, which starts at A12. All of it is rewritten if the tab is wiped. A table pasted
+//      at A1 by habit is pushed down, never overwritten.
 //   9. Reads Yahoo's Group Picks table from Picks_Board, infers its week from the Points column, infers each game's
 //      result from the paste itself (Points must equal the confidence of the correct picks) and keeps the week in
 //      Picks_Log. data.json "picks" is rebuilt from Picks_Log on every publish.
@@ -116,29 +117,38 @@ function publishLeaderboard_() {
     try { warnTexts = reviewTribune_(ss, data, picksWarn); } catch (e) { Logger.log('Warnings skipped: ' + e); warnTexts = picksWarn.slice(); }
     result = commitAll_(repo, token, data, cur);
   } catch (e) {
-    reportStatus_(ss, 'ERROR ' + stamp_() + '. ' + (e && e.message ? e.message : e) + ' La publicación falló, revisa Executions en Apps Script.');
+    reportStatus_(ss, 'ERROR ' + stamp_() + '. La publicación falló, revisa Executions en Apps Script.', [String(e && e.message ? e.message : e).slice(0, 220)]);
     throw e;
   }
   Logger.log(result);
   var weeks = Object.keys(data.picks || {}).map(Number).sort(function (x, y) { return x - y; });
-  reportStatus_(ss, (warnTexts.length ? 'OK CON AVISOS ' : 'OK ') + stamp_() + '. Semana ' + data.week + ': ' +
+  reportStatus_(ss, (warnTexts.length ? 'OK CON AVISOS ' : 'OK ') + stamp_() + '. Semana ' + data.week + ' ' +
     (/^Committed/.test(result) ? 'publicada' : 'sin cambios') + '. Picks guardados: ' +
     (weeks.length ? 'semana' + (weeks.length > 1 ? 's ' : ' ') + weeks.join(', ') : 'ninguno') + '. Avisos: ' +
-    (warnTexts.length ? warnTexts.length + ' (' + warnTexts.slice(0, 2).join(' / ') + (warnTexts.length > 2 ? ' / ...' : '') + '), ver la tabla Warnings en Tribune, columna I' : 'ninguno') + '.');
+    (warnTexts.length ? warnTexts.length + ' (abajo y en Tribune, columna I)' : 'ninguno') + '.',
+    warnTexts.slice(0, 2).map(function (t) { return '• ' + t; }));
   return result;
 }
 
 function stamp_() { return Utilities.formatDate(new Date(), 'America/Chicago', 'yyyy-MM-dd HH:mm'); }
 
-/** The end-of-process message: log line, a toast for whoever has the workbook open, and the status cell in Picks_Board. */
-function reportStatus_(ss, text) {
-  Logger.log('Estado: ' + text);
-  try { ss.toast(text, 'Fourth and Beers', 15); } catch (e) { /* no toast outside a spreadsheet session */ }
+/**
+ * The end-of-process message: a log line, a toast for whoever has the workbook open, and rows 8 to 10 of Picks_Board
+ * (headline, then up to two details). Rows are written only when the text changed.
+ */
+function reportStatus_(ss, headline, details) {
+  details = details || [];
+  Logger.log('Estado: ' + [headline].concat(details).join(' '));
+  try { ss.toast([headline].concat(details).join('\n'), 'Fourth and Beers', 15); } catch (e) { /* no toast outside a spreadsheet session */ }
   try {
     var sh = findTab_(ss, CFG.picksTab);
     if (!sh) return;
     ensurePicksNote_(sh);
-    if (String(sh.getRange(PICKS_NOTE.length + 3, NOTE_COL, 1, 1).getValue() || '') !== text) sh.getRange(PICKS_NOTE.length + 3, NOTE_COL, 1, 1).setValue(text);
+    var want = [headline, details[0] || '', details[1] || ''];
+    for (var i = 0; i < 3; i++) {
+      var cell = sh.getRange(NOTE_ROWS - 3 + i, 1, 1, 1);
+      if (String(cell.getValue() || '') !== want[i]) cell.setValue(want[i]);
+    }
   } catch (e) { Logger.log('Status cell skipped: ' + e); }
 }
 
@@ -158,6 +168,7 @@ function setupTribuneTab() {
   setupPicks_(ss);
   var pb = findTab_(ss, CFG.picksTab);
   if (pb) ensurePicksNote_(pb);
+  orderTabs_(ss);
   Logger.log('Tribune, ' + CFG.picksTab + ' and ' + CFG.logTab + ' tabs ready in ' + ss.getName());
 }
 
@@ -537,15 +548,19 @@ function mentions(idx, text) {
 // ---------------------------------------------------------------------------
 
 var LOG_HEADER = ['Semana', 'Pick Set', 'Juego', 'Favorito', 'Spread', 'Underdog', 'Pick', 'Confianza', 'Resultado'];
-var NOTE_COL = 20;              // column T: instructions and status, out of the way of the pasted table (16 games reach column R)
+var NOTE_ROWS = 11;             // rows 1 to 11 of Picks_Board: instructions, status, paste banner. The paste starts at A12.
+var PASTE_COLS = 19;            // 16 games reach column R, the cells right of S are not read
 var PICKS_NOTE = [
-  'Cómo pegar la tabla de Group Picks',
-  '1. En Yahoo, como Comish, abre football.fantasysports.yahoo.com/pickem/27197/grouppicks?week=N (N es la semana).',
-  '2. Selecciona la tabla desde la celda "Favored" hasta el último Points y cópiala. Que incluya Favored, Spread y Underdog.',
-  '3. Aquí: selecciona todo, borra y pega en A1. Antes, PickEm_Board debe tener los puntos de esa semana.',
-  '4. No escribas la semana. Se saca de los Points. El script ignora esta columna T.',
-  '5. Espera un minuto y lee el estado de abajo. Los avisos también salen en Tribune, columna I.'
+  'PICKS_BOARD: aquí va la tabla de Group Picks de Yahoo, una semana a la vez.',
+  '1. Yahoo > Pick\'em > Group Picks (football.fantasysports.yahoo.com/pickem/27197/grouppicks?week=N).',
+  '2. Copia la tabla completa: desde la celda "Favored" (arriba a la izquierda) hasta el último Points.',
+  '3. PickEm_Board debe tener ya los puntos de esa semana. No escribas la semana, sale de los Points.',
+  '4. Borra el área de pegado: clic en A12, Ctrl+Mayús+Fin, Supr. Luego pega en A12.',
+  'No escribas nada arriba de la fila 12. Los avisos también salen en Tribune, columna I.'
 ];
+var PICKS_LABEL = 'Estado del último publish';
+var PICKS_BANNER = '▼ PEGA AQUÍ, en la celda A12. Antes borra de la fila 12 hacia abajo ▼';
+var PICKS_OLD_TITLE = 'Cómo pegar la tabla de Group Picks';      // the first layout kept its note in column T
 var SOLVER_NODES = 3000000;     // a week that needs more search than this is stored without results
 
 /** Creates Picks_Board (empty, the paste goes at A1) and Picks_Log (header only) when missing. Safe to repeat. */
@@ -559,14 +574,46 @@ function setupPicks_(ss) {
   return log;
 }
 
-/** Writes the instructions in column T (and the Estado label) if they are missing, for example after the tab was wiped. */
+/**
+ * Keeps rows 1 to 11 of Picks_Board: instructions, the Estado label and the paste banner. Does nothing while they are in place.
+ * If those rows hold anything else (a table pasted at A1 by habit, or the first layout's table) the rows are pushed down
+ * first, so a paste is never overwritten. Only writes, never clears.
+ */
 function ensurePicksNote_(sh) {
-  if (String(sh.getRange(1, NOTE_COL, 1, 1).getValue() || '') === PICKS_NOTE[0]) return;
-  sh.getRange(1, NOTE_COL, PICKS_NOTE.length, 1).setValues(PICKS_NOTE.map(function (t) { return [t]; }));
-  sh.getRange(1, NOTE_COL, 1, 1).setFontWeight('bold');
-  sh.getRange(PICKS_NOTE.length + 2, NOTE_COL, 1, 1).setValue('Estado del último publish');
-  sh.getRange(PICKS_NOTE.length + 2, NOTE_COL, 1, 1).setFontWeight('bold');
-  sh.setColumnWidth(NOTE_COL, 560);
+  if (String(sh.getRange(1, 1, 1, 1).getValue() || '') === PICKS_NOTE[0] && String(sh.getRange(NOTE_ROWS, 1, 1, 1).getValue() || '') === PICKS_BANNER) return;
+  if (String(sh.getRange(1, 20, 1, 1).getValue() || '') === PICKS_OLD_TITLE) {
+    var blank = []; for (var i = 0; i < 9; i++) blank.push(['']);
+    sh.getRange(1, 20, 9, 1).setValues(blank);                    // the first layout's note and status in column T
+  }
+  var ours = function (c) {
+    c = String(c || '').trim();
+    return c === '' || PICKS_NOTE.indexOf(c) >= 0 || c === PICKS_LABEL || c === PICKS_BANNER || /^(OK|ERROR) /.test(c) || /^• /.test(c);
+  };
+  var top = sh.getRange(1, 1, NOTE_ROWS, PASTE_COLS).getValues();
+  if (!top.every(function (r) { return r.every(ours); })) sh.insertRowsBefore(1, NOTE_ROWS);
+  sh.getRange(1, 1, PICKS_NOTE.length, 1).setValues(PICKS_NOTE.map(function (t) { return [t]; }));
+  sh.getRange(1, 1, 1, 1).setFontWeight('bold');
+  sh.getRange(PICKS_NOTE.length + 1, 1, 1, 1).setValue(PICKS_LABEL).setFontWeight('bold');
+  sh.getRange(NOTE_ROWS, 1, 1, 1).setValue(PICKS_BANNER).setFontWeight('bold');
+  sh.getRange(NOTE_ROWS, 1, 1, 12).setBackground('#fff2cc');
+  sh.setColumnWidth(1, 200);
+}
+
+/**
+ * Tab order: Participantes first, the tabs this script owns last (Picks_Board, PickEm_Board, Tribune, Picks_Log), anything
+ * else in between in its own order. Only the tabs named here are moved, so a commissioner-only tab is never activated or touched.
+ * Moves nothing when the order is already right.
+ */
+function orderTabs_(ss) {
+  var names = function () { return ss.getSheets().map(function (t) { return t.getName().trim().toLowerCase(); }); };
+  var mine = [CFG.picksTab, CFG.boardTab, CFG.tribuneTab, CFG.logTab].filter(function (n) { return findTab_(ss, n); });
+  var part = findTab_(ss, CFG.participantsTab);
+  var want = mine.map(function (n) { return n.toLowerCase(); }), now = names();
+  var tailOk = now.slice(now.length - want.length).join('|') === want.join('|');
+  if ((!part || now[0] === CFG.participantsTab.toLowerCase()) && tailOk) return;
+  var move = function (sh, pos) { ss.setActiveSheet(sh); ss.moveActiveSheet(pos); };
+  if (part) move(part, 1);
+  mine.forEach(function (n) { move(findTab_(ss, n), ss.getSheets().length); });
 }
 
 function team_(s) { return String(s || '').replace(/[^A-Za-z]/g, '').toUpperCase(); }
@@ -717,9 +764,9 @@ function syncPicks_(ss, board, warn) {
     var sh = findTab_(ss, CFG.picksTab);
     if (!sh) return;
     ensurePicksNote_(sh);
-    var grid = gridOf_(sh, NOTE_COL - 1);
-    if (!grid.some(function (r) { return r.some(function (c) { return c !== ''; }); })) return;
+    var grid = gridOf_(sh, PASTE_COLS);
     var parsed = parsePicksGrid_(grid);
+    if (!parsed && !grid.slice(NOTE_ROWS).some(function (r) { return r.some(function (c) { return c !== ''; }); })) return;   // nothing pasted yet
     if (!parsed) { warn.push(CFG.picksTab + ': no pude leer la tabla. Pega la tabla completa de Group Picks de Yahoo en A1, encabezados incluidos.'); return; }
     var weeks = weeksMatching_(parsed.sets, board);
     if (weeks.length !== 1) {

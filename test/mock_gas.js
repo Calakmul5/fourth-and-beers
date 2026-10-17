@@ -55,6 +55,10 @@ function makeSheet(name, rows) {
     getMaxColumns: () => Math.max(maxCols || 0, ...data.map(r => r.length), 1),
     getMaxRows: () => Math.max(data.length, 1000, maxRows),
     vmap: (r, c) => vmap[r + ',' + c] || null,
+    insertRowsBefore(r, n) {
+      [bgs, vmap].forEach(m => { Object.keys(m).map(k => k.split(',').map(Number)).filter(p => p[0] >= r).sort((a, b) => b[0] - a[0]).forEach(p => { m[(p[0] + n) + ',' + p[1]] = m[p[0] + ',' + p[1]]; delete m[p[0] + ',' + p[1]]; }); });
+      for (let i = 0; i < n; i++) data.splice(r - 1, 0, []);
+    },
     insertRowsAfter(r, n) { for (let i = 0; i < n; i++) data.splice(r, 0, []); maxRows = Math.max(maxRows, r + n); },
     insertColumnAfter(c) {
       log.inserted.push(c);
@@ -84,6 +88,9 @@ function makeWorkbook(name, sheets) {
     getName: () => name,
     getUrl: () => 'https://example.test/' + name,
     toasts: [],
+    active: null,
+    setActiveSheet(sh) { this.active = sh; },
+    moveActiveSheet(pos) { const i = sheets.indexOf(this.active); sheets.splice(i, 1); sheets.splice(pos - 1, 0, this.active); },
     toast(m) { this.toasts.push(m); },
     getSheets: () => sheets,
     insertSheet(n) { const sh = makeSheet(n, []); sheets.push(sh); return sh; },
