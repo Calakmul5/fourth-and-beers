@@ -97,8 +97,36 @@
   }
  },
  "tribune": {
-  "portada": null,
+  "portada": {
+   "titulo": "Dallas no alcanzÃ³ y el Comish sigue de lÃ­der",
+   "texto": "Silverback manda con 304 tras tirar su peor semana. Steel Man ya huele las pizzas del Super Bowl.",
+   "para": ""
+  },
   "columna": [
+   {
+    "para": "Silverback",
+    "texto": "LÃ­der con 304 y todavÃ­a no sÃ© por quÃ©. Si alguien lo averigua que me avise antes de que corrijan la tabla."
+   },
+   {
+    "para": "Steel Man",
+    "texto": "Entre 40 y 47 puntos cada semana. Constancia admirable. Las pizzas del Super Bowl ya van a su nombre."
+   },
+   {
+    "para": "Juan1768",
+    "texto": "Cero rayas en Survivor y 34 puntos en la semana cuatro. Se ve que ahÃ­ sÃ­ hubo cuidado."
+   },
+   {
+    "para": "Rastaman, Conquistador, This is our year, Chitownâ€™DemBoyz, Cyber70, Mean Machine, SinCasco, X-Men Letâ€™s go Boys",
+    "texto": "Ocho confiaron en Dallas otra vez. La esperanza es gratis. Los puntos no."
+   },
+   {
+    "para": "King of The North, Osos de Grayslake, Billy Beaner",
+    "texto": "Tres fans de los Osos entre los diez primeros. Raro. Lo celebro con cautela porque ya conozco a los Osos."
+   },
+   {
+    "para": "",
+    "texto": "Recordatorio de la regla. El Ãºltimo lugar paga las pizzas del Super Bowl para todos. Familias incluidas."
+   },
    {
     "para": "",
     "texto": "12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16."
@@ -113,6 +141,31 @@
    }
   ],
   "clasificados": [
+   {
+    "titulo": "SE VENDE",
+    "para": "Steel Man",
+    "texto": "Picks de constancia total. Nunca arriba de 47. Sin sorpresas ni sobresaltos. Preguntar por descuento en pizzas."
+   },
+   {
+    "titulo": "SE RENTA",
+    "para": "King of The North",
+    "texto": "Trono en tercer lugar con 287. Vista a la cima a 17 puntos. Interesados favor de empujar."
+   },
+   {
+    "titulo": "SE BUSCA",
+    "para": "Billy Beaner",
+    "texto": "Tercera raya de Survivor. Visto por Ãºltima vez en la semana 4. Se ofrece recompensa por su regreso."
+   },
+   {
+    "titulo": "SE REGALA",
+    "para": "Juan1768",
+    "texto": "Un pick de Survivor sin una sola raya. Se acepta a cambio de puntos en Pick'em."
+   },
+   {
+    "titulo": "SE BUSCA",
+    "para": "KinkyKing",
+    "texto": "23 puntos en la semana 4 y 83 en la 5. Se busca el punto medio."
+   },
    {
     "titulo": "Fotocopia",
     "para": "Osos de Grayslake, Mean Machine, Jorge_B",
@@ -134,7 +187,7 @@
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-17T00:10:18.751Z",
+ "updated": "2026-10-17T00:16:59.309Z",
  "prizes": {
   "regular": [
    1050,
