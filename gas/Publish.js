@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.4.0 c1.3.0
+// v2.4.1 c1.3.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -619,7 +619,27 @@ function reviewTribune_(ss, data) {
  * after F. A no-op once G1 is not the Color header. Everything right of F shifts, nothing is rewritten.
  */
 function ensureSeparator_(sh) {
-  if (String(sh.getRange(1, SEP_AFTER + 1, 1, 1).getValue() || '').trim() === WARN_HEADER[0]) sh.insertColumnAfter(SEP_AFTER);
+  var col = SEP_AFTER + 1;
+  var inserted = String(sh.getRange(1, col, 1, 1).getValue() || '').trim() === WARN_HEADER[0];
+  if (inserted) sh.insertColumnAfter(SEP_AFTER);
+  if (inserted || String(sh.getRange(1, WARN_COL, 1, 1).getValue() || '').trim() === WARN_HEADER[0]) cleanSeparator_(sh);
+}
+
+/**
+ * Sheets copies the format of the column to the left into an inserted one, so the separator would inherit Publicar's
+ * checkboxes and the row tints. Strips them: validations, backgrounds and stray TRUE/FALSE values. Writes only if dirty.
+ * Typed text in G is left alone.
+ */
+function cleanSeparator_(sh) {
+  var col = SEP_AFTER + 1, n = sh.getMaxRows();
+  var rg = sh.getRange(1, col, n, 1);
+  var vals = rg.getValues(), dv = rg.getDataValidations(), bg = rg.getBackgrounds();
+  var hasDv = dv.some(function (r) { return r[0] != null; });
+  var hasBg = bg.some(function (r) { var c = String(r[0] || '').toLowerCase(); return c && c !== '#ffffff'; });
+  var hasBool = vals.some(function (r) { return typeof r[0] === 'boolean'; });
+  if (hasDv) rg.clearDataValidations();
+  if (hasBg) rg.setBackground(null);
+  if (hasBool) rg.setValues(vals.map(function (r) { return [typeof r[0] === 'boolean' ? '' : r[0]]; }));
 }
 
 /**

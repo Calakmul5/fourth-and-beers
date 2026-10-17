@@ -741,6 +741,32 @@ A.run('Publish.js', [
     A.deep(warnTable(sh).map(x => x.week), [3, 2], 'the old log survived the move');
   }],
 
+  ['Warnings: the separator column does not inherit the checkboxes or colors of Publicar', () => {
+    const rows = [TRIBUNE_HEAD.concat(['Color', 'Warnings', 'Warning week']),
+      ['3', 'Columna', '', '', 'Sin portada.', 'TRUE', '', 'Aviso viejo.', 2]];
+    const ws = participants(null, { tribune: rows });
+    const { ctx } = setup({ participants: ws });
+    const sh = tab(ws, 'Tribune');
+    sh.getRange(2, 6, 999, 1).insertCheckboxes();                // Publicar checkboxes, as setup left them
+    sh.getRange(2, 1, 1, 6).setBackground('#fff2cc');            // a tinted row, as a warning leaves it
+    sh.getRange(3, 6, 1, 1).setBackground('#d9ead3');
+    ctx.setupTribuneTab();
+    ctx.publishLeaderboard();
+    const clean = () => { for (const r of [1, 2, 3, 500, 1000]) { if (sh.vmap(r, 7) || sh.bg(r, 7)) return false; } return true; };
+    A.ok(sh.vmap(2, 6) === 'checkbox', 'Publicar keeps its checkboxes');
+    A.ok(clean(), 'G has no checkboxes and no colors after the insert');
+    // a sheet that was already damaged by the first version of the insert is repaired on the next run
+    sh.getRange(2, 7, 999, 1).insertCheckboxes();
+    sh.getRange(2, 7, 1, 1).setBackground('#fff2cc');
+    sh.getRange(3, 7, 1, 1).setValues([[false]]);
+    A.ok(!clean(), 'damage in place');
+    ctx.publishLeaderboard();
+    A.ok(clean(), 'repaired');
+    A.equal(sh.getRange(3, 7, 1, 1).getValue(), '', 'a stray checkbox value is cleared');
+    A.equal(sh.rows()[1][4], 'Sin portada.', 'rows untouched');
+    A.deep(sh.rows()[0].slice(7, 10), ['Color', 'Warnings', 'Warning week'], 'the table is still where it was');
+  }],
+
   ['Warnings: a log entry more than three weeks old rolls off', () => {
     const ws = participants();
     const { ctx } = setup({ participants: ws });

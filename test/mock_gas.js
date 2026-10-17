@@ -16,6 +16,8 @@ function makeSheet(name, rows) {
   const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [], validations: [], cleared: [], writes: 0, inserted: [] };
   let maxCols = 0;
   const bgs = {};
+  const vmap = {};                 // 'row,col' -> data validation (a checkbox is 'checkbox')
+  const each = (row, col, nr, nc, fn) => { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) fn((row + i) + ',' + (col + j), row + i, col + j); };
   function range(row, col, nr, nc) {
     const self = {
       setValues(vals) {
@@ -32,9 +34,12 @@ function makeSheet(name, rows) {
       setBackground(c) { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { const k = (row + i) + ',' + (col + j); if (c == null) delete bgs[k]; else bgs[k] = c; } return self; },
       getBackgrounds() { const out = []; for (let i = 0; i < nr; i++) { const l = []; for (let j = 0; j < nc; j++) l.push(bgs[(row + i) + ',' + (col + j)] || '#ffffff'); out.push(l); } return out; },
       setFontWeight(w) { log.bold.push([row, col, nr, nc, w]); return self; },
-      insertCheckboxes() { log.checkboxes.push('r' + row + 'c' + col); return self; },
+      insertCheckboxes() { log.checkboxes.push('r' + row + 'c' + col); each(row, col, nr, nc, k => { vmap[k] = 'checkbox'; }); return self; },
+      getValues() { const out = []; for (let i = 0; i < nr; i++) { const l = []; for (let j = 0; j < nc; j++) { const line = data[row + i - 1]; l.push(line && line[col + j - 1] != null ? line[col + j - 1] : ''); } out.push(l); } return out; },
+      getDataValidations() { const out = []; for (let i = 0; i < nr; i++) { const l = []; for (let j = 0; j < nc; j++) l.push(vmap[(row + i) + ',' + (col + j)] || null); out.push(l); } return out; },
+      clearDataValidations() { each(row, col, nr, nc, k => { delete vmap[k]; }); return self; },
       setWrap() { log.wrap.push('r' + row + 'c' + col); return self; },
-      setDataValidation(rule) { log.validations.push({ at: 'r' + row + 'c' + col, rule }); return self; },
+      setDataValidation(rule) { log.validations.push({ at: 'r' + row + 'c' + col, rule }); each(row, col, nr, nc, k => { vmap[k] = rule; }); return self; },
       clearContent() {
         log.cleared.push([row, col, nr, nc]);
         for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { const line = data[row + i - 1]; if (line && col + j - 1 < line.length) line[col + j - 1] = ''; }
@@ -48,7 +53,15 @@ function makeSheet(name, rows) {
     getName: () => name,
     setName(n) { name = n; },
     getMaxColumns: () => Math.max(maxCols || 0, ...data.map(r => r.length), 1),
-    insertColumnAfter(c) { log.inserted.push(c); data.forEach(r => { while (r.length < c) r.push(''); r.splice(c, 0, ''); }); maxCols = Math.max(maxCols || 0, ...data.map(r => r.length)); },
+    getMaxRows: () => Math.max(data.length, 1000),
+    vmap: (r, c) => vmap[r + ',' + c] || null,
+    insertColumnAfter(c) {
+      log.inserted.push(c);
+      // Like Sheets: columns right of c shift, and the new column copies the format (background, validation) of column c.
+      [bgs, vmap].forEach(m => {
+        Object.keys(m).map(k => k.split(',').map(Number)).filter(p => p[1] > c).sort((a, b) => b[1] - a[1]).forEach(p => { m[p[0] + ',' + (p[1] + 1)] = m[p[0] + ',' + p[1]]; delete m[p[0] + ',' + p[1]]; });
+        Object.keys(m).map(k => k.split(',').map(Number)).filter(p => p[1] === c).forEach(p => { m[p[0] + ',' + (c + 1)] = m[p[0] + ',' + c]; });
+      }); data.forEach(r => { while (r.length < c) r.push(''); r.splice(c, 0, ''); }); maxCols = Math.max(maxCols || 0, ...data.map(r => r.length)); },
     getDataRange: () => ({
       getDisplayValues: () => pad(data).map(r => r.map(String)),
       getValues: () => pad(data),
