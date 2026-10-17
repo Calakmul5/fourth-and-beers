@@ -96,6 +96,14 @@
    "nfl": "DAL"
   }
  },
+ "apodos": {
+  "KinkyKing": [
+   "Kinky"
+  ],
+  "Silverback": [
+   "Comish"
+  ]
+ },
  "tribune": {
   "portada": {
    "titulo": "Dallas no alcanzó y el Comish sigue de líder",
@@ -104,38 +112,47 @@
   },
   "columna": [
    {
+    "titulo": "Silverback",
     "para": "Silverback",
     "texto": "Líder con 304 y todavía no sé por qué. Si alguien lo averigua que me avise antes de que corrijan la tabla."
    },
    {
+    "titulo": "Steel Man",
     "para": "Steel Man",
     "texto": "Entre 40 y 47 puntos cada semana. Constancia admirable. Las pizzas del Super Bowl ya van a su nombre."
    },
    {
+    "titulo": "Juan1768",
     "para": "Juan1768",
     "texto": "Cero rayas en Survivor y 34 puntos en la semana cuatro. Se ve que ahí sí hubo cuidado."
    },
    {
+    "titulo": "Dallas",
     "para": "Rastaman, Conquistador, This is our year, Chitown’DemBoyz, Cyber70, Mean Machine, SinCasco, X-Men Let’s go Boys",
     "texto": "Ocho confiaron en Dallas otra vez. La esperanza es gratis. Los puntos no."
    },
    {
+    "titulo": "Osos",
     "para": "King of The North, Osos de Grayslake, Billy Beaner",
     "texto": "Tres fans de los Osos entre los diez primeros. Raro. Lo celebro con cautela porque ya conozco a los Osos."
    },
    {
+    "titulo": "Pizzas",
     "para": "",
     "texto": "Recordatorio de la regla. El último lugar paga las pizzas del Super Bowl para todos. Familias incluidas."
    },
    {
+    "titulo": "",
     "para": "",
     "texto": "12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16."
    },
    {
+    "titulo": "",
     "para": "Silverback",
     "texto": "El Comish hizo 50 y sigue líder. La peor semana se tira. Qué regla tan sabia."
    },
    {
+    "titulo": "",
     "para": "Abogado",
     "texto": "Del 12º al 2º en una semana. No fue trampa, fue trámite."
    }
@@ -182,12 +199,13 @@
     "texto": "Su mejor semana, 73. Esa misma semana Dallas la sacó de Survivor."
    }
   ],
-  "datos": []
+  "datos": [],
+  "edicion": null
  },
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-17T00:20:13.784Z",
+ "updated": "2026-10-17T10:51:27.200Z",
  "prizes": {
   "regular": [
    1050,
