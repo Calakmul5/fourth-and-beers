@@ -105,8 +105,42 @@
   ]
  },
  "tribune": {
-  "portada": null,
+  "portada": {
+   "titulo": "Abogado gana el juicio y cobra honorarios",
+   "texto": "Hizo 94, la mejor tarjeta de la semana 5, y amanece en zona de premio con 289.",
+   "para": "Abogado"
+  },
   "columna": [
+   {
+    "titulo": "",
+    "para": "Abogado",
+    "texto": "Abogado hizo 94 y ganó la semana 5 por 11 puntos. Nadie más pasó de 83. Se lleva $50 de honorarios y ni recibo dio."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Los hechos del caso son sencillos. Hace una semana andaba a media tabla y hoy es segundo con 289. Más vale un pick en mano que cien alegatos volando."
+   },
+   {
+    "titulo": "",
+    "para": "King of The North, Cyber70",
+    "texto": "La defensa del segundo lugar no va a estar fácil. King of The North quedó a 2 puntos y Cyber70 a 3. Los dos vienen pegaditos por detrás y no piensan soltarlo."
+   },
+   {
+    "titulo": "",
+    "para": "Silverback",
+    "texto": "Objeción de Silverback, o sea de su servidor, que sigue líder con 304. Hice 50 y la ventaja bajó de 23 a 15. Escogí como nunca y sumé como siempre."
+   },
+   {
+    "titulo": "",
+    "para": "Juan1768",
+    "texto": "En la sala de al lado, Juan1768 bajó seis lugares con 40. Fue la caída más grande de la semana. Sus picks se declararon culpables sin pelear."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Se levanta la sesión. El juicio de la semana ya tiene ganador y los honorarios ya se cobraron. Los demás, ni modo, a apelar el domingo."
+   },
    {
     "titulo": "",
     "para": "",
@@ -124,6 +158,36 @@
    }
   ],
   "clasificados": [
+   {
+    "titulo": "Q.E.P.D.",
+    "para": "X-Men Let’s go Boys",
+    "texto": "Tercer strike en la semana 5 y fuera de Survivor. Lo despiden 16 sobrevivientes, ninguno trajo flores."
+   },
+   {
+    "titulo": "SE RENTA",
+    "para": "Conquistador",
+    "texto": "Subió seis lugares con 82 y comparte el 11 con This is our year, 252 cada uno. Cama matrimonial, nada de arrimones."
+   },
+   {
+    "titulo": "SE BUSCA",
+    "para": "SinCasco",
+    "texto": "Casco. Bajó cuatro lugares con 44 y jugar sin protección tiene sus consecuencias."
+   },
+   {
+    "titulo": "SE TRASPASA",
+    "para": "Manolito’s winning picks",
+    "texto": "Negocio de picks ganadores, lugar 19 con 229. El nombre va incluido, la garantía no."
+   },
+   {
+    "titulo": "SE REGALA",
+    "para": "Mean Machine",
+    "texto": "Máquina de 92, modelo semana 1. Desde entonces no ha pasado de 70, pero todavía prende."
+   },
+   {
+    "titulo": "SE VENDE",
+    "para": "Rastaman",
+    "texto": "La fórmula de su mejor semana del año, 71 puntos. Se entrega en sobre cerrado, nada de manoseos."
+   },
    {
     "titulo": "Fotocopia",
     "para": "Osos de Grayslake, Mean Machine, Jorge_B",
@@ -146,7 +210,7 @@
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-17T11:18:14.461Z",
+ "updated": "2026-10-17T11:18:50.417Z",
  "prizes": {
   "regular": [
    1050,
