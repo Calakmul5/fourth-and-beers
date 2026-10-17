@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.8.0 c1.6.0
+// v2.9.0 c1.7.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -14,9 +14,9 @@
 //      editions/index.json lists the weeks. A week that has moved on is never touched again.
 //   8. Lists warnings in the Tribune tab (H:J, one per row: color, text, week, with a blank separator column G) and tints the rows involved when the last place
 //      is named more than once, or in two weeks in a row, and so on. It never blocks a publish or edits your text.
-//  10. Ends every publish with a status message: a log line, a toast in the workbook and rows 7 to 10 of Picks_Board
-//      (OK, OK with warnings and the first two, or the error). Rows 1 to 6 hold the instructions for pasting Group Picks and
-//      row 11 marks the paste area, which starts at A12. All of it is rewritten if the tab is wiped. A table pasted
+//  10. Ends every publish with a status message: a log line, a toast in the workbook and rows 7 to 10 of Picks_Board and PickEm_Board
+//      (OK, OK with warnings and the first two, or the error). Rows 1 to 6 hold the instructions for pasting (Group Picks, or
+//      Yahoo's weekly table in PickEm_Board) and row 11 marks the paste area, which starts at A12 in both tabs. All of it is rewritten if the tab is wiped. A table pasted
 //      at A1 by habit is pushed down, never overwritten.
 //   9. Reads Yahoo's Group Picks table from Picks_Board, infers its week from the Points column, infers each game's
 //      result from the paste itself (Points must equal the confidence of the correct picks) and keeps the week in
@@ -141,14 +141,16 @@ function reportStatus_(ss, headline, details) {
   Logger.log('Estado: ' + [headline].concat(details).join(' '));
   try { ss.toast([headline].concat(details).join('\n'), 'Fourth and Beers', 15); } catch (e) { /* no toast outside a spreadsheet session */ }
   try {
-    var sh = findTab_(ss, CFG.picksTab);
-    if (!sh) return;
-    ensurePicksNote_(sh);
     var want = [headline, details[0] || '', details[1] || ''];
-    for (var i = 0; i < 3; i++) {
-      var cell = sh.getRange(NOTE_ROWS - 3 + i, 1, 1, 1);
-      if (String(cell.getValue() || '') !== want[i]) cell.setValue(want[i]);
-    }
+    [[CFG.picksTab, PICKS_SPEC], [CFG.boardTab, BOARD_SPEC]].forEach(function (t) {
+      var sh = findTab_(ss, t[0]);
+      if (!sh) return;
+      ensureNote_(sh, t[1]);
+      for (var i = 0; i < 3; i++) {
+        var cell = sh.getRange(NOTE_ROWS - 3 + i, 1, 1, 1);
+        if (String(cell.getValue() || '') !== want[i]) cell.setValue(want[i]);
+      }
+    });
   } catch (e) { Logger.log('Status cell skipped: ' + e); }
 }
 
@@ -166,10 +168,12 @@ function setupTribuneTab() {
   var ss = SpreadsheetApp.openById(String(PropertiesService.getScriptProperties().getProperty('SHEET_ID')).trim());
   setupTribune_(ss);
   setupPicks_(ss);
-  var pb = findTab_(ss, CFG.picksTab);
-  if (pb) ensurePicksNote_(pb);
+  [[CFG.picksTab, PICKS_SPEC], [CFG.boardTab, BOARD_SPEC]].forEach(function (t) {
+    var sh = findTab_(ss, t[0]);
+    if (sh) ensureNote_(sh, t[1]);
+  });
   orderTabs_(ss);
-  Logger.log('Tribune, ' + CFG.picksTab + ' and ' + CFG.logTab + ' tabs ready in ' + ss.getName());
+  Logger.log('Tribune, ' + CFG.boardTab + ', ' + CFG.picksTab + ' and ' + CFG.logTab + ' tabs ready in ' + ss.getName());
 }
 
 function setupTribune_(ss) {
@@ -263,7 +267,7 @@ function readBoard_(ss) {
   for (var i = 0; i < values.length; i++) {
     if (values[i].some(function (c) { return /^pick set name$/i.test(c); })) { h = i; break; }
   }
-  if (h < 0) throw new Error('No header row with "Pick Set Name" in ' + CFG.boardTab + '. Paste the whole Yahoo table, header included.');
+  if (h < 0) throw new Error('No header row with "Pick Set Name" in ' + CFG.boardTab + '. Paste the whole Yahoo table at A12, header included.');
 
   var head = values[h];
   var col = function (re) { for (var j = 0; j < head.length; j++) if (re.test(head[j])) return j; return -1; };
@@ -561,6 +565,18 @@ var PICKS_NOTE = [
 var PICKS_LABEL = 'Estado del último publish';
 var PICKS_BANNER = '▼ PEGA AQUÍ, en la celda A12. Antes borra de la fila 12 hacia abajo ▼';
 var PICKS_OLD_TITLE = 'Cómo pegar la tabla de Group Picks';      // the first layout kept its note in column T
+var PICKS_SPEC = { note: PICKS_NOTE, banner: PICKS_BANNER, cols: PASTE_COLS, oldTitle: PICKS_OLD_TITLE };
+// PickEm_Board has the same layout: instructions, Estado, banner, paste at A12. Yahoo's table is 22 columns wide.
+var BOARD_NOTE = [
+  'PICKEM_BOARD: aquí va la tabla semanal de Yahoo, la de puntos por semana. Se pega completa cada semana.',
+  '1. Yahoo > Pick\'em (football.fantasysports.yahoo.com/pickem/27197), la tabla con una columna por semana.',
+  '2. Copia la tabla completa: desde la fila de encabezados (Pick Set Name, Wk 1, Wk 2 ... Total, Dropped) hasta el último jugador.',
+  '3. Siempre con todas las semanas, no solo la nueva. La semana en curso es la última que tiene puntos.',
+  '4. Borra el área de pegado: clic en A12, Ctrl+Mayús+Fin, Supr. Luego pega en A12.',
+  'No escribas nada arriba de la fila 12. Si algo falla, el estado de abajo lo dice.'
+];
+var BOARD_BANNER = '▼ PEGA AQUÍ, en la celda A12. Antes borra de la fila 12 hacia abajo ▼';
+var BOARD_SPEC = { note: BOARD_NOTE, banner: BOARD_BANNER, cols: 24, oldTitle: null };
 var SOLVER_NODES = 3000000;     // a week that needs more search than this is stored without results
 
 /** Creates Picks_Board (empty, the paste goes at A1) and Picks_Log (header only) when missing. Safe to repeat. */
@@ -575,26 +591,27 @@ function setupPicks_(ss) {
 }
 
 /**
- * Keeps rows 1 to 11 of Picks_Board: instructions, the Estado label and the paste banner. Does nothing while they are in place.
- * If those rows hold anything else (a table pasted at A1 by habit, or the first layout's table) the rows are pushed down
- * first, so a paste is never overwritten. Only writes, never clears.
+ * Keeps rows 1 to 11 of Picks_Board or PickEm_Board (spec): instructions, the Estado label and the paste banner. Does nothing
+ * while they are in place. If those rows hold anything else (a table pasted at A1 by habit, or the first layout's table)
+ * the rows are pushed down first, so a paste is never overwritten. Only writes, never clears.
  */
-function ensurePicksNote_(sh) {
-  if (String(sh.getRange(1, 1, 1, 1).getValue() || '') === PICKS_NOTE[0] && String(sh.getRange(NOTE_ROWS, 1, 1, 1).getValue() || '') === PICKS_BANNER) return;
-  if (String(sh.getRange(1, 20, 1, 1).getValue() || '') === PICKS_OLD_TITLE) {
+function ensureNote_(sh, spec) {
+  var note = spec.note;
+  if (String(sh.getRange(1, 1, 1, 1).getValue() || '') === note[0] && String(sh.getRange(NOTE_ROWS, 1, 1, 1).getValue() || '') === spec.banner) return;
+  if (spec.oldTitle && String(sh.getRange(1, 20, 1, 1).getValue() || '') === spec.oldTitle) {
     var blank = []; for (var i = 0; i < 9; i++) blank.push(['']);
     sh.getRange(1, 20, 9, 1).setValues(blank);                    // the first layout's note and status in column T
   }
   var ours = function (c) {
     c = String(c || '').trim();
-    return c === '' || PICKS_NOTE.indexOf(c) >= 0 || c === PICKS_LABEL || c === PICKS_BANNER || /^(OK|ERROR) /.test(c) || /^• /.test(c);
+    return c === '' || note.indexOf(c) >= 0 || c === PICKS_LABEL || c === spec.banner || /^(OK|ERROR) /.test(c) || /^• /.test(c);
   };
-  var top = sh.getRange(1, 1, NOTE_ROWS, PASTE_COLS).getValues();
+  var top = sh.getRange(1, 1, NOTE_ROWS, spec.cols).getValues();
   if (!top.every(function (r) { return r.every(ours); })) sh.insertRowsBefore(1, NOTE_ROWS);
-  sh.getRange(1, 1, PICKS_NOTE.length, 1).setValues(PICKS_NOTE.map(function (t) { return [t]; }));
+  sh.getRange(1, 1, note.length, 1).setValues(note.map(function (t) { return [t]; }));
   sh.getRange(1, 1, 1, 1).setFontWeight('bold');
-  sh.getRange(PICKS_NOTE.length + 1, 1, 1, 1).setValue(PICKS_LABEL).setFontWeight('bold');
-  sh.getRange(NOTE_ROWS, 1, 1, 1).setValue(PICKS_BANNER).setFontWeight('bold');
+  sh.getRange(note.length + 1, 1, 1, 1).setValue(PICKS_LABEL).setFontWeight('bold');
+  sh.getRange(NOTE_ROWS, 1, 1, 1).setValue(spec.banner).setFontWeight('bold');
   sh.getRange(NOTE_ROWS, 1, 1, 12).setBackground('#fff2cc');
   sh.setColumnWidth(1, 200);
 }
@@ -763,11 +780,11 @@ function syncPicks_(ss, board, warn) {
   try {
     var sh = findTab_(ss, CFG.picksTab);
     if (!sh) return;
-    ensurePicksNote_(sh);
+    ensureNote_(sh, PICKS_SPEC);
     var grid = gridOf_(sh, PASTE_COLS);
     var parsed = parsePicksGrid_(grid);
     if (!parsed && !grid.slice(NOTE_ROWS).some(function (r) { return r.some(function (c) { return c !== ''; }); })) return;   // nothing pasted yet
-    if (!parsed) { warn.push(CFG.picksTab + ': no pude leer la tabla. Pega la tabla completa de Group Picks de Yahoo en A1, encabezados incluidos.'); return; }
+    if (!parsed) { warn.push(CFG.picksTab + ': no pude leer la tabla. Pega la tabla completa de Group Picks de Yahoo en A12, encabezados incluidos.'); return; }
     var weeks = weeksMatching_(parsed.sets, board);
     if (weeks.length !== 1) {
       warn.push(CFG.picksTab + (weeks.length ? ': los puntos coinciden con varias semanas de ' + CFG.boardTab + ' (' + weeks.join(', ') + '). No guardé nada.'

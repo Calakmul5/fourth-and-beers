@@ -889,8 +889,9 @@ A.run('Publish.js', [
       ['PickEm_Board', 'Participantes', 'Tribune', 'Picks_Board', 'Picks_Log', 'Field'], 'tab names');
     const lookups = src.match(/(?:findTab_|insertSheet)\((?:ss, ?)?[^)]*\)/g) || [];
     A.ok(lookups.length > 5, 'found the tab lookups');
-    lookups.filter(x => !/^findTab_\(sheet|function/.test(x)).forEach(u => A.match(u, /(CFG\.\w+Tab|name|n|'Sheet1')\)$/, 'tab lookup ' + u));
+    lookups.filter(x => !/^findTab_\(sheet|function/.test(x)).forEach(u => A.match(u, /(CFG\.\w+Tab|name|n|t\[0\]|'Sheet1')\)$/, 'tab lookup ' + u));
     A.match(src, /var mine = \[CFG\.picksTab, CFG\.boardTab, CFG\.tribuneTab, CFG\.logTab\]/, 'the tabs that get moved come from CFG only');
+    A.match(src, /\[\[CFG\.picksTab, PICKS_SPEC\], \[CFG\.boardTab, BOARD_SPEC\]\]/, 'the two boards come from CFG only');
     A.noMatch(src, /deleteSheet|\.clear\(|\.clearContent\(|\.clearContents\(|\.deleteRows?\(|\.deleteColumns?\(|removeSheet/, 'no clear or delete calls');
     A.noMatch(src, /Premios|Comentarios|migrate|LEGACY_TABS/, 'no retired tabs, no migration');
   }],
@@ -981,5 +982,42 @@ A.run('Publish.js', [
     A.deep(tabNames(ws), ['Participantes', 'Premios de la temporada', 'Picks_Board', 'PickEm_Board', 'Tribune', 'Picks_Log']);
     ctx.setupTribuneTab();
     A.deep(tabNames(ws), ['Participantes', 'Premios de la temporada', 'Picks_Board', 'PickEm_Board', 'Tribune', 'Picks_Log'], 'idempotent');
+  }],
+
+  ['PickEm_Board: same layout as Picks_Board, instructions on top, Estado under them, paste area at A12', () => {
+    [boardGrid(), boardTabbed()].forEach((rows, i) => {
+      const ws = participants(rows);
+      const { ctx, github } = setup({ participants: ws });
+      ctx.publishLeaderboard();
+      const pb = tab(ws, 'PickEm_Board'), r = pb.rows();
+      A.match(r[0][0], /^PICKEM_BOARD: aquí va la tabla semanal de Yahoo/, 'shape ' + i);
+      A.match(r[2][0], /Pick Set Name, Wk 1/);
+      A.equal(r[6][0], 'Estado del último publish');
+      A.match(r[7][0], /^OK( CON AVISOS)? 20\d\d-\d\d-\d\d \d\d:\d\d\. Semana 3 publicada/);
+      A.match(r[10][0], /PEGA AQUÍ, en la celda A12/);
+      A.equal(pb.bg(11, 1), '#fff2cc', 'banner colored');
+      A.equal(r.length, 11 + rows.length, 'nothing lost, the table moved down 11 rows');
+      const first = JSON.parse(github.state.files['data.json'].text);
+      A.equal(first.pickem.length, PLAYERS.length, 'still parsed after the move');
+      ctx.publishLeaderboard();
+      A.equal(pb.rows().length, 11 + rows.length, 'a second publish does not push again');
+      A.match(pb.rows()[7][0], /Semana 3 sin cambios/);
+    });
+    // wiped: the error reaches the tab itself
+    const ws2 = participants();
+    const { ctx: c2 } = setup({ participants: ws2 });
+    c2.publishLeaderboard();
+    const pb2 = tab(ws2, 'PickEm_Board');
+    pb2.rows().length = 0;
+    let msg = '';
+    try { c2.publishLeaderboard(); } catch (e) { msg = e.message; }
+    A.match(msg, /No header row with "Pick Set Name"/);
+    A.match(pb2.rows()[0][0], /^PICKEM_BOARD/, 'instructions come back');
+    A.match(pb2.rows()[7][0], /^ERROR /, 'and the status says why');
+    A.match(pb2.rows()[8][0], /Paste the whole Yahoo table at A12/);
+    // a paste under the instructions
+    boardGrid().forEach((row, i) => { pb2.rows()[11 + i] = row; });
+    c2.publishLeaderboard();
+    A.match(pb2.rows()[7][0], /^OK /, 'recovers');
   }],
 ]);
