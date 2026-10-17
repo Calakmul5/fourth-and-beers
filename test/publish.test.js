@@ -492,7 +492,7 @@ A.run('Publish.js', [
     A.deep(rows.map(r => r.slice(0, 3)), JSON.parse(before).map(r => r.slice(0, 3)), 'other columns untouched');
     A.deep(rows.slice(1).map(r => r[3] || ''), rows.slice(1).map(() => ''), 'no values written');
     A.equal(sheet1.getName(), 'Participantes', 'Sheet1 is renamed');
-    A.deep(tabNames(ws), ['Participantes', 'Picks_Board', 'PickEm_Board', 'Tribune', 'Picks_Log'], 'renamed, plus the two Picks tabs, in the agreed order');
+    A.deep(tabNames(ws), ['Participantes', 'Picks_Board', 'PickEm_Board', 'Playoffs_Picks', 'Playoffs_Board', 'Tribune', 'Picks_Log'], 'renamed, plus the Picks and Playoffs tabs, in the agreed order');
     const v = tab(ws, 'Tribune').log.validations;
     A.deep(JSON.parse(JSON.stringify(v[v.length - 1].rule.list)).slice(-1), ['Edición'], 'the dropdown is refreshed on the existing tab');
   }],
@@ -889,9 +889,9 @@ A.run('Publish.js', [
       ['PickEm_Board', 'Participantes', 'Tribune', 'Picks_Board', 'Picks_Log', 'Field'], 'tab names');
     const lookups = src.match(/(?:findTab_|insertSheet)\((?:ss, ?)?[^)]*\)/g) || [];
     A.ok(lookups.length > 5, 'found the tab lookups');
-    lookups.filter(x => !/^findTab_\(sheet|function/.test(x)).forEach(u => A.match(u, /(CFG\.\w+Tab|name|n|t\[0\]|'Sheet1')\)$/, 'tab lookup ' + u));
-    A.match(src, /var mine = \[CFG\.picksTab, CFG\.boardTab, CFG\.tribuneTab, CFG\.logTab\]/, 'the tabs that get moved come from CFG only');
-    A.match(src, /\[\[CFG\.picksTab, PICKS_SPEC\], \[CFG\.boardTab, BOARD_SPEC\]\]/, 'the two boards come from CFG only');
+    lookups.filter(x => !/^findTab_\(sheet|function/.test(x)).forEach(u => A.match(u, /(CFG\.\w+Tab|name|n|t\[0\]|tabName|'Sheet1')\)$/, 'tab lookup ' + u));
+    A.match(src, /var mine = \[CFG\.picksTab, CFG\.boardTab, CFG\.playoffsPicksTab, CFG\.playoffsTab, CFG\.tribuneTab, CFG\.logTab\]/, 'the tabs that get moved come from CFG only');
+    A.match(src, /\[\[CFG\.picksTab, PICKS_SPEC\], \[CFG\.boardTab, BOARD_SPEC\], \[CFG\.playoffsPicksTab, PLAYOFFS_PICKS_SPEC\], \[CFG\.playoffsTab, PLAYOFFS_SPEC\]\]/, 'the two boards come from CFG only');
     A.noMatch(src, /deleteSheet|\.clear\(|\.clearContent\(|\.clearContents\(|\.deleteRows?\(|\.deleteColumns?\(|removeSheet/, 'no clear or delete calls');
     A.noMatch(src, /Premios|Comentarios|migrate|LEGACY_TABS/, 'no retired tabs, no migration');
   }],
@@ -979,9 +979,9 @@ A.run('Publish.js', [
       makeSheet('Participantes', FANS), makeSheet('Picks_Board', PF.paste())]);
     const { ctx } = setup({ participants: ws });
     ctx.setupTribuneTab();
-    A.deep(tabNames(ws), ['Participantes', 'Premios de la temporada', 'Picks_Board', 'PickEm_Board', 'Tribune', 'Picks_Log']);
+    A.deep(tabNames(ws), ['Participantes', 'Premios de la temporada', 'Picks_Board', 'PickEm_Board', 'Playoffs_Picks', 'Playoffs_Board', 'Tribune', 'Picks_Log']);
     ctx.setupTribuneTab();
-    A.deep(tabNames(ws), ['Participantes', 'Premios de la temporada', 'Picks_Board', 'PickEm_Board', 'Tribune', 'Picks_Log'], 'idempotent');
+    A.deep(tabNames(ws), ['Participantes', 'Premios de la temporada', 'Picks_Board', 'PickEm_Board', 'Playoffs_Picks', 'Playoffs_Board', 'Tribune', 'Picks_Log'], 'idempotent');
   }],
 
   ['PickEm_Board: same layout as Picks_Board, instructions on top, Estado under them, paste area at A12', () => {
@@ -1070,5 +1070,78 @@ A.run('Publish.js', [
     const { ctx } = setup({ participants: ws });
     ctx.publishLeaderboard();
     A.match(warnTable(tab(ws, 'Tribune')).map(x => x.text).join('\n'), /semana 3 tiene empate en el primer lugar/);
+  }],
+
+  // ---- Playoffs: weeks 19 to 22 in their own paste areas ---------------------------------------
+
+  ['Playoffs: Semana accepts 19 to 22 or a round name', () => {
+    const { ctx } = setup();
+    const f = x => ctx.semanaNum_(x);
+    A.deep([f('5'), f(5), f('Semana 7'), f('19'), f('Wild Card'), f('wild card'), f('Divisional'), f('Conferencia'), f('Conference Championship'), f('Super Bowl'), f('super bowl'), f('Playoffs 3'), f('Ronda 4'), f('')],
+      [5, 5, 7, 19, 19, 19, 20, 21, 21, 22, 22, 21, 22, 0]);
+  }],
+
+  ['Playoffs: no playoff scores means a regular edition, with the empty paste areas ready', () => {
+    const ws = participants(PF.board5());
+    const { ctx, github } = setup({ participants: ws });
+    ctx.setupTribuneTab();
+    ctx.publishLeaderboard();
+    const d = JSON.parse(github.state.files['data.json'].text);
+    A.equal(d.week, 5);
+    A.ok(!('playoffs' in d) && !('regularWeek' in d), 'no playoffs block yet');
+    ['Playoffs_Board', 'Playoffs_Picks'].forEach(n => {
+      const t = tab(ws, n);
+      A.match(t.rows()[0][0], new RegExp('^' + n.toUpperCase()), n + ' instructions');
+      A.match(t.rows()[10][0], /PEGA AQUÍ, en la celda A12/, n + ' banner');
+      A.match(t.rows()[7][0], /^OK/, n + ' status');
+    });
+    A.equal(warnTable(tab(ws, 'Tribune')).filter(x => /Playoffs/.test(x.text)).length, 0, 'an empty playoff area is quiet');
+  }],
+
+  ['Playoffs: Playoffs_Board scores make week 19 to 22 the edition, with its own winners, Tribune rows and picks', () => {
+    const head = ['Rank', 'Pick Set Name', 'Wk 19', 'Wk 20', 'Wk 21', 'Wk 22', 'Total'];
+    const po = [['Playoffs'], [], head].concat(PF.sets.map((s, i) => [String(i + 1), s.name, String(s.points), String(30 + i), '', '', String(s.points + 30 + i)]));
+    const pb = makeSheet('Playoffs_Board', po);
+    pb.getRange(4, 3, 1, 1).setFontColor('#0a8a2a');                   // Abogado, the top score of round 1, in green
+    const tribune = TRIBUNE.concat([['Divisional', 'Portada', '', 'Ronda dos', 'Ya van dos.', 'TRUE'], ['19', 'Columna', '', '', 'Ronda vieja.', 'TRUE'], ['20', 'Dato', '', 'Dato', 'Texto.', 'TRUE']]);
+    const ws = participants(PF.board5(), { tribune, extra: [pb, makeSheet('Picks_Board', PF.paste()), makeSheet('Playoffs_Picks', PF.paste())] });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const d = JSON.parse(github.state.files['data.json'].text);
+    A.equal(d.week, 20, 'two rounds scored, week 20');
+    A.equal(d.regularWeek, 5);
+    A.equal(d.weeks, 18);
+    A.equal(d.playoffs.rounds, 2);
+    A.equal(d.playoffs.pickem.length, 22);
+    A.deep(d.playoffs.pickem[0], { name: 'Abogado', weeks: [94, 30], total: 124 });
+    A.deep(d.playoffs.winners[0], ['Abogado'], 'the green mark');
+    A.deep(d.playoffs.winners[1], ['Steel Man'], 'round 2: the single top score wins by itself');
+    A.equal(d.tribune.portada && d.tribune.portada.titulo, 'Ronda dos', 'Divisional is week 20');
+    A.deep(d.tribune.columna, [], 'the week 19 row is not this edition');
+    A.equal(d.tribune.datos.length, 1, 'and a 20 is');
+    A.deep(Object.keys(d.picks).sort(), ['19', '5'], 'the same Group Picks table, once for week 5 and once for round 1');
+    A.ok(d.picks['19'].g.every(g => g[3] !== null), 'solved against the playoff points');
+    const log = tab(ws, 'Picks_Log').rows().slice(1).filter(r => r[0] !== '');
+    A.deep(Array.from(new Set(log.map(r => r[0]))), [5, 19]);
+    ['Picks_Board', 'PickEm_Board', 'Playoffs_Picks', 'Playoffs_Board'].forEach(n => A.match(tab(ws, n).rows()[7][0], /^OK( CON AVISOS)? .*Semana 20 publicada/, n + ' shows the status'));
+    ctx.publishLeaderboard();
+    A.deep(JSON.parse(github.state.files['data.json'].text).playoffs.winners[0], ['Abogado'], 'the plain re-read keeps it');
+    const idx = JSON.parse(github.state.files['editions/index.json'].text);
+    A.deep(idx.weeks, [20], 'editions/semana-20.json is the playoff edition');
+    A.ok(github.state.files['editions/semana-20.json']);
+  }],
+
+  ['Playoffs: the Wk 1 to 4 header also works, and an unreadable paste warns', () => {
+    const head = ['Pick Set Name', 'Wk 1', 'Wk 2', 'Wk 3', 'Wk 4', 'Total'];
+    const po = [head].concat(PF.sets.map(s => [s.name, String(s.points), '', '', '', String(s.points)]));
+    const ws = participants(PF.board5(), { extra: [makeSheet('Playoffs_Board', po)] });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    A.equal(JSON.parse(github.state.files['data.json'].text).week, 19);
+    const bad = participants(PF.board5(), { extra: [makeSheet('Playoffs_Board', [['esto no es la tabla']])] });
+    const { ctx: c2, github: g2 } = setup({ participants: bad });
+    c2.publishLeaderboard();
+    A.match(warnTable(tab(bad, 'Tribune')).map(x => x.text).join('\n'), /Playoffs_Board: no pude leer la tabla/);
+    A.equal(JSON.parse(g2.state.files['data.json'].text).week, 5, 'the regular edition still publishes');
   }],
 ]);

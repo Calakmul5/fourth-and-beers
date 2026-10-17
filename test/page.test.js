@@ -1066,4 +1066,81 @@ A.run('index.html', [
     A.deep(bad.M.weekly[4].winners.slice().sort(), ['Abogado', 'Cyber70'], 'an unknown name is ignored');
     A.deep(bad.errors, []);
   }],
+
+  // ---- v4.0: the playoff phase ------------------------------------------------------------
+
+  ['playoffs: week 20 is a playoff edition with its own card, portada and facts, and the regular season stays closed', async () => {
+    const d = P5();
+    d.week = 20; d.regularWeek = 5;
+    const names = d.pickem.map(p => p.name);
+    d.playoffs = { week: 20, rounds: 2, winners: [['Silverback'], []],
+      pickem: names.map((n, i) => ({ name: n, weeks: [60 + (i % 7) * 3 + (n === 'Silverback' ? 20 : 0), 50 + (i % 5) * 4], total: 0 })) };
+    d.playoffs.pickem.forEach(p => { p.total = p.weeks[0] + p.weeks[1]; });
+    const c = await load(d);
+    common(c, 'playoffs');
+    A.equal(c.M.N, 5, 'the regular league stays at its last week');
+    A.equal(c.M.EW, 20);
+    A.match(text(c.doc, '#dateline'), /Edición 20, playoffs/);
+    A.match(text(c.doc, '#p-head'), /Playoffs: ronda 2 de 4/);
+    A.match(text(c.doc, '#p-deck'), /lidera con \d+ puntos, a \d+ del segundo\. Solo paga el primero\./);
+    const box = all(c.doc, '#prizes .box').filter(b => /Quiniela de playoffs/.test(b.textContent))[0];
+    A.ok(box, 'playoff card');
+    A.match(box.textContent, /en juego/);
+    A.equal(all(box, '.pzr').length, 5, 'top five');
+    A.match(box.textContent, /Ronda 2 de 4\. Solo paga primer lugar\./);
+    A.match(box.textContent, /Wild Card: Silverback/, 'round winners come from Yahoo');
+    const rules = c.M.pk.all.map(f => f.rule);
+    A.ok(rules.indexOf('playoffs') >= 0 && rules.indexOf('poronda') >= 0, 'playoff facts');
+    ['rebote', 'racha', 'remontada', 'siempre', 'sotano', 'aficiones'].forEach(r => A.equal(rules.indexOf(r), -1, r + ' is a regular-season fact'));
+    c.M.pk.all.forEach(f => lint(f.texto, f.rule));
+    A.equal(c.M.pk.picks.length <= 6, true);
+    // the money: nothing is paid until round 4
+    const ppl = c.M.paid;
+    A.equal(ppl['Silverback'], c.T.model(Object.assign({}, d, { playoffs: undefined, week: 5 })).paid['Silverback'], 'no playoff money yet');
+    A.deep(c.errors, []);
+  }],
+
+  ['playoffs: round 4 pays the winner, a tie splits the 700, and the archive banner says playoffs', async () => {
+    const d = P5();
+    d.week = 22; d.regularWeek = 5;
+    const names = d.pickem.map(p => p.name);
+    const mk = (a, b) => ({ name: a, weeks: [b, b, b, b], total: b * 4 });
+    d.playoffs = { week: 22, rounds: 4, winners: [[], [], [], []], pickem: names.map((n, i) => mk(n, n === 'Cyber70' ? 100 : 40 + (i % 9))) };
+    const c = await load(d, { url: '?ed=22', editions: { 22: d }, index: { weeks: [20, 22] } });
+    common(c, 'playoffs final');
+    const box = all(c.doc, '#prizes .box').filter(b => /Quiniela de playoffs/.test(b.textContent))[0];
+    A.match(box.textContent, /final/);
+    A.match(box.textContent, /\$700/);
+    A.match(box.textContent, /Terminó\. Solo paga primer lugar\./);
+    A.match(text(c.doc, '#p-head'), /Se acabó la temporada/);
+    A.match(text(c.doc, '#banner'), /Edición 22, playoffs, archivo/);
+    A.ok(c.M.pk.all.some(f => f.rule === 'playoffs' && /Cyber70 ganó los playoffs con 400 puntos y se lleva \$700|Los playoffs terminaron\. Cyber70 se queda con \$700/.test(f.texto)), 'champion fact');
+    const solo = c.T.model(d);
+    A.equal(solo.paid['Cyber70'] - c.T.model(Object.assign({}, d, { playoffs: undefined, week: 5 })).paid['Cyber70'], 700);
+    const t = clone(d);
+    t.playoffs.pickem.find(p => p.name === 'Abogado').weeks = [100, 100, 100, 100];
+    t.playoffs.pickem.find(p => p.name === 'Abogado').total = 400;
+    const m2 = c.T.model(t);
+    A.deep(m2.po.leaders.slice().sort(), ['Abogado', 'Cyber70']);
+    A.equal(m2.paid['Cyber70'] - c.T.model(Object.assign({}, d, { playoffs: undefined, week: 5 })).paid['Cyber70'], 350, 'a tie splits it');
+  }],
+
+  ['playoffs: the old hook (playoffs.pickem with only totals) still shows the leader, truncate rebuilds earlier editions', async () => {
+    const d = clone(W5);
+    d.playoffs = { pickem: [{ name: 'Abogado', total: 55 }, { name: 'Silverback', total: 40 }] };
+    const c = await load(d);
+    const box = all(c.doc, '#prizes .box').filter(b => /Quiniela de playoffs/.test(b.textContent))[0];
+    A.match(box.textContent, /1º.*Abogado, 55/);
+    const p = P5();
+    p.week = 21; p.regularWeek = 5;
+    p.playoffs = { week: 21, rounds: 3, winners: [[], [], []], pickem: p.pickem.map(q => ({ name: q.name, weeks: [10, 20, 30], total: 60 })) };
+    const t19 = c.T.truncate(p, 19);
+    A.equal(t19.playoffs.rounds, 1);
+    A.deep(t19.playoffs.pickem[0].weeks, [10]);
+    A.equal(t19.playoffs.pickem[0].total, 10);
+    A.equal(c.T.truncate(p, 18).playoffs, undefined, 'at week 18 the playoffs have not started');
+    A.equal('regularWeek' in c.T.truncate(p, 17), false);
+    const m = c.T.model(p);
+    A.equal(c.T.prevRules(m).length >= 0, true, 'the no-repeat rule runs on the previous round');
+  }],
 ]);

@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.10.0 c1.8.0
+// v3.0.0 c1.9.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -19,6 +19,10 @@
 //      font colors and published as data.json winners[] and pickem[].droppedWeek. Without colors (a plain-text paste)
 //      the marks from the previous data.json are kept when that week's scores did not change, a single top score
 //      wins by itself, and a tie nobody marked is listed as a warning.
+//  12. Playoffs. Weeks 19 to 22 live in their own paste areas, Playoffs_Board (Yahoo's playoff table, everyone starts at
+//      zero) and Playoffs_Picks (its Group Picks), laid out like the regular-season tabs. Once Playoffs_Board has
+//      scores, data.json week is the playoff week (19 to 22), regularWeek stays at 18, and data.json gets a playoffs
+//      block. Tribune Semana accepts 19 to 22 or a round name (Wild Card, Divisional, Conferencia, Super Bowl).
 //  10. Ends every publish with a status message: a log line, a toast in the workbook and rows 7 to 10 of Picks_Board and PickEm_Board
 //      (OK, OK with warnings and the first two, or the error). Rows 1 to 6 hold the instructions for pasting (Group Picks, or
 //      Yahoo's weekly table in PickEm_Board) and row 11 marks the paste area, which starts at A12 in both tabs. All of it is rewritten if the tab is wiped. A table pasted
@@ -46,13 +50,16 @@ var CFG = {
   participantsTab: 'Participantes',  // the participants list; setup renames an old Sheet1 to this
   tribuneTab: 'Tribune',     // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | (blank separator) | Color | Warnings | Warning week, in the participants workbook
   fieldTab: 'Field',          // model tab with Entrant / Strikes columns
+  playoffsTab: 'Playoffs_Board',   // Yahoo's playoff table (weeks 19 to 22), same layout as PickEm_Board
+  playoffsPicksTab: 'Playoffs_Picks',  // Group Picks of the playoff rounds, same layout as Picks_Board
   picksTab: 'Picks_Board',    // Yahoo Group Picks table pasted at A1, header rows included
   logTab: 'Picks_Log',        // durable: one row per pick set and game, never cleared or deleted by any routine
   path: 'data.json',
   editionsDir: 'editions',
   branch: 'main',
   season: 2026,
-  weeks: 18
+  weeks: 18,
+  rounds: 4                    // playoff rounds, played as weeks 19 to 22
 };
 
 // Prize money from the reglamento, published as data.json "prizes". After the weekly $50s the pot splits
@@ -147,7 +154,7 @@ function reportStatus_(ss, headline, details) {
   try { ss.toast([headline].concat(details).join('\n'), 'Fourth and Beers', 15); } catch (e) { /* no toast outside a spreadsheet session */ }
   try {
     var want = [headline, details[0] || '', details[1] || ''];
-    [[CFG.picksTab, PICKS_SPEC], [CFG.boardTab, BOARD_SPEC]].forEach(function (t) {
+    boardTabs_().forEach(function (t) {
       var sh = findTab_(ss, t[0]);
       if (!sh) return;
       ensureNote_(sh, t[1]);
@@ -163,7 +170,7 @@ function reportStatus_(ss, headline, details) {
 function onBoardEdit(e) {
   if (!e || !e.range) return;
   var name = e.range.getSheet().getName().trim().toLowerCase();
-  if ([CFG.boardTab, CFG.picksTab, CFG.tribuneTab].every(function (t) { return name !== t.toLowerCase(); })) return;
+  if ([CFG.boardTab, CFG.picksTab, CFG.playoffsTab, CFG.playoffsPicksTab, CFG.tribuneTab].every(function (t) { return name !== t.toLowerCase(); })) return;
   Utilities.sleep(5000); // let a large paste or a few quick checkbox clicks land
   publishLeaderboard();
 }
@@ -173,12 +180,13 @@ function setupTribuneTab() {
   var ss = SpreadsheetApp.openById(String(PropertiesService.getScriptProperties().getProperty('SHEET_ID')).trim());
   setupTribune_(ss);
   setupPicks_(ss);
-  [[CFG.picksTab, PICKS_SPEC], [CFG.boardTab, BOARD_SPEC]].forEach(function (t) {
+  [CFG.playoffsTab, CFG.playoffsPicksTab].forEach(function (n) { if (!findTab_(ss, n)) ss.insertSheet(n); });
+  boardTabs_().forEach(function (t) {
     var sh = findTab_(ss, t[0]);
     if (sh) ensureNote_(sh, t[1]);
   });
   orderTabs_(ss);
-  Logger.log('Tribune, ' + CFG.boardTab + ', ' + CFG.picksTab + ' and ' + CFG.logTab + ' tabs ready in ' + ss.getName());
+  Logger.log('Tribune, ' + CFG.boardTab + ', ' + CFG.picksTab + ', ' + CFG.playoffsTab + ', ' + CFG.playoffsPicksTab + ' and ' + CFG.logTab + ' tabs ready in ' + ss.getName());
 }
 
 function setupTribune_(ss) {
@@ -232,17 +240,21 @@ function installTriggers() {
 // ---------------------------------------------------------------------------
 
 function buildData_(ss, model, prev, picksWarn) {
+  picksWarn = picksWarn || [];
   var board = readBoard_(ss);
-  syncPicks_(ss, board, picksWarn || []);
-  var winners = settleWinners_(board, prev, picksWarn || []);
+  var po = readPlayoffs_(ss, picksWarn);
+  syncPicks_(ss, board, picksWarn, CFG.picksTab, 0, CFG.boardTab);
+  syncPicks_(ss, po || { rows: [], week: 0 }, picksWarn, CFG.playoffsPicksTab, CFG.weeks, CFG.playoffsTab);
+  var winners = settleWinners_(board, prev, picksWarn, CFG.boardTab, 0);
+  var week = po ? CFG.weeks + po.week : board.week;           // the edition: a regular week, or 19 to 22 once the playoffs have scores
   var strikes = readStrikes_(model || ss, board.names);
-  return {
-    survivorOut: survivorOut_(prev, strikes, board.week),
+  var out = {
+    survivorOut: survivorOut_(prev, strikes, week),
     fans: readFans_(ss, board.names),
     apodos: readApodos_(ss, board.names),
-    tribune: readTribune_(ss, board.week, board.names),
+    tribune: readTribune_(ss, week, board.names),
     season: CFG.season,
-    week: board.week,
+    week: week,
     weeks: CFG.weeks,
     updated: new Date().toISOString(),
     prizes: JSON.parse(JSON.stringify(PRIZES)),
@@ -251,6 +263,38 @@ function buildData_(ss, model, prev, picksWarn) {
     strikes: strikes,
     picks: readPicksLog_(ss)
   };
+  if (po) {
+    out.regularWeek = board.week;
+    out.playoffs = {
+      week: week,
+      rounds: po.week,
+      pickem: po.rows.map(function (p) { return { name: p.name, weeks: p.weeks, total: p.total != null ? p.total : p.weeks.reduce(function (x, y) { return x + y; }, 0) }; }),
+      winners: settleWinners_(po, prev && prev.playoffs ? { winners: prev.playoffs.winners, pickem: prev.playoffs.pickem } : null, picksWarn, CFG.playoffsTab, CFG.weeks)
+    };
+  }
+  return out;
+}
+
+/** Playoffs_Board as a table like PickEm_Board: weeks 19 to 22 are rounds 1 to 4. null until it has scores. Never throws. */
+function readPlayoffs_(ss, warn) {
+  var sh = findTab_(ss, CFG.playoffsTab);
+  if (!sh) return null;
+  try {
+    ensureNote_(sh, PLAYOFFS_SPEC);
+    var grid = gridOf_(sh);
+    if (!grid.some(function (r) { return r.some(function (c) { return /^pick set name$/i.test(c); }); })) {
+      if (grid.slice(NOTE_ROWS).some(function (r) { return r.some(function (c) { return c !== ''; }); })) {
+        warn.push(CFG.playoffsTab + ': no pude leer la tabla. Pega la tabla completa de los playoffs de Yahoo en A12, encabezados incluidos.');
+      }
+      return null;
+    }
+    var t = readTable_(sh, CFG.playoffsTab, true);
+    if (t.week > CFG.rounds) t.week = CFG.rounds;
+    return t;
+  } catch (e) {
+    if (!/No scores yet/.test(String(e))) warn.push(CFG.playoffsTab + ': ' + e);
+    return null;
+  }
 }
 
 /** The tab as rows of trimmed strings. A paste that landed as tab-separated text in column A is split into columns. */
@@ -268,6 +312,11 @@ function readBoard_(ss) {
   if (!sh) throw new Error('Tab "' + CFG.boardTab + '" not found in workbook "' + ss.getName() + '". Tabs it sees: ' +
     ss.getSheets().map(function (t) { return JSON.stringify(t.getName()); }).join(', ') +
     '. If this is the wrong workbook, fix SHEET_ID in Script properties.');
+  return readTable_(sh, CFG.boardTab, false);
+}
+
+/** The weekly table of one tab. playoffs: the Wk columns are 19 to 22 (or 1 to 4) and count as rounds 1 to 4. */
+function readTable_(sh, tabName, playoffs) {
   var values = gridOf_(sh);
   var colors = [];
   try { colors = sh.getDataRange().getFontColors(); } catch (e) { colors = []; }
@@ -276,21 +325,29 @@ function readBoard_(ss) {
   for (var i = 0; i < values.length; i++) {
     if (values[i].some(function (c) { return /^pick set name$/i.test(c); })) { h = i; break; }
   }
-  if (h < 0) throw new Error('No header row with "Pick Set Name" in ' + CFG.boardTab + '. Paste the whole Yahoo table at A12, header included.');
+  if (h < 0) throw new Error('No header row with "Pick Set Name" in ' + tabName + '. Paste the whole Yahoo table at A12, header included.');
 
   var head = values[h];
   var col = function (re) { for (var j = 0; j < head.length; j++) if (re.test(head[j])) return j; return -1; };
   var nameC = col(/^pick set name$/i), totalC = col(/^total/i), dropC = col(/^dropped/i);
   var wkC = [];
-  head.forEach(function (c, j) { var m = /^wk\s*(\d+)$/i.exec(c); if (m) wkC[Number(m[1]) - 1] = j; });
-  if (nameC < 0 || !wkC.length) throw new Error('Could not find the name and week columns in ' + CFG.boardTab + '.');
+  var first = 1;
+  if (playoffs) {
+    var ns = head.map(function (c) { var m = /^wk\s*(\d+)$/i.exec(c); return m ? Number(m[1]) : 0; }).filter(Boolean);
+    first = ns.length && Math.min.apply(null, ns) >= CFG.weeks + 1 ? CFG.weeks + 1 : 1;
+  }
+  head.forEach(function (c, j) { var m = /^wk\s*(\d+)$/i.exec(c); if (m && Number(m[1]) - first >= 0) wkC[Number(m[1]) - first] = j; });
+  if (nameC < 0 || !wkC.length) throw new Error('Could not find the name and week columns in ' + tabName + '.');
 
   var rows = [], marks = [];
   for (var r = h + 1; r < values.length; r++) {
     var v = values[r], name = v[nameC];
     if (!name) continue;
-    var weeks = wkC.map(function (j) { return toNum_(v[j]); });
-    var kinds = wkC.map(function (j) { return fontKind_(colors[r] && colors[r][j]); });
+    var weeks = [], kinds = [];
+    for (var q = 0; q < wkC.length; q++) {
+      weeks.push(wkC[q] === undefined ? 0 : toNum_(v[wkC[q]]));
+      kinds.push(wkC[q] === undefined ? '' : fontKind_(colors[r] && colors[r][wkC[q]]));
+    }
     marks.push(kinds);
     rows.push({
       name: name,
@@ -299,14 +356,14 @@ function readBoard_(ss) {
       dropped: dropC >= 0 ? toNum_(v[dropC]) : null
     });
   }
-  if (rows.length < 2) throw new Error('Fewer than 2 players found in ' + CFG.boardTab + '.');
+  if (rows.length < 2) throw new Error('Fewer than 2 players found in ' + tabName + '.');
 
   // Current week = last week where anyone scored
   var week = 0;
   for (var k = 0; k < wkC.length; k++) {
     if (rows.some(function (p) { return p.weeks[k] > 0; })) week = k + 1;
   }
-  if (week === 0) throw new Error('No scores yet in ' + CFG.boardTab + '.');
+  if (week === 0) throw new Error('No scores yet in ' + tabName + '.');
   rows.forEach(function (p) { p.weeks = p.weeks.slice(0, week); });
 
   // Yahoo's marks: green = the week's winner, red = the dropped week
@@ -337,7 +394,7 @@ function fontKind_(c) {
  * week's scores are unchanged, a single top score wins by itself, and a tie nobody marked stays empty (the page splits it)
  * and is listed as a warning. Marks that contradict the scores are warned about. Returns winners[] (one list per week).
  */
-function settleWinners_(board, prev, warn) {
+function settleWinners_(board, prev, warn, label, base) {
   var out = [];
   for (var k = 0; k < board.week; k++) {
     var scores = board.rows.map(function (p) { return p.weeks[k]; }), top = Math.max.apply(null, scores);
@@ -352,13 +409,13 @@ function settleWinners_(board, prev, warn) {
     }
     if (marked.length) {
       var off = marked.filter(function (n) { return tied.map(norm_).indexOf(norm_(n)) < 0; });
-      if (off.length) warn.push(CFG.boardTab + ': semana ' + (k + 1) + ', el verde de Yahoo (' + off.join(', ') + ') no está entre los de mayor puntaje (' + tied.join(', ') + '). Gana Yahoo, revisa el pegado.');
+      if (off.length) warn.push(label + ': semana ' + (base + k + 1) + ', el verde de Yahoo (' + off.join(', ') + ') no está entre los de mayor puntaje (' + tied.join(', ') + '). Gana Yahoo, revisa el pegado.');
       out.push(marked);
     } else if (tied.length === 1) {
       out.push(tied);
     } else {
       out.push([]);
-      warn.push(CFG.boardTab + ': semana ' + (k + 1) + ' tiene empate en el primer lugar (' + tied.join(', ') + ') y la tabla no trae el verde de Yahoo. Pega la tabla con formato para que gane quien dice Yahoo. Mientras, la página reparte el premio.');
+      warn.push(label + ': semana ' + (base + k + 1) + ' tiene empate en el primer lugar (' + tied.join(', ') + ') y la tabla no trae el verde de Yahoo. Pega la tabla con formato para que gane quien dice Yahoo. Mientras, la página reparte el premio.');
     }
   }
   board.rows.forEach(function (p) {
@@ -367,7 +424,7 @@ function settleWinners_(board, prev, warn) {
       if (q && q.droppedWeek && q.weeks && p.weeks.length >= q.weeks.length && q.weeks.every(function (x, i) { return x === p.weeks[i]; })) p.droppedWeek = q.droppedWeek;
     }
     if (p.droppedWeek != null && p.dropped != null && p.weeks[p.droppedWeek - 1] !== p.dropped) {
-      warn.push(CFG.boardTab + ': ' + p.name + ', el rojo de Yahoo está en la semana ' + p.droppedWeek + ' (' + p.weeks[p.droppedWeek - 1] + ') pero Dropped dice ' + p.dropped + '. Gana Yahoo, revisa el pegado.');
+      warn.push(label + ': ' + p.name + ', el rojo de Yahoo está en la semana ' + p.droppedWeek + ' (' + p.weeks[p.droppedWeek - 1] + ') pero Dropped dice ' + p.dropped + '. Gana Yahoo, revisa el pegado.');
     }
   });
   return out;
@@ -421,6 +478,7 @@ function checkSetup() {
   var mid = PropertiesService.getScriptProperties().getProperty('MODEL_SHEET_ID');
   var model = mid ? SpreadsheetApp.openById(String(mid).trim()) : ss;
   Logger.log('Model workbook: ' + model.getName());
+  Logger.log('Playoffs_Board found: ' + !!findTab_(ss, CFG.playoffsTab) + '   Playoffs_Picks found: ' + !!findTab_(ss, CFG.playoffsPicksTab));
   Logger.log('PickEm_Board found: ' + !!findTab_(ss, CFG.boardTab) + '   Picks_Board found: ' + !!findTab_(ss, CFG.picksTab) +
     '   Picks_Log found: ' + !!findTab_(ss, CFG.logTab) + '   Tribune found: ' + !!findTab_(ss, CFG.tribuneTab) +
     '   Field found: ' + !!findTab_(model, CFG.fieldTab));
@@ -537,7 +595,7 @@ function tribuneRows_(sh, week) {
   for (var r = 1; r < values.length; r++) {
     var v = values[r];
     var ok = /^(true|x|s[ií]|yes)$/i.test(String(v[cK] || '').trim());
-    if (!ok || toNum_(v[cW]) !== week) continue;
+    if (!ok || semanaNum_(v[cW]) !== week) continue;
     out.push({ row: r + 1, sec: plain_(v[cS]), secRaw: String(v[cS] || '').trim(), para: String(v[cP] || '').trim(),
       titulo: String(v[cT] || '').trim(), texto: String(v[cX] || '').trim() });
   }
@@ -649,6 +707,28 @@ var BOARD_NOTE = [
 ];
 var BOARD_BANNER = '▼ PEGA AQUÍ, en la celda A12. Antes borra de la fila 12 hacia abajo ▼';
 var BOARD_SPEC = { note: BOARD_NOTE, banner: BOARD_BANNER, cols: 24, oldTitle: null };
+var PLAYOFFS_NOTE = [
+  'PLAYOFFS_BOARD: aquí va la tabla de los playoffs de Yahoo (semanas 19 a 22). Todos empiezan en cero. Solo paga el primer lugar.',
+  '1. Yahoo > Pick\'em (football.fantasysports.yahoo.com/pickem/27197), la tabla de los playoffs, no la de la temporada regular.',
+  '2. Copia la tabla completa: desde la fila de encabezados (Pick Set Name, Wk 19, Wk 20 ... Total) hasta el último jugador.',
+  '3. Siempre con todas las rondas, no solo la nueva. La ronda en curso es la última que tiene puntos.',
+  '4. Borra el área de pegado: clic en A12, Ctrl+Mayús+Fin, Supr. Luego pega en A12. Pega con formato para que venga el verde de Yahoo.',
+  'No escribas nada arriba de la fila 12. Si algo falla, el estado de abajo lo dice.'
+];
+var PLAYOFFS_PICKS_NOTE = [
+  'PLAYOFFS_PICKS: aquí va la tabla de Group Picks de una ronda de playoffs, una ronda a la vez.',
+  '1. En Yahoo, como Comish, abre football.fantasysports.yahoo.com/pickem/27197/grouppicks?week=N (N es 19, 20, 21 o 22).',
+  '2. Selecciona la tabla desde la celda "Favored" hasta el último Points y cópiala. Que incluya Favored, Spread y Underdog.',
+  '3. Playoffs_Board debe tener ya los puntos de esa ronda. No escribas la semana, sale de los Points.',
+  '4. Borra el área de pegado: clic en A12, Ctrl+Mayús+Fin, Supr. Luego pega en A12.',
+  'No escribas nada arriba de la fila 12. Los avisos también salen en Tribune, columna I.'
+];
+var PLAYOFFS_SPEC = { note: PLAYOFFS_NOTE, banner: BOARD_BANNER, cols: 24, oldTitle: null };
+var PLAYOFFS_PICKS_SPEC = { note: PLAYOFFS_PICKS_NOTE, banner: PICKS_BANNER, cols: PASTE_COLS, oldTitle: null };
+/** [tab name, spec] of the four paste areas, in the order they are shown the status. */
+function boardTabs_() {
+  return [[CFG.picksTab, PICKS_SPEC], [CFG.boardTab, BOARD_SPEC], [CFG.playoffsPicksTab, PLAYOFFS_PICKS_SPEC], [CFG.playoffsTab, PLAYOFFS_SPEC]];
+}
 var SOLVER_NODES = 3000000;     // a week that needs more search than this is stored without results
 
 /** Creates Picks_Board (empty, the paste goes at A1) and Picks_Log (header only) when missing. Safe to repeat. */
@@ -695,7 +775,7 @@ function ensureNote_(sh, spec) {
  */
 function orderTabs_(ss) {
   var names = function () { return ss.getSheets().map(function (t) { return t.getName().trim().toLowerCase(); }); };
-  var mine = [CFG.picksTab, CFG.boardTab, CFG.tribuneTab, CFG.logTab].filter(function (n) { return findTab_(ss, n); });
+  var mine = [CFG.picksTab, CFG.boardTab, CFG.playoffsPicksTab, CFG.playoffsTab, CFG.tribuneTab, CFG.logTab].filter(function (n) { return findTab_(ss, n); });
   var part = findTab_(ss, CFG.participantsTab);
   var want = mine.map(function (n) { return n.toLowerCase(); }), now = names();
   var tailOk = now.slice(now.length - want.length).join('|') === want.join('|');
@@ -748,14 +828,14 @@ function parsePicksGrid_(values) {
 }
 
 /** The weeks of PickEm_Board whose scores equal the Points of every pick set that is on the board. */
-function weeksMatching_(sets, board) {
+function weeksMatching_(sets, board, base) {
   var by = {};
   board.rows.forEach(function (p) { by[norm_(p.name)] = p; });
   var known = sets.filter(function (s) { return by[norm_(s.name)]; });
   var out = [];
   if (!known.length || !known.some(function (s) { return s.points > 0; })) return out;
   for (var w = 1; w <= board.week; w++) {
-    if (known.every(function (s) { return by[norm_(s.name)].weeks[w - 1] === s.points; })) out.push(w);
+    if (known.every(function (s) { return by[norm_(s.name)].weeks[w - 1] === s.points; })) out.push(w + (base || 0));
   }
   return out;
 }
@@ -848,24 +928,24 @@ function writeLogWeek_(ss, week, rows) {
  * The week is the one PickEm_Board week whose scores equal the pasted Points. No match or several: nothing is stored.
  * Problems go to warn as Spanish sentences for the Warnings table. Never throws.
  */
-function syncPicks_(ss, board, warn) {
+function syncPicks_(ss, board, warn, tabName, base, boardName) {
   try {
-    var sh = findTab_(ss, CFG.picksTab);
+    var sh = findTab_(ss, tabName);
     if (!sh) return;
-    ensureNote_(sh, PICKS_SPEC);
+    ensureNote_(sh, tabName === CFG.playoffsPicksTab ? PLAYOFFS_PICKS_SPEC : PICKS_SPEC);
     var grid = gridOf_(sh, PASTE_COLS);
     var parsed = parsePicksGrid_(grid);
     if (!parsed && !grid.slice(NOTE_ROWS).some(function (r) { return r.some(function (c) { return c !== ''; }); })) return;   // nothing pasted yet
-    if (!parsed) { warn.push(CFG.picksTab + ': no pude leer la tabla. Pega la tabla completa de Group Picks de Yahoo en A12, encabezados incluidos.'); return; }
-    var weeks = weeksMatching_(parsed.sets, board);
+    if (!parsed) { warn.push(tabName + ': no pude leer la tabla. Pega la tabla completa de Group Picks de Yahoo en A12, encabezados incluidos.'); return; }
+    var weeks = weeksMatching_(parsed.sets, board, base);
     if (weeks.length !== 1) {
-      warn.push(CFG.picksTab + (weeks.length ? ': los puntos coinciden con varias semanas de ' + CFG.boardTab + ' (' + weeks.join(', ') + '). No guardé nada.'
-        : ': los puntos no coinciden con ninguna semana de ' + CFG.boardTab + '. Pega primero la tabla de Yahoo ahí y vuelvo a intentar.'));
+      warn.push(tabName + (weeks.length ? ': los puntos coinciden con varias semanas de ' + boardName + ' (' + weeks.join(', ') + '). No guardé nada.'
+        : ': los puntos no coinciden con ninguna semana de ' + boardName + '. Pega primero la tabla de Yahoo ahí y vuelvo a intentar.'));
       return;
     }
     storePicksWeek_(ss, board, weeks[0], parsed, warn);
   } catch (e) {
-    warn.push(CFG.picksTab + ': falló al guardar (' + e + '). Los demás datos se publicaron igual.');
+    warn.push(tabName + ': falló al guardar (' + e + '). Los demás datos se publicaron igual.');
     Logger.log('Picks skipped: ' + e);
   }
 }
@@ -1051,6 +1131,21 @@ function writeWarnings_(sh, warn, week) {
       else if (!wantC && WARN_COLORS.indexOf(have) >= 0) sh.getRange(row, k + 1, 1, 1).setBackground(null);
     }
   }
+}
+
+/**
+ * The week of a Tribune row. A number (a trailing "Semana 5" works too), or a playoff round by name: Wild Card 19,
+ * Divisional 20, Conferencia 21, Super Bowl 22, or "Playoffs 1" to "Playoffs 4" / "Ronda 1" to "Ronda 4".
+ */
+function semanaNum_(x) {
+  var t = plain_(x), n = toNum_(x);
+  var round = /(?:playoffs?|ronda|round)\s*(\d)/.exec(t);
+  if (round && Number(round[1]) >= 1 && Number(round[1]) <= CFG.rounds) return CFG.weeks + Number(round[1]);
+  if (/wild\s*card|comodin/.test(t)) return CFG.weeks + 1;
+  if (/divisional|divisionales/.test(t)) return CFG.weeks + 2;
+  if (/conferencia|conference|campeonato/.test(t)) return CFG.weeks + 3;
+  if (/super\s*bowl/.test(t)) return CFG.weeks + 4;
+  return n;
 }
 
 /** Lowercase without accents, for matching headers and Sección values. */

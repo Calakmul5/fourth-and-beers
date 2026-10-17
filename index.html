@@ -179,7 +179,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v3.3.0 c2.2.0
+      v4.0.0 c2.3.0
     </div>
   </div>
 </div>
@@ -368,18 +368,26 @@ T.normalize = function(D){
 };
 
 // The same league as it stood after week k. Strikes after k are approximated: whoever went out later has 2.
-T.truncate = function(D, k){
-  var d = {};
+T.truncate = function(D,k){
+  var WK = D.weeks || 18, kr = Math.min(k, WK), d = {};
   Object.keys(D).forEach(function(x){ d[x] = D[x]; });
   d.week = k;
+  if (k>WK){ d.regularWeek = WK; } else { delete d.regularWeek; delete d.playoffs; }
   d.pickem = D.pickem.map(function(p){
-    var w = p.weeks.slice(0,k), s = sum(w), drop = k>1 ? min(w) : 0;
+    var w = p.weeks.slice(0,kr), s = sum(w), drop = kr>1 ? min(w) : 0;
     return {name:p.name, weeks:w, total:s-drop, dropped:drop};
   });
-  d.survivorOut = (D.survivorOut||[]).filter(function(o){ return o.week==null || o.week<=k; });
-  d.winners = (D.winners||[]).slice(0,k);
+  if (k>WK && D.playoffs){
+    var rr = k-WK;
+    d.playoffs = {week:k, rounds:rr, winners:(D.playoffs.winners||[]).slice(0,rr), pickem:(D.playoffs.pickem||[]).map(function(p){
+      var w = (p.weeks||[]).slice(0,rr);
+      return {name:p.name, weeks:w, total: p.weeks ? sum(w) : p.total};
+    })};
+  }
+  d.winners = (D.winners||[]).slice(0,kr);
   d.picks = {};
   Object.keys(D.picks||{}).forEach(function(w){ if (Number(w)<=k) d.picks[w] = D.picks[w]; });
+  d.survivorOut = (D.survivorOut||[]).filter(function(o){ return o.week==null || o.week<=k; });
   var later = {};
   (D.survivorOut||[]).forEach(function(o){ if (o.week!=null && o.week>k) later[normName(o.name)] = 1; });
   d.strikes = {};
@@ -412,7 +420,7 @@ function splitGroups(groups, amounts){
 
 T.model = function(D){
   D = T.normalize(D);
-  var N = D.week, WK = D.weeks, PR = D.prizes;
+  var WK = D.weeks, EW = D.week, N = Math.min(D.regularWeek!=null ? D.regularWeek : D.week, WK), PR = D.prizes;
   var players = D.pickem.map(function(p,i){
     var w = p.weeks.slice(0,N), s = sum(w);
     var drop = typeof p.dropped==="number" ? p.dropped : (N>1 ? min(w) : 0);
@@ -427,7 +435,7 @@ T.model = function(D){
     p.rank = 1 + players.filter(function(q){return q.total>p.total}).length;
     p.tied = tot[p.total]>1;
   });
-  var M = {D:D, N:N, WK:WK, PR:PR, players:players, byName:byName, ids:T.initials(players.map(function(p){return p.name}))};
+  var M = {D:D, N:N, EW:EW, WK:WK, PR:PR, players:players, byName:byName, ids:T.initials(players.map(function(p){return p.name}))};
   M.idx = nameIndex(players.map(function(p){return p.name}), D.apodos);
 
   // Rank of every player after k weeks, ties share the better rank. Week N is Yahoo's table.
@@ -475,6 +483,28 @@ T.model = function(D){
   finalists.sort(function(a,b){ return b.key-a.key; });
   M.survivorFinal = splitGroups(placeGroups(finalists, function(x){return x.key}), PR.survivor || []);
 
+  // Playoffs: Yahoo's separate table, weeks 19 to 22 as rounds 1 to 4. Everybody starts at zero and only first place pays.
+  M.po = null;
+  var PO = D.playoffs && D.playoffs.pickem && D.playoffs.pickem.length ? D.playoffs : null;
+  if (PO){
+    var prow = PO.pickem.map(function(q,i){ var w = (q.weeks||[]).map(Number); return {name:q.name, w:w, total: typeof q.total==="number" ? q.total : sum(w), i:i}; });
+    var rounds = PO.rounds || max(prow.map(function(q){return q.w.length}).concat([1]));
+    prow.sort(function(a,b){ return b.total-a.total || a.i-b.i; });
+    var pg = placeGroups(prow, function(q){return q.total});
+    pg.forEach(function(g){ g.items.forEach(function(q){ q.rank = g.start; }); });
+    var pw = [];
+    for (var r=0;r<rounds;r++){
+      var top = max(prow.map(function(q){return q.w[r]||0}));
+      var tiedR = prow.filter(function(q){return (q.w[r]||0)===top}).map(function(q){return q.name});
+      var canonR = ((PO.winners||[])[r] || []).map(normName);
+      var namedR = prow.filter(function(q){return canonR.indexOf(normName(q.name))>=0}).map(function(q){return q.name});
+      pw.push({r:r, max:top, winners: namedR.length ? namedR : tiedR});
+    }
+    M.po = {rows:prow, groups:pg, rounds:rounds, rounds4:4, winners:pw, final:rounds>=4, leaders:pg[0].items.map(function(q){return q.name}), top:pg[0].score,
+      per:(PR.playoffs||[])[0] ? (PR.playoffs[0]/pg[0].items.length) : 0};
+    M.po.byName = {}; prow.forEach(function(q){ M.po.byName[q.name] = q; });
+  }
+
   // Fan bases
   var fanBy = {}; Object.keys(D.fans).forEach(function(n){ fanBy[normName(n)] = D.fans[n]; });
   M.hasFans = Object.keys(D.fans).length>0;
@@ -493,6 +523,7 @@ T.model = function(D){
   M.weekly.forEach(function(w){ w.winners.forEach(function(n){ paid[n] += PR.weekly/w.winners.length; }); });
   if (N>=WK) M.regular.forEach(function(g){ g.items.forEach(function(p){ paid[p.name] += g.per; }); });
   if (M.survivorDecided) M.survivorFinal.forEach(function(g){ g.items.forEach(function(x){ if (paid[x.name]!=null) paid[x.name] += g.per; }); });
+  if (M.po && M.po.final) M.po.groups[0].items.forEach(function(q){ if (paid[q.name]!=null) paid[q.name] += M.po.per; });
   M.paid = paid;
   M.groups.forEach(function(g){ g.money = sum(g.members.map(function(p){return paid[p.name]})); });
   return M;
@@ -607,7 +638,7 @@ var TPL = {
 T.TPL = TPL;
 
 // Week 5 shows the first line of every list, then they rotate week by week.
-function rot(M, list){ var len = list.length; return list[(((M.N-5)%len)+len)%len]; }
+function rot(M, list){ var len = list.length; return list[(((M.EW-5)%len)+len)%len]; }
 
 // sujetos: the players the sentence names. The last-place budget reads it.
 function fact(rule, valor, titulo, texto, score, num, data, sujetos){
@@ -895,7 +926,7 @@ T.pickModel = function(M){
   M.pm = null;
   var raw = M.D.picks;
   if (!raw || typeof raw !== "object") return null;
-  var weeks = Object.keys(raw).map(Number).filter(function(w){ return w>=1 && w<=M.N && raw[w] && raw[w].g && raw[w].p; }).sort(function(a,b){return a-b});
+  var weeks = Object.keys(raw).map(Number).filter(function(w){ return w>=1 && w<=M.EW && raw[w] && raw[w].g && raw[w].p; }).sort(function(a,b){return a-b});
   if (!weeks.length) return null;
   var pm = {weeks:weeks, W:{}, R:[], recs:{}}, byNorm = {};
   M.players.forEach(function(p){ byNorm[normName(p.name)] = p.name; });
@@ -925,7 +956,7 @@ T.pickModel = function(M){
 // This week's solved picks, or null when the week has none.
 function thisWeek(M){
   var pm = T.pickModel(M);
-  var W = pm && pm.W[M.N];
+  var W = pm && pm.W[M.EW];
   return W && W.solved ? W : null;
 }
 
@@ -974,8 +1005,8 @@ function fMismoEquipo(M){
       (by[r.team] = by[r.team]||{})[r.w] = r;
     });
     Object.keys(by).forEach(function(t){
-      var L = 0, net = 0, w = 0, c = 0, k = M.N;
-      while (by[t][k] && pm.W[k].solved){ L++; net += pickPts(by[t][k]); c++; if (by[t][k].won) w++; k--; }
+      var L = 0, net = 0, w = 0, c = 0, k = M.EW;
+      while (by[t][k] && pm.W[k] && pm.W[k].solved){ L++; net += pickPts(by[t][k]); c++; if (by[t][k].won) w++; k--; }
       if (L>=2 && net!==0 && (!best || L>best.L || (L===best.L && Math.abs(net)>Math.abs(best.net)))) best = {p:p, team:t, L:L, net:net, w:w, c:c};
     });
   });
@@ -1213,11 +1244,70 @@ T.tusPicks = function(M, name){
   return out;
 };
 
+TPL.poLider = [
+  "{n} lidera los playoffs con {t} puntos, a {gap} del segundo. Solo paga el primero.",
+  "{n} manda en los playoffs: {t} puntos y {gap} de ventaja. El segundo no cobra."
+];
+TPL.poEmpate = [
+  "{names} empatan arriba en los playoffs con {t} puntos. Si nadie desempata, el premio se parte.",
+  "{t} puntos para {names} en lo alto de los playoffs. Solo uno cobra, o se parten el premio."
+];
+TPL.poFinal = [
+  "{n} ganó los playoffs con {t} puntos y se lleva {money}.",
+  "Los playoffs terminaron. {n} se queda con {money}."
+];
+TPL.poRonda = [
+  "{n} ganó la ronda {ronda} de los playoffs con {pts} puntos.",
+  "Ronda {ronda}: {n}, {pts} puntos. Yahoo ya lo anotó."
+];
+TPL.poSube = [
+  "{n} subió {up} lugares en la ronda {ronda}, del {from}º al {to}º.",
+  "Del {from}º al {to}º. {n} se movió {up} lugares en los playoffs."
+];
+var ROUNDS = ["Wild Card","Divisional","Final de conferencia","Super Bowl"];
+function roundName(r){ return ROUNDS[r] || ("ronda "+(r+1)); }
+
+// Rank of every playoff player after k rounds, ties share the better rank.
+function poRanksAt(M, k){
+  var rows = M.po.rows.map(function(q){ return {name:q.name, t:sum(q.w.slice(0,k))}; }), out = {};
+  rows.forEach(function(a){ out[a.name] = 1 + rows.filter(function(b){return b.t>a.t}).length; });
+  return out;
+}
+function fPlayoffLider(M){
+  if (!M.po) return null;
+  var lead = M.po.leaders, second = M.po.groups[1], gap = second ? M.po.top-second.score : M.po.top;
+  var v = {n:who(lead[0]), names:J(lead.map(who)), t:M.po.top, gap:gap, money:money(M.po.per)};
+  var text = M.po.final ? rot(M,TPL.poFinal) : lead.length>1 ? rot(M,TPL.poEmpate) : rot(M,TPL.poLider);
+  if (M.po.final && lead.length>1) text = "Los playoffs terminaron en empate: {names}, {t} puntos. Se parten {money} cada uno.";
+  return fact("playoffs", String(M.po.top), M.po.final ? "Campeón de playoffs" : "Playoffs", fill(text, v), M.po.final ? 98 : 92, true,
+    {names:lead, total:M.po.top, gap:gap, rounds:M.po.rounds}, lead);
+}
+function fPlayoffRonda(M){
+  if (!M.po || !M.po.rounds) return null;
+  var r = M.po.rounds-1, w = M.po.winners[r];
+  if (!w || !w.winners.length) return null;
+  var v = {n:J(w.winners.map(who)), ronda:roundName(r), pts:w.max};
+  return fact("poronda", String(w.max), "Ronda de playoffs", fill(rot(M,TPL.poRonda), v), 86, true, {names:w.winners, round:r+1, points:w.max}, w.winners);
+}
+function fPlayoffSubida(M){
+  if (!M.po || M.po.rounds<2) return null;
+  var before = poRanksAt(M, M.po.rounds-1), now = poRanksAt(M, M.po.rounds), best = null;
+  M.po.rows.forEach(function(q){
+    var up = before[q.name]-now[q.name];
+    if (up>=2 && (!best || up>best.up)) best = {q:q, up:up, from:before[q.name], to:now[q.name]};
+  });
+  if (!best) return null;
+  return fact("posube", "+"+best.up, "Subida de playoffs", fill(rot(M,TPL.poSube), {n:who(best.q.name), up:best.up, from:best.from, to:best.to, ronda:roundName(M.po.rounds-1)}), 70, true,
+    {name:best.q.name, from:best.from, to:best.to}, [best.q.name]);
+}
+
+var PICK_RULES_LIST = [fLealtad,fMismoEquipo,fCostalazo,fLlanero,fBorregada,fEmpate,fOlvido,fRachaPicks,fPerros,fCorriente];
 var RULES = [fRebote,fArriba,fFotocopia,fDisco,fRacha,fRecord,fRemontada,fSiempre,fPeor,fSurvivor,fAficiones,fSotano,
   fLealtad,fMismoEquipo,fCostalazo,fLlanero,fBorregada,fEmpate,fOlvido,fRachaPicks,fPerros,fCorriente];
 T.facts = function(M){
   var out = [];
-  RULES.forEach(function(f){ var r = f(M); if (r) out.push(r); });
+  // The playoffs replace the regular-season facts, which would only repeat week 18. Survivor and the pick rules carry on.
+  (M.po ? [fPlayoffLider,fPlayoffRonda,fPlayoffSubida,fSurvivor].concat(PICK_RULES_LIST) : RULES).forEach(function(f){ var r = f(M); if (r) out.push(r); });
   return out;
 };
 
@@ -1250,8 +1340,8 @@ T.pickFacts = function(M, prevRules, spent){
 
 // What last week's edition ran, found by running the same engine on last week's league.
 T.prevRules = function(M){
-  if (M.N<2) return [];
-  var P = T.model(T.truncate(M.D, M.N-1));
+  if (M.EW<2) return [];
+  var P = T.model(T.truncate(M.D, M.EW-1));
   return T.pickFacts(P, [], false).picks.map(function(f){return f.rule});
 };
 
@@ -1261,6 +1351,13 @@ T.prevRules = function(M){
 T.portada = function(M){
   var row = M.D.tribune.portada;
   if (row) return {titulo:row.titulo, texto:row.texto||"", fromSheet:true};
+  if (M.po){
+    var lead = M.po.leaders, second = M.po.groups[1], gap = second ? M.po.top-second.score : M.po.top;
+    var head = M.po.final ? "Se acabó la temporada" : M.po.rounds===1 ? "Arrancan los playoffs" : "Playoffs: ronda "+M.po.rounds+" de "+M.po.rounds4;
+    var text = lead.length>1 ? fill("{names} empatan arriba con {t} puntos. Solo paga el primero.", {names:J(lead.map(who)), t:M.po.top})
+      : fill("{n} lidera con {t} puntos, a {gap} del segundo. Solo paga el primero.", {n:who(lead[0]), t:M.po.top, gap:gap});
+    return {titulo:head, texto:text, fromSheet:false, data:{names:lead, playoffs:true}};
+  }
   var leader = M.players[0];
   if (M.N>=2){
     var before = M.ranksAt(M.N-1), now = M.ranksAt(M.N), top = 0;
@@ -1387,12 +1484,13 @@ function render(D, opts){
   var upd = D.updated ? new Date(D.updated) : null;
   var dateTxt = "";
   try { dateTxt = upd && !isNaN(upd) ? upd.toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric",timeZone:TZ}) : ""; } catch(e){ dateTxt = ""; }
-  $("dateline").innerHTML = "<span>Edición "+N+"</span><span>"+esc(dateTxt)+"</span><span>Una chela</span>";
+  var edLabel = "Edición "+M.EW+(M.po ? ", playoffs" : "");
+  $("dateline").innerHTML = "<span>"+edLabel+"</span><span>"+esc(dateTxt)+"</span><span>Una chela</span>";
   document.title = "Fourth and Beers Tribune";
   if (opts.ed){
     var b = $("banner");
     b.className = "banner";
-    b.innerHTML = 'Edición '+N+', archivo · <a href="'+esc(location.pathname)+'">Volver a la edición actual</a>';
+    b.innerHTML = edLabel+', archivo · <a href="'+esc(location.pathname)+'">Volver a la edición actual</a>';
     b.hidden = false;
   }
   $("yahoo").href = YAHOO_URL;
@@ -1499,10 +1597,15 @@ function render(D, opts){
   var pill = M.hasStrikes ? (sv ? "decidido" : M.alive.length+" "+plural(M.alive.length,"vivo","vivos")) : "";
   P.push('<div class="box"><div class="h">Survivor '+(pill?'<span class="pill">'+pill+'</span>':'')+'</div>'+srows+'<div class="note">'+sn+'</div></div>');
 
-  // Playoffs. Hook: when data.json carries playoffs.pickem [{name, total}], the leader shows here.
-  var po = D.playoffs && D.playoffs.pickem && D.playoffs.pickem.length ? D.playoffs.pickem.slice().sort(function(a,b){return b.total-a.total})[0] : null;
-  if (po) P.push('<div class="box"><div class="h">Quiniela de playoffs <span class="pill">en juego</span></div><div class="pzr"><span class="r">1º</span><span class="n">'+esc(po.name)+', '+po.total+'</span><span class="m">'+money((PR.playoffs||[])[0]||0)+'</span></div><div class="note">Solo paga primer lugar.</div></div>');
-  else P.push('<div class="box"><div class="h">Quiniela de playoffs <span class="pill soon">en enero</span></div><div class="pzr"><span class="r">1º</span><span class="n">Todos empiezan en cero</span><span class="m">'+money((PR.playoffs||[])[0]||0)+'</span></div><div class="note">Solo paga primer lugar.</div></div>');
+  // Playoffs: Yahoo's separate table (weeks 19 to 22). Only first place pays. Before it has scores, everybody starts at zero.
+  if (M.po){
+    var prs = M.po.rows.slice(0,5).map(function(q){
+      return '<div class="pzr"><span class="r">'+ord(q.rank)+'</span><span class="n">'+esc(q.name)+', '+q.total+'</span><span class="m">'+(q.rank===1 && M.po.final ? money(M.po.per)+(M.po.leaders.length>1 ? ' <small>c/u</small>' : '') : '')+'</span></div>';
+    }).join("");
+    var rw = M.po.winners.map(function(w){ return esc(roundName(w.r))+": "+esc(J(w.winners))+" ("+w.max+")"; }).join(" · ");
+    var pnote = (M.po.final ? "Terminó." : "Ronda "+M.po.rounds+" de "+M.po.rounds4+".")+" Solo paga primer lugar."+(M.po.leaders.length>1 ? " Empate: se parten el premio." : "");
+    P.push('<div class="box"><div class="h">Quiniela de playoffs <span class="pill">'+(M.po.final ? "final" : "en juego")+'</span></div>'+prs+'<div class="note plain">'+rw+'</div><div class="note">'+pnote+'</div></div>');
+  } else P.push('<div class="box"><div class="h">Quiniela de playoffs <span class="pill soon">en enero</span></div><div class="pzr"><span class="r">1º</span><span class="n">Todos empiezan en cero</span><span class="m">'+money((PR.playoffs||[])[0]||0)+'</span></div><div class="note">Solo paga primer lugar.</div></div>');
 
   // Pizzas
   var lp = T.lastPlace(M), pn;
