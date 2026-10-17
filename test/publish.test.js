@@ -893,4 +893,56 @@ A.run('Publish.js', [
     A.noMatch(src, /deleteSheet|\.clear\(|\.clearContent\(|\.clearContents\(|\.deleteRows?\(|\.deleteColumns?\(|removeSheet/, 'no clear or delete calls');
     A.noMatch(src, /Premios|Comentarios|migrate|LEGACY_TABS/, 'no retired tabs, no migration');
   }],
+
+  ['Picks_Board: instructions sit in column T, come back after a wipe and never break the parse', () => {
+    [PF.paste(), PF.pasteTabbed()].forEach((paste, i) => {
+      const pb = makeSheet('Picks_Board', paste);
+      const ws = participants(PF.board5(), { extra: [pb] });
+      const { ctx, github } = setup({ participants: ws });
+      ctx.publishLeaderboard();
+      A.equal(pb.rows()[0][19], 'Cómo pegar la tabla de Group Picks', 'shape ' + i + ': title in T1');
+      A.match(pb.rows()[1][19], /grouppicks\?week=N/);
+      A.equal(Object.keys(JSON.parse(github.state.files['data.json'].text).picks['5'].p).length, 22, 'shape ' + i + ': parsed with the note next to it');
+      pb.rows().forEach(r => { r[19] = ''; });                      // select all, delete
+      ctx.publishLeaderboard();
+      A.equal(pb.rows()[0][19], 'Cómo pegar la tabla de Group Picks', 'restored');
+    });
+    const only = makeSheet('Picks_Board', []);
+    const ws2 = participants(PF.board5(), { extra: [only] });
+    const { ctx: c2 } = setup({ participants: ws2 });
+    c2.publishLeaderboard();
+    A.equal(warnTable(tab(ws2, 'Tribune')).filter(x => /Picks_Board/.test(x.text)).length, 0, 'an empty board with only the note is not an unreadable paste');
+  }],
+
+  ['status: every publish ends with OK, OK con avisos or the error, in the log, a toast and Picks_Board', () => {
+    const pb = makeSheet('Picks_Board', PF.paste());
+    const ws = participants(PF.board5(), { extra: [pb] });
+    const { ctx } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const cell = () => pb.rows()[8][19];
+    A.match(cell(), /^OK 20\d\d-\d\d-\d\d \d\d:\d\d\. Semana 5: publicada\. Picks guardados: semana 5\. Avisos: ninguno\.$/);
+    A.equal(pb.rows()[7][19], 'Estado del último publish');
+    A.ok(ctx._logs.some(l => /^Estado: OK /.test(l)), 'logged');
+    A.ok(ws.toasts.some(t => /^OK /.test(t)), 'toast');
+    ctx.publishLeaderboard();
+    A.match(cell(), /sin cambios/, 'second run changes nothing');
+    // a warning
+    const bad = makeSheet('Picks_Board', PF.paste({ points: { 'Abogado': 95 } }));
+    const ws2 = participants(PF.board5(), { extra: [bad] });
+    const { ctx: c2 } = setup({ participants: ws2 });
+    c2.publishLeaderboard();
+    A.match(bad.rows()[8][19], /^OK CON AVISOS .*Avisos: 1 \(Picks_Board: los puntos no coinciden.*Tribune, columna I\./);
+    // an error
+    const ok = makeSheet('Picks_Board', PF.paste());
+    const ws3 = participants(PF.board5(), { extra: [ok] });
+    const github = makeGithub(null);
+    const real = github.fetch;
+    github.fetch = (u, o) => (o && o.method === 'put') ? { getResponseCode: () => 401, getContentText: () => 'Bad credentials' } : real(u, o);
+    const { ctx: c3 } = setup({ participants: ws3, github });
+    let msg = '';
+    try { c3.publishLeaderboard(); } catch (e) { msg = e.message; }
+    A.match(msg, /GitHub write failed \(401\)/, 'the error still surfaces');
+    A.match(ok.rows()[8][19], /^ERROR 20.*GitHub write failed \(401\).*revisa Executions/);
+    A.ok(ws3.toasts.some(t => /^ERROR /.test(t)), 'error toast');
+  }],
 ]);

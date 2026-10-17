@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.6.0 c1.4.0
+// v2.7.0 c1.5.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -14,6 +14,9 @@
 //      editions/index.json lists the weeks. A week that has moved on is never touched again.
 //   8. Lists warnings in the Tribune tab (H:J, one per row: color, text, week, with a blank separator column G) and tints the rows involved when the last place
 //      is named more than once, or in two weeks in a row, and so on. It never blocks a publish or edits your text.
+//  10. Ends every publish with a status message: a log line, a toast in the workbook and a line in column T of Picks_Board
+//      (OK, OK with warnings, or the error). Column T also holds the instructions for pasting Group Picks. Both are
+//      rewritten if the tab is wiped, and the paste ignores everything from column T on.
 //   9. Reads Yahoo's Group Picks table from Picks_Board, infers its week from the Points column, infers each game's
 //      result from the paste itself (Points must equal the confidence of the correct picks) and keeps the week in
 //      Picks_Log. data.json "picks" is rebuilt from Picks_Log on every publish.
@@ -104,15 +107,39 @@ function publishLeaderboard_() {
     throw new Error('Missing Script properties. Set GITHUB_TOKEN, GITHUB_REPO and SHEET_ID in Project Settings.');
   }
   var ss = SpreadsheetApp.openById(String(sheetId).trim());
-  var modelId = props.getProperty('MODEL_SHEET_ID');
-  var model = modelId ? SpreadsheetApp.openById(String(modelId).trim()) : ss;
-  var cur = readFile_(repo, token, CFG.path);
-  var picksWarn = [];
-  var data = buildData_(ss, model, cur ? cur.data : null, picksWarn);
-  try { reviewTribune_(ss, data, picksWarn); } catch (e) { Logger.log('Warnings skipped: ' + e); }
-  var result = commitAll_(repo, token, data, cur);
+  var picksWarn = [], warnTexts = [], data, result;
+  try {
+    var modelId = props.getProperty('MODEL_SHEET_ID');
+    var model = modelId ? SpreadsheetApp.openById(String(modelId).trim()) : ss;
+    var cur = readFile_(repo, token, CFG.path);
+    data = buildData_(ss, model, cur ? cur.data : null, picksWarn);
+    try { warnTexts = reviewTribune_(ss, data, picksWarn); } catch (e) { Logger.log('Warnings skipped: ' + e); warnTexts = picksWarn.slice(); }
+    result = commitAll_(repo, token, data, cur);
+  } catch (e) {
+    reportStatus_(ss, 'ERROR ' + stamp_() + '. ' + (e && e.message ? e.message : e) + ' La publicación falló, revisa Executions en Apps Script.');
+    throw e;
+  }
   Logger.log(result);
+  var weeks = Object.keys(data.picks || {}).map(Number).sort(function (x, y) { return x - y; });
+  reportStatus_(ss, (warnTexts.length ? 'OK CON AVISOS ' : 'OK ') + stamp_() + '. Semana ' + data.week + ': ' +
+    (/^Committed/.test(result) ? 'publicada' : 'sin cambios') + '. Picks guardados: ' +
+    (weeks.length ? 'semana' + (weeks.length > 1 ? 's ' : ' ') + weeks.join(', ') : 'ninguno') + '. Avisos: ' +
+    (warnTexts.length ? warnTexts.length + ' (' + warnTexts.slice(0, 2).join(' / ') + (warnTexts.length > 2 ? ' / ...' : '') + '), ver la tabla Warnings en Tribune, columna I' : 'ninguno') + '.');
   return result;
+}
+
+function stamp_() { return Utilities.formatDate(new Date(), 'America/Chicago', 'yyyy-MM-dd HH:mm'); }
+
+/** The end-of-process message: log line, a toast for whoever has the workbook open, and the status cell in Picks_Board. */
+function reportStatus_(ss, text) {
+  Logger.log('Estado: ' + text);
+  try { ss.toast(text, 'Fourth and Beers', 15); } catch (e) { /* no toast outside a spreadsheet session */ }
+  try {
+    var sh = findTab_(ss, CFG.picksTab);
+    if (!sh) return;
+    ensurePicksNote_(sh);
+    if (String(sh.getRange(PICKS_NOTE.length + 3, NOTE_COL, 1, 1).getValue() || '') !== text) sh.getRange(PICKS_NOTE.length + 3, NOTE_COL, 1, 1).setValue(text);
+  } catch (e) { Logger.log('Status cell skipped: ' + e); }
 }
 
 /** Installable onEdit: publishes after a paste into PickEm_Board or Picks_Board, or a change in Tribune. */
@@ -129,6 +156,8 @@ function setupTribuneTab() {
   var ss = SpreadsheetApp.openById(String(PropertiesService.getScriptProperties().getProperty('SHEET_ID')).trim());
   setupTribune_(ss);
   setupPicks_(ss);
+  var pb = findTab_(ss, CFG.picksTab);
+  if (pb) ensurePicksNote_(pb);
   Logger.log('Tribune, ' + CFG.picksTab + ' and ' + CFG.logTab + ' tabs ready in ' + ss.getName());
 }
 
@@ -203,9 +232,9 @@ function buildData_(ss, model, prev, picksWarn) {
 }
 
 /** The tab as rows of trimmed strings. A paste that landed as tab-separated text in column A is split into columns. */
-function gridOf_(sh) {
+function gridOf_(sh, maxCols) {
   return sh.getDataRange().getDisplayValues().map(function (r) {
-    var cells = r.map(function (c) { return String(c).trim(); });
+    var cells = (maxCols ? r.slice(0, maxCols) : r).map(function (c) { return String(c).trim(); });
     var filled = cells.filter(function (c) { return c !== ''; });
     return (filled.length === 1 && filled[0].indexOf('\t') >= 0) ? filled[0].split('\t').map(function (c) { return c.trim(); }) : cells;
   });
@@ -508,6 +537,15 @@ function mentions(idx, text) {
 // ---------------------------------------------------------------------------
 
 var LOG_HEADER = ['Semana', 'Pick Set', 'Juego', 'Favorito', 'Spread', 'Underdog', 'Pick', 'Confianza', 'Resultado'];
+var NOTE_COL = 20;              // column T: instructions and status, out of the way of the pasted table (16 games reach column R)
+var PICKS_NOTE = [
+  'Cómo pegar la tabla de Group Picks',
+  '1. En Yahoo, como Comish, abre football.fantasysports.yahoo.com/pickem/27197/grouppicks?week=N (N es la semana).',
+  '2. Selecciona la tabla desde la celda "Favored" hasta el último Points y cópiala. Que incluya Favored, Spread y Underdog.',
+  '3. Aquí: selecciona todo, borra y pega en A1. Antes, PickEm_Board debe tener los puntos de esa semana.',
+  '4. No escribas la semana. Se saca de los Points. El script ignora esta columna T.',
+  '5. Espera un minuto y lee el estado de abajo. Los avisos también salen en Tribune, columna I.'
+];
 var SOLVER_NODES = 3000000;     // a week that needs more search than this is stored without results
 
 /** Creates Picks_Board (empty, the paste goes at A1) and Picks_Log (header only) when missing. Safe to repeat. */
@@ -519,6 +557,16 @@ function setupPicks_(ss) {
     log.setFrozenRows(1);
   }
   return log;
+}
+
+/** Writes the instructions in column T (and the Estado label) if they are missing, for example after the tab was wiped. */
+function ensurePicksNote_(sh) {
+  if (String(sh.getRange(1, NOTE_COL, 1, 1).getValue() || '') === PICKS_NOTE[0]) return;
+  sh.getRange(1, NOTE_COL, PICKS_NOTE.length, 1).setValues(PICKS_NOTE.map(function (t) { return [t]; }));
+  sh.getRange(1, NOTE_COL, 1, 1).setFontWeight('bold');
+  sh.getRange(PICKS_NOTE.length + 2, NOTE_COL, 1, 1).setValue('Estado del último publish');
+  sh.getRange(PICKS_NOTE.length + 2, NOTE_COL, 1, 1).setFontWeight('bold');
+  sh.setColumnWidth(NOTE_COL, 560);
 }
 
 function team_(s) { return String(s || '').replace(/[^A-Za-z]/g, '').toUpperCase(); }
@@ -668,7 +716,8 @@ function syncPicks_(ss, board, warn) {
   try {
     var sh = findTab_(ss, CFG.picksTab);
     if (!sh) return;
-    var grid = gridOf_(sh);
+    ensurePicksNote_(sh);
+    var grid = gridOf_(sh, NOTE_COL - 1);
     if (!grid.some(function (r) { return r.some(function (c) { return c !== ''; }); })) return;
     var parsed = parsePicksGrid_(grid);
     if (!parsed) { warn.push(CFG.picksTab + ': no pude leer la tabla. Pega la tabla completa de Group Picks de Yahoo en A1, encabezados incluidos.'); return; }

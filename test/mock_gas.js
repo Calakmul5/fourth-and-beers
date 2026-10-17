@@ -83,6 +83,8 @@ function makeWorkbook(name, sheets) {
   return {
     getName: () => name,
     getUrl: () => 'https://example.test/' + name,
+    toasts: [],
+    toast(m) { this.toasts.push(m); },
     getSheets: () => sheets,
     insertSheet(n) { const sh = makeSheet(n, []); sheets.push(sh); return sh; },
     deleteSheet(sh) { const i = sheets.indexOf(sh); if (i >= 0) sheets.splice(i, 1); },
@@ -147,6 +149,7 @@ function loadPublisher(opts) {
       base64Decode: s => Buffer.from(s, 'base64'),
       newBlob: bytes => ({ getDataAsString: () => Buffer.from(bytes).toString('utf8') }),
       sleep() {},
+      formatDate: (d, tz, f) => d.toISOString().slice(0, 16).replace('T', ' '),
     },
     ScriptApp: {},
   };
