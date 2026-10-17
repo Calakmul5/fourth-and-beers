@@ -778,6 +778,26 @@ A.run('Publish.js', [
     A.deep(warnTable(sh).map(x => x.week), [6, 5, 3], 'weeks 5 and 3 stay, week 2 is gone');
   }],
 
+  ['Warnings: a checked Clasificado with a blank Para is flagged and still published; Todos and unchecked rows are not', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],
+      ['3', 'Clasificado', '', 'SE VENDE', 'Sin destinatario.', 'TRUE'],                     // row 3, flagged
+      ['3', 'Clasificado', 'Todos', 'AVISO', 'Para todos.', 'TRUE'],                         // row 4, fine
+      ['3', 'Clasificado', 'Abogado', 'SE BUSCA', 'Con destinatario.', 'TRUE'],              // row 5, fine
+      ['3', 'Clasificado', '', 'VIEJO', 'No cuenta.', 'FALSE'],                              // unchecked
+      ['3', 'Dato', '', 'Dato', 'Un dato sin Para.', 'TRUE']];                               // only Clasificados are checked
+    const ws = participants(null, { tribune: rows });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const sh = tab(ws, 'Tribune'), t = warnTable(sh);
+    A.deep(t.map(x => x.text), ['Clasificado sin Para en la fila 3.']);
+    A.deep([2, 3, 4, 5, 6, 7].map(r => !!sh.bg(r, 1)), [false, true, false, false, false, false], 'only that row is tinted');
+    A.ok(github.state.puts.length >= 3, 'it still publishes');
+    const ads = JSON.parse(github.state.file.text).tribune.clasificados;
+    A.deep(ads.map(a => a.titulo), ['SE VENDE', 'AVISO', 'SE BUSCA'], 'the row is published anyway');
+    A.equal(ads[0].para, '');
+  }],
+
   ['Warnings: apodos count, Columna needs a Portada, one Edición, known temas', () => {
     const fans = FANS.map((r, i) => i === 0 ? r.concat(['Apodo']) : r[0] === 'Steel Man' ? r.concat(['Acero']) : r);
     const rows = [TRIBUNE_HEAD,

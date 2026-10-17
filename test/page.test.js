@@ -697,7 +697,7 @@ A.run('index.html', [
     A.match(c.doc.querySelector('#p-deck').innerHTML, /&lt;i&gt;<b class="nombre" data-n="Abogado">Abogado<\/b>&lt;\/i&gt;/);
     A.equal(c.doc.querySelector('#p-head').querySelector('b'), null, 'the headline is not wrapped');
     A.deep(all(c.doc, '#story b.nombre').map(b => b.getAttribute('data-n')), ['Abogado', 'KinkyKing', 'Silverback'], 'crosshead and paragraph mentions');
-    A.deep(all(c.doc, '#ads b.nombre').map(b => b.getAttribute('data-n')), ['KinkyKing', 'Osos de Grayslake']);
+    A.deep(all(c.doc, '#ads b.nombre').map(b => b.getAttribute('data-n')), ['Abogado', 'KinkyKing', 'Osos de Grayslake'], 'the Para line is bolded too');
     A.equal(all(c.doc, 'b.nombre.tuyo').length, 0, 'nobody selected, nobody highlighted');
     const c2 = await load(d, { url: '?yo=KinkyKing' });
     const mine = all(c2.doc, 'b.nombre.tuyo');
@@ -782,6 +782,39 @@ A.run('index.html', [
     A.match(HTML, /\.ad\.esq \.who\{[^}]*var\(--head\)/);
     ['Q.E.P.D.', 'QEPD', 'q.e.p.d', 'Q E P D'].forEach(t => A.equal(c.T.isEsquela(t), true, t));
     A.equal(c.T.isEsquela('QEPDX'), false);
+  }],
+
+  // ---- v3.1.1: Para on every ad ------------------------------------------------
+
+  ['clasificados: every ad shows who it is for, bolded, esquela or not, and a blank Para shows no line', async () => {
+    const calls = c => c.M.players.map(p => p.name);
+    const c = await load(W5);
+    const ads = all(c.doc, '#ads .ad');
+    A.equal(ads.length, W5.tribune.clasificados.length, 'all three week 5 ads render');
+    W5.tribune.clasificados.forEach((x, i) => {
+      const who = ads[i].querySelector('.who');
+      A.ok(who, 'ad "' + x.titulo + '" shows its Para');
+      x.para.split(',').map(t => t.trim()).forEach(n => {
+        A.ok(who.textContent.indexOf(n) >= 0, n + ' is in the .who line');
+        if (calls(c).indexOf(n) >= 0) A.ok(Array.from(who.querySelectorAll('b.nombre')).some(b => b.textContent === n), n + ' is bolded');
+      });
+      A.equal(ads[i].querySelector('strong').nextElementSibling, who, 'Título, then the .who line');
+      A.equal(who.nextElementSibling.tagName, 'P', 'then the texto in a paragraph');
+    });
+    A.equal(ads[0].querySelectorAll('.who b.nombre').length, 3, 'several names, all bolded');
+    const d = clone(W5);
+    d.tribune.clasificados = [
+      { titulo: 'Q.E.P.D.', para: 'Andrea’s Picks', texto: 'Sus picks.' },
+      { titulo: 'SE VENDE', para: 'Abogado, KinkyKing', texto: 'Un lugar.' },
+      { titulo: 'AVISO', para: '', texto: 'Para todos.' }];
+    const c2 = await load(d);
+    const a2 = all(c2.doc, '#ads .ad');
+    A.ok(a2[0].classList.contains('esq') && a2[0].querySelector('.who'), 'esquela keeps its .who');
+    A.equal(a2[1].querySelectorAll('.who b.nombre').length, 2);
+    A.equal(a2[2].querySelector('.who'), null, 'blank Para, no line');
+    A.equal(a2[2].querySelector('p').textContent, 'Para todos.');
+    A.match(HTML, /\.ad \.who\{[^}]*14px/, 'the ad .who rule');
+    A.match(HTML, /\.ad\.esq \.who\{[^}]*var\(--head\)/, 'the esquela rule is kept');
   }],
 
   // ---- v3.1: special editions -------------------------------------------------

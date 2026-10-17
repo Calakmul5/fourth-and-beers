@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.4.1 c1.3.0
+// v2.5.0 c1.3.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -604,6 +604,9 @@ function reviewTribune_(ss, data) {
   if (columna.length && !rows.some(function (x) { return x.sec === 'portada'; })) {
     add('Hay Columna sin fila de Portada (filas ' + rn(columna) + ').', columna);
   }
+  rows.filter(function (x) { return x.sec === 'clasificado' && !x.para; }).forEach(function (x) {
+    add('Clasificado sin Para en la fila ' + x.row + '.', [x]);       // published anyway, the ad just has no addressee
+  });
   var ediciones = rows.filter(function (x) { return x.sec === 'edicion'; });
   if (ediciones.length > 1) add('Hay ' + ediciones.length + ' filas de Edición. Solo cuenta la primera (fila ' + ediciones[0].row + ').', ediciones.slice(1));
   ediciones.forEach(function (x) {

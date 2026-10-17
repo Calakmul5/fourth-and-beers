@@ -57,6 +57,8 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
 .ads{columns:2;column-gap:14px;column-rule:1px solid var(--hair)}
 .ad{break-inside:avoid;font:13px/1.38 var(--body);padding:0 0 8px;margin-bottom:8px;border-bottom:1px solid var(--hair)}
 .ad strong{display:block;font:900 15px var(--sans);letter-spacing:.06em}
+.ad .who{display:block;font:700 14px/1.2 var(--body);margin:1px 0 4px}
+.ad p{margin:0}
 .ad.esq{border:2px solid var(--ink);padding:8px 8px 10px;text-align:center}
 .ad.esq .cruz{display:block;font:400 16px/1 var(--body);margin-bottom:2px}
 .ad.esq .who{display:block;font:900 17px/1.15 var(--head);margin:3px 0 4px}
@@ -174,7 +176,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v3.1.0 c2.1.0
+      v3.1.1 c2.1.0
     </div>
   </div>
 </div>
@@ -1004,7 +1006,7 @@ function render(D, opts){
   if (ads.length){
     $("ads").innerHTML = ads.map(function(a){
       if (isEsquela(a.titulo)) return '<div class="ad esq"><span class="cruz" aria-hidden="true">✝</span><strong>'+esc(a.titulo)+'</strong>'+(a.para ? '<span class="who">'+W(a.para)+'</span>' : '')+'<p>'+W(a.texto)+'</p></div>';
-      return '<div class="ad"><strong>'+W(a.titulo)+'</strong>'+W(a.texto)+'</div>';
+      return '<div class="ad"><strong>'+W(a.titulo)+'</strong>'+(a.para ? '<span class="who">'+W(a.para)+'</span>' : '')+'<p>'+W(a.texto)+'</p></div>';
     }).join("");
     $("clasificados").hidden = false;
   }
