@@ -1048,4 +1048,22 @@ A.run('index.html', [
     common(c, 'odd picks');
     A.equal(c.M.pk.picks.length, 6);
   }],
+
+  ['Yahoo is canon for the weekly winner: a tie follows its green mark, an unmarked tie splits', async () => {
+    const d = clone(W5);
+    d.pickem.find(p => p.name === 'Cyber70').weeks[4] = 94;               // ties Abogado at the top of week 5
+    const split = await load(d);
+    A.deep(split.M.weekly[4].winners.slice().sort(), ['Abogado', 'Cyber70'], 'no mark, both share');
+    A.equal(split.doc.querySelectorAll('#prizes .g.tie').length, 1, 'and the tile shows the tie');
+    d.winners = [[], [], [], [], ['Cyber70']];
+    const one = await load(d);
+    A.deep(one.M.weekly[4].winners, ['Cyber70'], 'Yahoo broke the tie');
+    A.equal(one.doc.querySelectorAll('#prizes .g.tie').length, 0);
+    A.equal(one.M.paid['Cyber70'] - split.M.paid['Cyber70'], 25, 'the $50 is no longer split');
+    A.equal(one.T.truncate(d, 4).winners.length, 4, 'the league as it stood in week 4');
+    d.winners = [[], [], [], [], ['Nadie']];
+    const bad = await load(d);
+    A.deep(bad.M.weekly[4].winners.slice().sort(), ['Abogado', 'Cyber70'], 'an unknown name is ignored');
+    A.deep(bad.errors, []);
+  }],
 ]);

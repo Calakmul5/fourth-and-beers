@@ -139,7 +139,7 @@ A.run('Publish.js', [
     A.deep(grid.pickem[2].weeks, [78, 0, 50], 'a missed week stays a zero in the middle');
     A.equal(grid.pickem[2].dropped, 0, 'Yahoo dropped is canon');
     A.deep(Object.keys(grid).sort(),
-      ['apodos', 'fans', 'pickem', 'picks', 'prizes', 'season', 'strikes', 'survivorOut', 'tribune', 'updated', 'week', 'weeks'], 'fields: apodos and picks added, no comments, awards, pays or weeklyPrize');
+      ['apodos', 'fans', 'pickem', 'picks', 'prizes', 'season', 'strikes', 'survivorOut', 'tribune', 'updated', 'week', 'weeks', 'winners'], 'fields: apodos and picks added, no comments, awards, pays or weeklyPrize');
   }],
 
   ['display values with a header only (no scores) throw a clear error', () => {
@@ -1019,5 +1019,56 @@ A.run('Publish.js', [
     boardGrid().forEach((row, i) => { pb2.rows()[11 + i] = row; });
     c2.publishLeaderboard();
     A.match(pb2.rows()[7][0], /^OK /, 'recovers');
+  }],
+
+  // ---- Yahoo is canon: green font = the week's winner, red font = the dropped week ------------
+
+  ['Yahoo marks: green is the winner, red the dropped week, without colors a single top score wins by itself', () => {
+    const run = (rows, paint, prev) => {
+      const pb = makeSheet('PickEm_Board', rows);
+      (paint || []).forEach(([r, c, color]) => pb.getRange(r, c, 1, 1).setFontColor(color));
+      const ws = participants(null, {});
+      ws.getSheets()[0] = pb;
+      const { ctx } = setup({ participants: ws });
+      const warn = [];
+      const d = JSON.parse(JSON.stringify(ctx.buildData_(ctx.SpreadsheetApp.openById('participants'), ctx.SpreadsheetApp.openById('model'), prev || null, warn)));
+      return { d, warn: Array.from(warn) };
+    };
+    const jorge = 4 + 1 + 1;                                   // sheet row of Jorge_B (header is row 4, Silverback row 5)
+    const plain = run(boardGrid());
+    A.deep(plain.d.winners, [['Jorge_B'], ['Silverback'], ['Silverback']], 'no colors: the single top score of each week');
+    A.ok(plain.d.pickem.every(p => !('droppedWeek' in p)), 'no colors, no dropped week');
+    A.deep(plain.warn, []);
+    const marked = run(boardGrid(), [[jorge, 3, '#008000'], [jorge, 4, '#ff0000'], [5, 5, '#1d8a3f']]);
+    A.deep(marked.d.winners, [['Jorge_B'], ['Silverback'], ['Silverback']]);
+    A.equal(marked.d.pickem.find(p => p.name === 'Jorge_B').droppedWeek, 2, 'red on week 2');
+    A.deep(marked.warn, []);
+    // a tie in week 3, with and without Yahoo's green
+    const tie = boardGrid().map((r, i) => i === 7 ? r.map((c, j) => j === 4 ? '101' : c) : r);   // This is our year also scores 101
+    const noMark = run(tie);
+    A.deep(noMark.d.winners[2], [], 'an unmarked tie stays open');
+    A.match(noMark.warn.join('\n'), /PickEm_Board: semana 3 tiene empate en el primer lugar \(Silverback, This is our year\) y la tabla no trae el verde de Yahoo/);
+    const green = run(tie, [[8, 5, '#00aa00']]);
+    A.deep(green.d.winners[2], ['This is our year'], 'Yahoo broke the tie, whoever it was');
+    A.deep(green.warn, []);
+    // a later plain paste keeps the mark while that week is unchanged
+    const carried = run(tie, [], green.d);
+    A.deep(carried.d.winners[2], ['This is our year']);
+    A.deep(carried.warn, []);
+    const changed = run(tie.map((r, i) => i === 7 ? r.map((c, j) => j === 4 ? '100' : c) : r), [], green.d);
+    A.deep(changed.d.winners[2], ['Silverback'], 'scores changed, so the old mark is not trusted');
+    // marks that contradict the scores
+    const odd = run(boardGrid(), [[7, 3, '#008000'], [jorge, 3, '#ff0000']]);
+    A.match(odd.warn.join('\n'), /semana 1, el verde de Yahoo \(Billy Beaner\) no está entre los de mayor puntaje \(Jorge_B\)/);
+    A.match(odd.warn.join('\n'), /Jorge_B, el rojo de Yahoo está en la semana 1 \(93\) pero Dropped dice 39/);
+    A.deep(odd.d.winners[0], ['Billy Beaner'], 'and Yahoo still wins');
+  }],
+
+  ['Yahoo marks: the warnings reach the Tribune table', () => {
+    const rows = boardGrid().map((r, i) => i === 7 ? r.map((c, j) => j === 4 ? '101' : c) : r);
+    const ws = participants(rows);
+    const { ctx } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    A.match(warnTable(tab(ws, 'Tribune')).map(x => x.text).join('\n'), /semana 3 tiene empate en el primer lugar/);
   }],
 ]);

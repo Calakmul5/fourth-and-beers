@@ -16,6 +16,7 @@ function makeSheet(name, rows) {
   const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [], validations: [], cleared: [], writes: 0, inserted: [] };
   let maxCols = 0, maxRows = 0;
   const bgs = {};
+  const fcs = {};                   // 'row,col' -> font color
   const vmap = {};                 // 'row,col' -> data validation (a checkbox is 'checkbox')
   const each = (row, col, nr, nc, fn) => { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) fn((row + i) + ',' + (col + j), row + i, col + j); };
   function range(row, col, nr, nc) {
@@ -33,6 +34,7 @@ function makeSheet(name, rows) {
       setValue(v) { return self.setValues([[v]]); },
       setBackground(c) { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { const k = (row + i) + ',' + (col + j); if (c == null) delete bgs[k]; else bgs[k] = c; } return self; },
       getBackgrounds() { const out = []; for (let i = 0; i < nr; i++) { const l = []; for (let j = 0; j < nc; j++) l.push(bgs[(row + i) + ',' + (col + j)] || '#ffffff'); out.push(l); } return out; },
+      setFontColor(c) { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) fcs[(row + i) + ',' + (col + j)] = c; return self; },
       setFontWeight(w) { log.bold.push([row, col, nr, nc, w]); return self; },
       insertCheckboxes() { log.checkboxes.push('r' + row + 'c' + col); each(row, col, nr, nc, k => { vmap[k] = 'checkbox'; }); return self; },
       getValues() { const out = []; for (let i = 0; i < nr; i++) { const l = []; for (let j = 0; j < nc; j++) { const line = data[row + i - 1]; l.push(line && line[col + j - 1] != null ? line[col + j - 1] : ''); } out.push(l); } return out; },
@@ -56,7 +58,7 @@ function makeSheet(name, rows) {
     getMaxRows: () => Math.max(data.length, 1000, maxRows),
     vmap: (r, c) => vmap[r + ',' + c] || null,
     insertRowsBefore(r, n) {
-      [bgs, vmap].forEach(m => { Object.keys(m).map(k => k.split(',').map(Number)).filter(p => p[0] >= r).sort((a, b) => b[0] - a[0]).forEach(p => { m[(p[0] + n) + ',' + p[1]] = m[p[0] + ',' + p[1]]; delete m[p[0] + ',' + p[1]]; }); });
+      [bgs, vmap, fcs].forEach(m => { Object.keys(m).map(k => k.split(',').map(Number)).filter(p => p[0] >= r).sort((a, b) => b[0] - a[0]).forEach(p => { m[(p[0] + n) + ',' + p[1]] = m[p[0] + ',' + p[1]]; delete m[p[0] + ',' + p[1]]; }); });
       for (let i = 0; i < n; i++) data.splice(r - 1, 0, []);
     },
     insertRowsAfter(r, n) { for (let i = 0; i < n; i++) data.splice(r, 0, []); maxRows = Math.max(maxRows, r + n); },
@@ -70,6 +72,7 @@ function makeSheet(name, rows) {
     getDataRange: () => ({
       getDisplayValues: () => pad(data).map(r => r.map(String)),
       getValues: () => pad(data),
+      getFontColors: () => pad(data).map((r, i) => r.map((c, j) => fcs[(i + 1) + ',' + (j + 1)] || '#000000')),
     }),
     getRange(a, b, c, d) {
       if (typeof a === 'string') { const m = /^([A-Z])(\d+)/.exec(a); return range(Number(m[2]), m[1].charCodeAt(0) - 64, 1, 1); }
@@ -77,6 +80,7 @@ function makeSheet(name, rows) {
     },
     setFrozenRows(n) { log.frozen = n; },
     setColumnWidth(c, w) { log.widths[c] = w; },
+    fc: (r, c) => fcs[r + ',' + c] || null,
     bg: (r, c) => bgs[r + ',' + (c || 1)] || null,
     rows: () => data,
   };

@@ -179,7 +179,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v3.2.0 c2.2.0
+      v3.3.0 c2.2.0
     </div>
   </div>
 </div>
@@ -360,6 +360,7 @@ T.normalize = function(D){
   };
   d.apodos = d.apodos || {};
   d.picks = d.picks && typeof d.picks === "object" ? d.picks : {};
+  d.winners = Array.isArray(d.winners) ? d.winners : [];
   d.strikes = d.strikes || {};
   d.fans = d.fans || {};
   d.survivorOut = d.survivorOut || [];
@@ -376,6 +377,7 @@ T.truncate = function(D, k){
     return {name:p.name, weeks:w, total:s-drop, dropped:drop};
   });
   d.survivorOut = (D.survivorOut||[]).filter(function(o){ return o.week==null || o.week<=k; });
+  d.winners = (D.winners||[]).slice(0,k);
   d.picks = {};
   Object.keys(D.picks||{}).forEach(function(w){ if (Number(w)<=k) d.picks[w] = D.picks[w]; });
   var later = {};
@@ -445,7 +447,11 @@ T.model = function(D){
   for (var k=0;k<N;k++){
     var scores = players.map(function(p){return p.w[k]});
     var top = max(scores);
-    M.weekly.push({k:k, max:top, avg:sum(scores)/players.length, winners:players.filter(function(p){return p.w[k]===top}).map(function(p){return p.name})});
+    // Yahoo names the winner (green font, tiebreakers applied). Without its mark the tied top scores share the week.
+    var tied = players.filter(function(p){return p.w[k]===top}).map(function(p){return p.name});
+    var canon = ((D.winners||[])[k] || []).map(normName);
+    var named = players.filter(function(p){return canon.indexOf(normName(p.name))>=0}).map(function(p){return p.name});
+    M.weekly.push({k:k, max:top, avg:sum(scores)/players.length, winners: named.length ? named : tied, yahoo: named.length>0});
   }
 
   // Regular season money

@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.9.0 c1.7.0
+// v2.10.0 c1.8.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -14,6 +14,11 @@
 //      editions/index.json lists the weeks. A week that has moved on is never touched again.
 //   8. Lists warnings in the Tribune tab (H:J, one per row: color, text, week, with a blank separator column G) and tints the rows involved when the last place
 //      is named more than once, or in two weeks in a row, and so on. It never blocks a publish or edits your text.
+//  11. Yahoo is canon for who won the week and which week was dropped. In the pasted weekly table a green font marks the
+//      week's winner (Yahoo already applied its tiebreakers) and a red font the dropped week. They are read from the cell
+//      font colors and published as data.json winners[] and pickem[].droppedWeek. Without colors (a plain-text paste)
+//      the marks from the previous data.json are kept when that week's scores did not change, a single top score
+//      wins by itself, and a tie nobody marked is listed as a warning.
 //  10. Ends every publish with a status message: a log line, a toast in the workbook and rows 7 to 10 of Picks_Board and PickEm_Board
 //      (OK, OK with warnings and the first two, or the error). Rows 1 to 6 hold the instructions for pasting (Group Picks, or
 //      Yahoo's weekly table in PickEm_Board) and row 11 marks the paste area, which starts at A12 in both tabs. All of it is rewritten if the tab is wiped. A table pasted
@@ -229,6 +234,7 @@ function installTriggers() {
 function buildData_(ss, model, prev, picksWarn) {
   var board = readBoard_(ss);
   syncPicks_(ss, board, picksWarn || []);
+  var winners = settleWinners_(board, prev, picksWarn || []);
   var strikes = readStrikes_(model || ss, board.names);
   return {
     survivorOut: survivorOut_(prev, strikes, board.week),
@@ -241,6 +247,7 @@ function buildData_(ss, model, prev, picksWarn) {
     updated: new Date().toISOString(),
     prizes: JSON.parse(JSON.stringify(PRIZES)),
     pickem: board.rows,
+    winners: winners,
     strikes: strikes,
     picks: readPicksLog_(ss)
   };
@@ -262,6 +269,8 @@ function readBoard_(ss) {
     ss.getSheets().map(function (t) { return JSON.stringify(t.getName()); }).join(', ') +
     '. If this is the wrong workbook, fix SHEET_ID in Script properties.');
   var values = gridOf_(sh);
+  var colors = [];
+  try { colors = sh.getDataRange().getFontColors(); } catch (e) { colors = []; }
 
   var h = -1;
   for (var i = 0; i < values.length; i++) {
@@ -276,11 +285,13 @@ function readBoard_(ss) {
   head.forEach(function (c, j) { var m = /^wk\s*(\d+)$/i.exec(c); if (m) wkC[Number(m[1]) - 1] = j; });
   if (nameC < 0 || !wkC.length) throw new Error('Could not find the name and week columns in ' + CFG.boardTab + '.');
 
-  var rows = [];
+  var rows = [], marks = [];
   for (var r = h + 1; r < values.length; r++) {
     var v = values[r], name = v[nameC];
     if (!name) continue;
     var weeks = wkC.map(function (j) { return toNum_(v[j]); });
+    var kinds = wkC.map(function (j) { return fontKind_(colors[r] && colors[r][j]); });
+    marks.push(kinds);
     rows.push({
       name: name,
       weeks: weeks,
@@ -298,7 +309,68 @@ function readBoard_(ss) {
   if (week === 0) throw new Error('No scores yet in ' + CFG.boardTab + '.');
   rows.forEach(function (p) { p.weeks = p.weeks.slice(0, week); });
 
-  return { rows: rows, week: week, names: rows.map(function (p) { return p.name; }) };
+  // Yahoo's marks: green = the week's winner, red = the dropped week
+  var winners = [], warn = [];
+  for (var w = 0; w < week; w++) {
+    winners.push(rows.filter(function (p, i) { return marks[i][w] === 'green'; }).map(function (p) { return p.name; }));
+  }
+  rows.forEach(function (p, i) {
+    var reds = [];
+    for (var w2 = 0; w2 < week; w2++) if (marks[i][w2] === 'red') reds.push(w2 + 1);
+    if (reds.length === 1) p.droppedWeek = reds[0];
+  });
+  return { rows: rows, week: week, names: rows.map(function (p) { return p.name; }), winners: winners, warn: warn };
+}
+
+/** 'green' or 'red' for the font colors Yahoo uses to mark the week's winner and the dropped week, '' for anything else. */
+function fontKind_(c) {
+  var m = /^#?([0-9a-f]{6})$/i.exec(String(c || '').trim());
+  if (!m) return '';
+  var r = parseInt(m[1].slice(0, 2), 16), g = parseInt(m[1].slice(2, 4), 16), b = parseInt(m[1].slice(4, 6), 16);
+  if (g >= 90 && g > r * 1.4 && g > b * 1.4) return 'green';
+  if (r >= 150 && r > g * 1.8 && r > b * 1.8) return 'red';
+  return '';
+}
+
+/**
+ * Settles the weekly winners. Yahoo's green mark wins. Without one, the mark from the previous data.json stands when that
+ * week's scores are unchanged, a single top score wins by itself, and a tie nobody marked stays empty (the page splits it)
+ * and is listed as a warning. Marks that contradict the scores are warned about. Returns winners[] (one list per week).
+ */
+function settleWinners_(board, prev, warn) {
+  var out = [];
+  for (var k = 0; k < board.week; k++) {
+    var scores = board.rows.map(function (p) { return p.weeks[k]; }), top = Math.max.apply(null, scores);
+    var tied = board.rows.filter(function (p) { return p.weeks[k] === top; }).map(function (p) { return p.name; });
+    var marked = board.winners[k] || [];
+    if (!marked.length && prev && prev.winners && prev.winners[k] && prev.winners[k].length && prev.pickem) {
+      var same = board.rows.every(function (p) {
+        var q = prev.pickem.filter(function (x) { return norm_(x.name) === norm_(p.name); })[0];
+        return q && q.weeks[k] === p.weeks[k];
+      });
+      if (same) marked = prev.winners[k];
+    }
+    if (marked.length) {
+      var off = marked.filter(function (n) { return tied.map(norm_).indexOf(norm_(n)) < 0; });
+      if (off.length) warn.push(CFG.boardTab + ': semana ' + (k + 1) + ', el verde de Yahoo (' + off.join(', ') + ') no está entre los de mayor puntaje (' + tied.join(', ') + '). Gana Yahoo, revisa el pegado.');
+      out.push(marked);
+    } else if (tied.length === 1) {
+      out.push(tied);
+    } else {
+      out.push([]);
+      warn.push(CFG.boardTab + ': semana ' + (k + 1) + ' tiene empate en el primer lugar (' + tied.join(', ') + ') y la tabla no trae el verde de Yahoo. Pega la tabla con formato para que gane quien dice Yahoo. Mientras, la página reparte el premio.');
+    }
+  }
+  board.rows.forEach(function (p) {
+    if (p.droppedWeek == null && prev && prev.pickem) {
+      var q = prev.pickem.filter(function (x) { return norm_(x.name) === norm_(p.name); })[0];
+      if (q && q.droppedWeek && q.weeks && p.weeks.length >= q.weeks.length && q.weeks.every(function (x, i) { return x === p.weeks[i]; })) p.droppedWeek = q.droppedWeek;
+    }
+    if (p.droppedWeek != null && p.dropped != null && p.weeks[p.droppedWeek - 1] !== p.dropped) {
+      warn.push(CFG.boardTab + ': ' + p.name + ', el rojo de Yahoo está en la semana ' + p.droppedWeek + ' (' + p.weeks[p.droppedWeek - 1] + ') pero Dropped dice ' + p.dropped + '. Gana Yahoo, revisa el pegado.');
+    }
+  });
+  return out;
 }
 
 /** Strikes keyed by Pick'em name, so the page shows one name per person. */
