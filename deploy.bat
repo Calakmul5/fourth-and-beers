@@ -1,19 +1,18 @@
 @echo off
 setlocal EnableExtensions
 rem ===========================================================================
-rem VERSION  v1.1.0 c1.1.0
+rem VERSION  v1.2.0 c1.2.0
 rem The only way to ship the leaderboard. Never run clasp push, git commit or
 rem git push by hand. In order:
 rem   0. Preflight: git and node present, no stale .git\index.lock, and every
-rem      changed versioned file (index.html, gas\Publish.js, gas-bound\Code.js,
+rem      changed versioned file (index.html, gas\Publish.js, gas\Code.js,
 rem      the architecture doc) has a bumped version stamp.
 rem   1. Run test.bat.
 rem   2. Sync: discard any local data.json change (only Publish.gs writes it),
 rem      then git pull --rebase so the remote data.json wins.
-rem   3. clasp push, run from gas\ (the publisher), then from gas-bound\ (the Publicar
-rem      button project, bound to the participants workbook, it uses the publisher
-rem      as a library at HEAD). gas-bound\.clasp.json is gitignored because it holds
-rem      the workbook id. Without it the second push is skipped with a notice.
+rem   3. clasp push, run from gas\ (one Apps Script project bound to the participants
+rem      workbook: Publish.js, Code.js and the manifest). gas\.clasp.json is gitignored
+rem      because it holds the workbook id, so deploy stops if it is missing.
 rem   4. Commit "Deploy page vX cX, publisher vY cY[: note]" and git push.
 rem Nothing is pushed if 0 to 2 fail. Nothing is committed if clasp push fails.
 rem
@@ -68,7 +67,7 @@ for /f "tokens=1,2,3,4,5,6" %%a in ('node test\versions.js print') do (
   set "BC=%%f"
 )
 if not defined BC (
-  echo Could not read the version stamps from index.html, gas\Publish.js and gas-bound\Code.js. Nothing pushed.
+  echo Could not read the version stamps from index.html, gas\Publish.js and gas\Code.js. Nothing pushed.
   exit /b 1
 )
 node test\versions.js check
@@ -112,9 +111,13 @@ if errorlevel 1 (
 
 rem ---- 3. Apps Script ----------------------------------------------------------
 echo.
-echo Pushing the publisher to Apps Script...
+echo Pushing the Apps Script project...
+if not exist gas\.clasp.json (
+  echo gas\.clasp.json is missing. Copy gas\.clasp.json.example to gas\.clasp.json and fill in the ids. Nothing pushed.
+  exit /b 1
+)
 pushd gas
-call clasp push
+call clasp push -f
 set "CLASPERR=%ERRORLEVEL%"
 popd
 if not "%CLASPERR%"=="0" (
@@ -123,24 +126,6 @@ if not "%CLASPERR%"=="0" (
   exit /b 1
 )
 
-rem The button project runs the publisher as a library at HEAD, so it goes second.
-if exist gas-bound\.clasp.json (
-  echo.
-  echo Pushing the Publicar button project to Apps Script...
-  pushd gas-bound
-  call clasp push -f
-  set "CLASPERR=%ERRORLEVEL%"
-  popd
-  if not "%CLASPERR%"=="0" (
-    echo.
-    echo clasp push failed for gas-bound. The publisher is already pushed. Nothing committed.
-    exit /b 1
-  )
-) else (
-  echo.
-  echo NOTE: gas-bound\.clasp.json is missing, so the Publicar button project was NOT pushed.
-  echo       Copy gas-bound\.clasp.json.example to gas-bound\.clasp.json and fill in the ids.
-)
 
 rem ---- 4. Commit and push ------------------------------------------------------
 call :git_retry add -A

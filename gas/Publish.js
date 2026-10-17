@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v3.1.0 c1.9.0
+// v3.1.1 c1.9.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -32,8 +32,8 @@
 //      Picks_Log. data.json "picks" is rebuilt from Picks_Log on every publish.
 //   It only commits when something other than "updated" changed, so running it often is harmless.
 //  13. publishLeaderboard() returns a status object {status, week, commitSha, updatedAt, message}, status being "published"
-//      or "no_changes". publishManual() is the Publicar button's entry point (the container-bound project in gas-bound
-//      calls it through this project as a library). It never throws and adds "busy" (another publish holds the lock,
+//      or "no_changes". publishManual() is the Publicar button's entry point (publishNow in Code.js, same project,
+//      which is bound to the participants workbook). It never throws and adds "busy" (another publish holds the lock,
 //      it waits only a few seconds) and "error" (message holds the reason).
 //
 // One-time setup (Project Settings > Script properties)

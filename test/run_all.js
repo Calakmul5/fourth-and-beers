@@ -12,7 +12,7 @@ const STATIC_CHECKS = [
 
 const TEST_SCRIPTS = [
   ['Publish.js (mock Apps Script)', 'publish.test.js'],
-  ['Publicar button, gas-bound (mock Apps Script)', 'bound.test.js'],
+  ['Publicar button, gas/Code.js (mock Apps Script)', 'bound.test.js'],
   ['index.html (jsdom)', 'page.test.js'],
 ];
 

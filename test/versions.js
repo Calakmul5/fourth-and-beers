@@ -12,7 +12,7 @@ const V = '(v\\d+\\.\\d+\\.\\d+) (c\\d+\\.\\d+\\.\\d+)';
 const FILES = {
   page: { file: 'index.html', re: new RegExp('^\\s*' + V + '\\s*$', 'm') },
   publisher: { file: 'gas/Publish.js', re: new RegExp('^// ' + V, 'm') },
-  bound: { file: 'gas-bound/Code.js', re: new RegExp('^// ' + V, 'm') },
+  bound: { file: 'gas/Code.js', re: new RegExp('^// ' + V, 'm') },
   doc: { file: 'docs/LEADERBOARD_ARCHITECTURE.html', re: new RegExp('<dt>This document</dt><dd>' + V + '</dd>') },
 };
 

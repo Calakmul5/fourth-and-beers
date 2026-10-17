@@ -1,15 +1,13 @@
-// Fourth & Beers 2026 - Publicar button, bound to the participants workbook
-// v1.0.0 c1.0.0
+// Fourth & Beers 2026 - Publicar button, same project as Publish.js (bound to the participants workbook)
+// v1.0.1 c1.0.0
 //
-// A drawing or image button in Sheets can only run a function of a script bound to that workbook, and the publisher
-// (gas/Publish.js) is a standalone project. This small project is bound to the workbook and adds the publisher as the
-// library "Leaderboard" (developmentMode, so it always runs the latest pushed code). It holds no logic of its own:
-// publishNow() shows a toast, calls Leaderboard.publishManual() and shows its status in a popup.
+// A drawing or image button in Sheets can only run a function of a script bound to that workbook, which is why the
+// whole project is bound. publishNow() shows a toast, calls publishManual() from Publish.js and shows its status
+// in a popup.
 //
 // One-time setup, from this project's editor
 //   1. Run setupPublishButton() and approve the permissions. It puts the button at K1 of the Tribune tab.
-//   2. Run publishNow() once and read the result. If it says Missing Script properties, copy GITHUB_TOKEN, GITHUB_REPO,
-//      SHEET_ID and MODEL_SHEET_ID from the publisher project's Script properties into this project's.
+//   2. Click the button once and read the popup.
 // The workbook also gets a "Tribune" menu with the same Publicar action (onOpen), so there is always a way to publish
 // that sits outside the cells.
 
@@ -30,7 +28,7 @@ function publishNow() {
   ss.toast('Publicando...', 'Fourth and Beers', 10);
   var result;
   try {
-    result = Leaderboard.publishManual();
+    result = publishManual();
   } catch (e) {
     result = { status: 'error', message: String(e && e.message ? e.message : e) };
   }
@@ -47,9 +45,7 @@ function publishMessage_(r, tz) {
   if (r.status === 'no_changes') return 'Sin cambios. data.json ya estaba al día.';
   if (r.status === 'busy') return 'Ya se está publicando. Intenta en un minuto.';
   var msg = String(r.message || (r.status ? 'estado desconocido ' + r.status : 'sin respuesta'));
-  var hint = /Missing Script properties/.test(msg)
-    ? ' Copia GITHUB_TOKEN, GITHUB_REPO, SHEET_ID y MODEL_SHEET_ID a las propiedades de este proyecto (Project Settings).' : '';
-  return 'No se publicó: ' + msg + hint;
+  return 'No se publicó: ' + msg;
 }
 
 /** Run once, safe to repeat. Puts the image button at K1 of the Tribune tab and assigns publishNow to it. */

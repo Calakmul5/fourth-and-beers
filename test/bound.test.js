@@ -1,6 +1,6 @@
 'use strict';
-// Mock-GAS tests for gas-bound/Code.js, the Publicar button project bound to the participants workbook.
-// No live Google access. The library "Leaderboard" is a stub that returns each status the publisher can give.
+// Mock-GAS tests for gas/Code.js, the Publicar button (same Apps Script project as Publish.js, bound to the
+// participants workbook). No live Google access. publishManual is a stub that returns each status the publisher can give.
 const fs = require('fs');
 const vm = require('vm');
 const path = require('path');
@@ -8,7 +8,7 @@ const { execFileSync } = require('child_process');
 const A = require('./assert');
 
 const ROOT = path.join(__dirname, '..');
-const BOUND = path.join(ROOT, 'gas-bound');
+const BOUND = path.join(ROOT, 'gas');
 const CODE = fs.readFileSync(path.join(BOUND, 'Code.js'), 'utf8');
 
 /** Loads Code.js with a fake workbook. opts.result: what Leaderboard.publishManual returns, opts.throws: it throws. */
@@ -38,7 +38,7 @@ function load(opts) {
   const ctx = {
     SpreadsheetApp: { getActive: () => ss, getUi: () => ui },
     Utilities: { formatDate: (d, tz, f) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d) },
-    Leaderboard: { publishManual: () => { events.push('library'); if (opts.throws) throw new Error(opts.throws); return opts.result; } },
+    publishManual: () => { events.push('publish'); if (opts.throws) throw new Error(opts.throws); return opts.result; },
   };
   vm.createContext(ctx);
   vm.runInContext(CODE, ctx, { filename: 'Code.js' });
@@ -55,9 +55,9 @@ function popup(result, extra) {
 }
 
 A.run('Publicar button (bound project)', [
-  ['published: toast first, then the library, then the popup with week, short sha and local time', () => {
+  ['published: toast first, then the publisher, then the popup with week, short sha and local time', () => {
     const ev = popup(PUBLISHED);
-    A.deep(ev, ['toast:Publicando...', 'library', 'alert:Publicado. Semana 6, commit abc1234, 13:42']);
+    A.deep(ev, ['toast:Publicando...', 'publish', 'alert:Publicado. Semana 6, commit abc1234, 13:42']);
   }],
 
   ['no_changes, busy: the exact Spanish messages', () => {
@@ -69,15 +69,14 @@ A.run('Publicar button (bound project)', [
     A.equal(popup({ status: 'error', message: 'GitHub write failed (409) for data.json' })[2], 'alert:No se publicó: GitHub write failed (409) for data.json');
   }],
 
-  ['error: missing properties adds the one-time fix', () => {
+  ['error: missing properties is shown as it is, the properties live in this same project', () => {
     const m = popup({ status: 'error', message: 'Missing Script properties. Set GITHUB_TOKEN, GITHUB_REPO and SHEET_ID in Project Settings.' })[2];
     A.match(m, /^alert:No se publicó: Missing Script properties/);
-    A.match(m, /Copia GITHUB_TOKEN, GITHUB_REPO, SHEET_ID y MODEL_SHEET_ID a las propiedades de este proyecto/);
   }],
 
-  ['a library that throws still ends in the error popup', () => {
+  ['a publisher that throws still ends in the error popup', () => {
     const ev = popup(null, { throws: 'Library not authorized' });
-    A.deep(ev, ['toast:Publicando...', 'library', 'alert:No se publicó: Library not authorized']);
+    A.deep(ev, ['toast:Publicando...', 'publish', 'alert:No se publicó: Library not authorized']);
   }],
 
   ['an unknown or empty status is an error popup, never a blank one', () => {
@@ -130,38 +129,41 @@ A.run('Publicar button (bound project)', [
     A.ok(!/\.(getRange|setValue|setValues|insertRow|insertColumn|deleteRow|deleteColumn|clear|moveRows|moveColumns)/.test(CODE.replace(/\/\/.*$/gm, '')), 'no cell is read, written, moved or cleared');
   }],
 
-  ['manifest: the publisher is the library "Leaderboard", always at HEAD, with explicit scopes', () => {
+  ['manifest: one project, no library, no web app, explicit scopes', () => {
     const man = JSON.parse(fs.readFileSync(path.join(BOUND, 'appsscript.json'), 'utf8'));
-    const lib = man.dependencies.libraries[0];
-    A.equal(lib.userSymbol, 'Leaderboard');
-    A.equal(lib.libraryId, JSON.parse(fs.readFileSync(path.join(ROOT, 'gas', '.clasp.json'), 'utf8')).scriptId, 'points at the publisher project');
-    A.equal(lib.developmentMode, true);
+    A.ok(!man.dependencies, 'no libraries');
     A.deep(man.oauthScopes.slice().sort(), [
       'https://www.googleapis.com/auth/script.container.ui',
       'https://www.googleapis.com/auth/script.external_request',
+      'https://www.googleapis.com/auth/script.scriptapp',
       'https://www.googleapis.com/auth/spreadsheets',
     ]);
     A.ok(!man.webapp, 'no web app');
   }],
 
-  ['the publisher exposes the entry point the library call needs', () => {
+  ['Code.js and Publish.js load into one project without clashing, and publishNow reaches the real publishManual', () => {
     const pub = fs.readFileSync(path.join(ROOT, 'gas', 'Publish.js'), 'utf8');
+    const names = src => (src.match(/^(?:function|var)\s+([A-Za-z_$][\w$]*)/gm) || []).map(l => l.replace(/^(?:function|var)\s+/, ''));
+    const mine = new Set(names(CODE));
+    const clash = names(pub).filter(n => mine.has(n));
+    A.deep(clash, [], 'no shared global names');
+    A.match(CODE, /result = publishManual\(\);/);
     A.match(pub, /^function publishManual\(\)/m);
-    A.match(CODE, /Leaderboard\.publishManual\(\)/);
+    A.ok(!/Leaderboard\./.test(CODE), 'no library call left');
   }],
 
   ['privacy: the workbook id never reaches git. .clasp.json is ignored, only the template is tracked', () => {
     const ign = fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8').split(/\r?\n/);
-    A.ok(ign.includes('gas-bound/.clasp.json'), '.gitignore lists gas-bound/.clasp.json');
-    A.ok(!fs.existsSync(path.join(BOUND, '.clasp.json')) || /gas-bound\/\.clasp\.json/.test(execFileSync('git', ['check-ignore', '-v', 'gas-bound/.clasp.json'], { cwd: ROOT, encoding: 'utf8' })), 'git ignores it');
-    const tracked = execFileSync('git', ['ls-files', 'gas-bound'], { cwd: ROOT, encoding: 'utf8' }).split(/\r?\n/);
-    A.ok(!tracked.includes('gas-bound/.clasp.json'), 'not tracked');
+    A.ok(ign.includes('gas/.clasp.json'), '.gitignore lists gas/.clasp.json');
+    A.ok(!fs.existsSync(path.join(BOUND, '.clasp.json')) || /gas\/\.clasp\.json/.test(execFileSync('git', ['check-ignore', '-v', 'gas/.clasp.json'], { cwd: ROOT, encoding: 'utf8' })), 'git ignores it');
+    const tracked = execFileSync('git', ['ls-files', 'gas'], { cwd: ROOT, encoding: 'utf8' }).split(/\r?\n/);
+    A.ok(!tracked.includes('gas/.clasp.json'), 'not tracked');
     const ex = JSON.parse(fs.readFileSync(path.join(BOUND, '.clasp.json.example'), 'utf8'));
     A.match(ex.scriptId, /^SCRIPT_ID/);
     A.match(ex.parentId[0], /^PARTICIPANTS/);
     ['Code.js', 'appsscript.json', '.clasp.json.example'].forEach(f => {
       const text = fs.readFileSync(path.join(BOUND, f), 'utf8');
-      A.ok(!/[A-Za-z0-9_-]{40,}/.test(text.replace(/"libraryId": "[^"]+"/, '')), f + ' holds no id or token');
+      A.ok(!/[A-Za-z0-9_-]{40,}/.test(text), f + ' holds no id or token');
     });
   }],
 
