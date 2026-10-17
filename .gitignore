@@ -1,1 +1,3 @@
 node_modules/
+# the Publicar button project is bound to the participants workbook, its .clasp.json carries the workbook id
+gas-bound/.clasp.json

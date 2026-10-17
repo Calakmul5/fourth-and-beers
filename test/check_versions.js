@@ -14,7 +14,7 @@ function findIn(text, pattern, label) {
 
 A.run('Version stamps', [
   ['page, publisher and doc each carry a stamp', () => {
-    ['page', 'publisher', 'doc'].forEach(k => A.ok(V.versionOf(k), k + ' stamp'));
+    ['page', 'publisher', 'bound', 'doc'].forEach(k => A.ok(V.versionOf(k), k + ' stamp'));
   }],
   ['the doc masthead and footer agree', () => {
     const doc = V.read(V.FILES.doc.file);
@@ -28,6 +28,8 @@ A.run('Version stamps', [
     const page = V.versionOf('page'), pub = V.versionOf('publisher');
     A.equal(findIn(doc, '<dt>Page</dt><dd>' + ST + '</dd>', 'masthead page version'), page, 'masthead page version');
     A.equal(findIn(doc, '<dt>Publisher</dt><dd>' + ST + '</dd>', 'masthead publisher version'), pub, 'masthead publisher version');
+    A.equal(findIn(doc, '<dt>Publicar button</dt><dd>' + ST + '</dd>', 'masthead button version'), V.versionOf('bound'), 'masthead button version');
+    A.equal(findIn(doc, 'gas-bound/Code\\.js</td><td class="m">' + ST + '</td>', 'source table button version'), V.versionOf('bound'), 'source table button version');
     A.equal(findIn(doc, 'index\\.html</td><td class="m">' + ST + '</td>', 'source table page version'), page, 'source table page version');
     A.equal(findIn(doc, 'Publish\\.gs</td><td class="m">' + ST + '</td>', 'source table publisher version'), pub, 'source table publisher version');
     A.equal(findIn(doc, '<title>index\\.html ' + ST + '\\.', 'diagram node page version'), page, 'diagram node page version');
@@ -37,6 +39,7 @@ A.run('Version stamps', [
     const get = f => findIn(md, '(?:^|\\n)- ' + f.replace(/\./g, '\\.') + ' ' + ST, f + ' line in CLAUDE.md');
     A.equal(get('index.html'), V.versionOf('page'), 'CLAUDE.md index.html');
     A.equal(get('Publish.js'), V.versionOf('publisher'), 'CLAUDE.md Publish.js');
+    A.equal(get('gas-bound/Code.js'), V.versionOf('bound'), 'CLAUDE.md gas-bound/Code.js');
     A.equal(get('docs/LEADERBOARD_ARCHITECTURE.html'), V.versionOf('doc'), 'CLAUDE.md doc');
   }],
 ]);

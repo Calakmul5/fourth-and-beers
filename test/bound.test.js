@@ -1,0 +1,175 @@
+'use strict';
+// Mock-GAS tests for gas-bound/Code.js, the Publicar button project bound to the participants workbook.
+// No live Google access. The library "Leaderboard" is a stub that returns each status the publisher can give.
+const fs = require('fs');
+const vm = require('vm');
+const path = require('path');
+const { execFileSync } = require('child_process');
+const A = require('./assert');
+
+const ROOT = path.join(__dirname, '..');
+const BOUND = path.join(ROOT, 'gas-bound');
+const CODE = fs.readFileSync(path.join(BOUND, 'Code.js'), 'utf8');
+
+/** Loads Code.js with a fake workbook. opts.result: what Leaderboard.publishManual returns, opts.throws: it throws. */
+function load(opts) {
+  opts = opts || {};
+  const events = [];
+  const images = (opts.images || []).slice();
+  const menus = [];
+  const sheet = {
+    getImages: () => images,
+    insertImage(url, col, row, ox, oy) {
+      const img = { url, col, row, ox, oy, script: null, assignScript(fn) { img.script = fn; return img; }, getScriptAssigned: () => img.script, remove() { images.splice(images.indexOf(img), 1); events.push('remove'); } };
+      images.push(img); events.push('insert');
+      return img;
+    },
+  };
+  const ss = {
+    toast: (m, t, s) => events.push('toast:' + m),
+    getSpreadsheetTimeZone: () => 'America/Chicago',
+    getSheetByName: n => (opts.noTab || n !== 'Tribune') ? null : sheet,
+  };
+  const ui = {
+    ButtonSet: { OK: 'OK' },
+    alert: (title, msg, buttons) => events.push('alert:' + msg),
+    createMenu: name => { const m = { name, items: [], addItem(l, f) { m.items.push([l, f]); return m; }, addToUi() { menus.push(m); } }; return m; },
+  };
+  const ctx = {
+    SpreadsheetApp: { getActive: () => ss, getUi: () => ui },
+    Utilities: { formatDate: (d, tz, f) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d) },
+    Leaderboard: { publishManual: () => { events.push('library'); if (opts.throws) throw new Error(opts.throws); return opts.result; } },
+  };
+  vm.createContext(ctx);
+  vm.runInContext(CODE, ctx, { filename: 'Code.js' });
+  ctx._events = events; ctx._images = images; ctx._menus = menus;
+  return ctx;
+}
+
+const PUBLISHED = { status: 'published', week: 6, commitSha: 'abc1234def5678', updatedAt: '2026-10-17T18:42:10.000Z', message: 'Committed data.json (week 6).' };
+
+function popup(result, extra) {
+  const ctx = load(Object.assign({ result }, extra || {}));
+  ctx.publishNow();
+  return ctx._events;
+}
+
+A.run('Publicar button (bound project)', [
+  ['published: toast first, then the library, then the popup with week, short sha and local time', () => {
+    const ev = popup(PUBLISHED);
+    A.deep(ev, ['toast:Publicando...', 'library', 'alert:Publicado. Semana 6, commit abc1234, 13:42']);
+  }],
+
+  ['no_changes, busy: the exact Spanish messages', () => {
+    A.equal(popup({ status: 'no_changes', week: 6, commitSha: '', updatedAt: '', message: 'No changes' })[2], 'alert:Sin cambios. data.json ya estaba al día.');
+    A.equal(popup({ status: 'busy', week: 0, commitSha: '', updatedAt: '', message: '' })[2], 'alert:Ya se está publicando. Intenta en un minuto.');
+  }],
+
+  ['error: the reason follows "No se publicó:"', () => {
+    A.equal(popup({ status: 'error', message: 'GitHub write failed (409) for data.json' })[2], 'alert:No se publicó: GitHub write failed (409) for data.json');
+  }],
+
+  ['error: missing properties adds the one-time fix', () => {
+    const m = popup({ status: 'error', message: 'Missing Script properties. Set GITHUB_TOKEN, GITHUB_REPO and SHEET_ID in Project Settings.' })[2];
+    A.match(m, /^alert:No se publicó: Missing Script properties/);
+    A.match(m, /Copia GITHUB_TOKEN, GITHUB_REPO, SHEET_ID y MODEL_SHEET_ID a las propiedades de este proyecto/);
+  }],
+
+  ['a library that throws still ends in the error popup', () => {
+    const ev = popup(null, { throws: 'Library not authorized' });
+    A.deep(ev, ['toast:Publicando...', 'library', 'alert:No se publicó: Library not authorized']);
+  }],
+
+  ['an unknown or empty status is an error popup, never a blank one', () => {
+    A.match(popup({ status: 'weird' })[2], /^alert:No se publicó: estado desconocido weird/);
+    A.match(popup(undefined)[2], /^alert:No se publicó: sin respuesta/);
+  }],
+
+  ['the Tribune menu offers Publicar and runs publishNow', () => {
+    const ctx = load({});
+    ctx.onOpen();
+    A.equal(ctx._menus.length, 1);
+    A.equal(ctx._menus[0].name, 'Tribune');
+    A.deep(ctx._menus[0].items, [['Publicar', 'publishNow']]);
+  }],
+
+  ['setupPublishButton puts the image at K1 on Tribune and assigns publishNow', () => {
+    const ctx = load({});
+    ctx.setupPublishButton();
+    A.equal(ctx._images.length, 1);
+    const img = ctx._images[0];
+    A.equal(img.col, 11, 'column K');
+    A.equal(img.row, 1);
+    A.equal(img.script, 'publishNow');
+    A.match(img.url, /^https:\/\/[a-z0-9-]+\.github\.io\/fourth-and-beers\/assets\/publicar\.png$/);
+  }],
+
+  ['setupPublishButton is repeatable: it replaces its own button and leaves other images alone', () => {
+    const other = { script: 'otraCosa', getScriptAssigned: () => 'otraCosa', remove() { throw new Error('touched a foreign image'); } };
+    const ctx = load({});
+    ctx._images.push(other);
+    ctx.setupPublishButton(); ctx.setupPublishButton();
+    A.equal(ctx._images.filter(i => i.script === 'publishNow').length, 1, 'one button');
+    A.ok(ctx._images.includes(other), 'foreign image kept');
+  }],
+
+  ['setupPublishButton without a Tribune tab says so', () => {
+    let msg = '';
+    try { load({ noTab: true }).setupPublishButton(); } catch (e) { msg = e.message; }
+    A.match(msg, /No hay pestaña Tribune/);
+  }],
+
+  ['placement: K1 is right of everything Publish.js writes on the Tribune tab, and the button writes no cell', () => {
+    const pub = fs.readFileSync(path.join(ROOT, 'gas', 'Publish.js'), 'utf8');
+    const warnCol = Number(/var WARN_COL = (\d+)/.exec(pub)[1]);
+    const warnWidth = /var WARN_HEADER = \[([^\]]*)\]/.exec(pub)[1].split(',').length;
+    const lastUsed = warnCol + warnWidth - 1;           // J
+    const buttonCol = Number(/var BUTTON_COL = (\d+)/.exec(CODE)[1]);
+    A.equal(lastUsed, 10, 'Warnings table ends at J');
+    A.ok(buttonCol > lastUsed, 'button column ' + buttonCol + ' is right of ' + lastUsed);
+    A.ok(!/\.(getRange|setValue|setValues|insertRow|insertColumn|deleteRow|deleteColumn|clear|moveRows|moveColumns)/.test(CODE.replace(/\/\/.*$/gm, '')), 'no cell is read, written, moved or cleared');
+  }],
+
+  ['manifest: the publisher is the library "Leaderboard", always at HEAD, with explicit scopes', () => {
+    const man = JSON.parse(fs.readFileSync(path.join(BOUND, 'appsscript.json'), 'utf8'));
+    const lib = man.dependencies.libraries[0];
+    A.equal(lib.userSymbol, 'Leaderboard');
+    A.equal(lib.libraryId, JSON.parse(fs.readFileSync(path.join(ROOT, 'gas', '.clasp.json'), 'utf8')).scriptId, 'points at the publisher project');
+    A.equal(lib.developmentMode, true);
+    A.deep(man.oauthScopes.slice().sort(), [
+      'https://www.googleapis.com/auth/script.container.ui',
+      'https://www.googleapis.com/auth/script.external_request',
+      'https://www.googleapis.com/auth/spreadsheets',
+    ]);
+    A.ok(!man.webapp, 'no web app');
+  }],
+
+  ['the publisher exposes the entry point the library call needs', () => {
+    const pub = fs.readFileSync(path.join(ROOT, 'gas', 'Publish.js'), 'utf8');
+    A.match(pub, /^function publishManual\(\)/m);
+    A.match(CODE, /Leaderboard\.publishManual\(\)/);
+  }],
+
+  ['privacy: the workbook id never reaches git. .clasp.json is ignored, only the template is tracked', () => {
+    const ign = fs.readFileSync(path.join(ROOT, '.gitignore'), 'utf8').split(/\r?\n/);
+    A.ok(ign.includes('gas-bound/.clasp.json'), '.gitignore lists gas-bound/.clasp.json');
+    A.ok(!fs.existsSync(path.join(BOUND, '.clasp.json')) || /gas-bound\/\.clasp\.json/.test(execFileSync('git', ['check-ignore', '-v', 'gas-bound/.clasp.json'], { cwd: ROOT, encoding: 'utf8' })), 'git ignores it');
+    const tracked = execFileSync('git', ['ls-files', 'gas-bound'], { cwd: ROOT, encoding: 'utf8' }).split(/\r?\n/);
+    A.ok(!tracked.includes('gas-bound/.clasp.json'), 'not tracked');
+    const ex = JSON.parse(fs.readFileSync(path.join(BOUND, '.clasp.json.example'), 'utf8'));
+    A.match(ex.scriptId, /^SCRIPT_ID/);
+    A.match(ex.parentId[0], /^PARTICIPANTS/);
+    ['Code.js', 'appsscript.json', '.clasp.json.example'].forEach(f => {
+      const text = fs.readFileSync(path.join(BOUND, f), 'utf8');
+      A.ok(!/[A-Za-z0-9_-]{40,}/.test(text.replace(/"libraryId": "[^"]+"/, '')), f + ' holds no id or token');
+    });
+  }],
+
+  ['the button image is a real 200x48 PNG that Pages serves from assets/', () => {
+    const png = fs.readFileSync(path.join(ROOT, 'assets', 'publicar.png'));
+    A.equal(png.slice(1, 4).toString('latin1'), 'PNG');
+    A.equal(png.readUInt32BE(16), 200, 'width');
+    A.equal(png.readUInt32BE(20), 48, 'height');
+    A.ok(png.length < 20000, 'small');
+  }],
+]);

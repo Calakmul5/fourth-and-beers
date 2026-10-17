@@ -1,16 +1,19 @@
 @echo off
 setlocal EnableExtensions
 rem ===========================================================================
-rem VERSION  v1.0.0 c1.0.0
+rem VERSION  v1.1.0 c1.1.0
 rem The only way to ship the leaderboard. Never run clasp push, git commit or
 rem git push by hand. In order:
 rem   0. Preflight: git and node present, no stale .git\index.lock, and every
-rem      changed versioned file (index.html, gas\Publish.js, the architecture
-rem      doc) has a bumped version stamp.
+rem      changed versioned file (index.html, gas\Publish.js, gas-bound\Code.js,
+rem      the architecture doc) has a bumped version stamp.
 rem   1. Run test.bat.
 rem   2. Sync: discard any local data.json change (only Publish.gs writes it),
 rem      then git pull --rebase so the remote data.json wins.
-rem   3. clasp push, run from gas\.
+rem   3. clasp push, run from gas\ (the publisher), then from gas-bound\ (the Publicar
+rem      button project, bound to the participants workbook, it uses the publisher
+rem      as a library at HEAD). gas-bound\.clasp.json is gitignored because it holds
+rem      the workbook id. Without it the second push is skipped with a notice.
 rem   4. Commit "Deploy page vX cX, publisher vY cY[: note]" and git push.
 rem Nothing is pushed if 0 to 2 fail. Nothing is committed if clasp push fails.
 rem
@@ -54,14 +57,18 @@ set "PV="
 set "PC="
 set "UV="
 set "UC="
-for /f "tokens=1,2,3,4" %%a in ('node test\versions.js print') do (
+set "BV="
+set "BC="
+for /f "tokens=1,2,3,4,5,6" %%a in ('node test\versions.js print') do (
   set "PV=%%a"
   set "PC=%%b"
   set "UV=%%c"
   set "UC=%%d"
+  set "BV=%%e"
+  set "BC=%%f"
 )
-if not defined UC (
-  echo Could not read the version stamps from index.html and gas\Publish.js. Nothing pushed.
+if not defined BC (
+  echo Could not read the version stamps from index.html, gas\Publish.js and gas-bound\Code.js. Nothing pushed.
   exit /b 1
 )
 node test\versions.js check
@@ -71,9 +78,9 @@ if errorlevel 1 (
   echo Bump v for functionality, c for content, then run deploy.bat again. Nothing pushed.
   exit /b 1
 )
-set "MSG=Deploy page %PV% %PC%, publisher %UV% %UC%"
+set "MSG=Deploy page %PV% %PC%, publisher %UV% %UC%, button %BV% %BC%"
 if defined NOTE set "MSG=%MSG%: %NOTE%"
-echo Deploying page %PV% %PC%, publisher %UV% %UC%.
+echo Deploying page %PV% %PC%, publisher %UV% %UC%, button %BV% %BC%.
 
 rem ---- 1. Tests --------------------------------------------------------------
 call "%~dp0test.bat"
@@ -114,6 +121,25 @@ if not "%CLASPERR%"=="0" (
   echo.
   echo clasp push failed. Nothing committed.
   exit /b 1
+)
+
+rem The button project runs the publisher as a library at HEAD, so it goes second.
+if exist gas-bound\.clasp.json (
+  echo.
+  echo Pushing the Publicar button project to Apps Script...
+  pushd gas-bound
+  call clasp push -f
+  set "CLASPERR=%ERRORLEVEL%"
+  popd
+  if not "%CLASPERR%"=="0" (
+    echo.
+    echo clasp push failed for gas-bound. The publisher is already pushed. Nothing committed.
+    exit /b 1
+  )
+) else (
+  echo.
+  echo NOTE: gas-bound\.clasp.json is missing, so the Publicar button project was NOT pushed.
+  echo       Copy gas-bound\.clasp.json.example to gas-bound\.clasp.json and fill in the ids.
 )
 
 rem ---- 4. Commit and push ------------------------------------------------------

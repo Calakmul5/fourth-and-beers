@@ -109,6 +109,7 @@ function setup(o) {
     model: o.model || model(o.field),
     github,
     props: o.props,
+    lockBusy: o.lockBusy,
   });
   return { ctx, github };
 }
@@ -265,7 +266,7 @@ A.run('Publish.js', [
   ['publishLeaderboard: edition, index, then data.json; no-change skip; change commits again', () => {
     const { ctx, github } = setup();
     const r1 = ctx.publishLeaderboard();
-    A.match(r1, /Committed editions\/semana-03\.json, editions\/index\.json, data\.json \(week 3\)/);
+    A.match(r1.message, /Committed editions\/semana-03\.json, editions\/index\.json, data\.json \(week 3\)/);
     A.deep(github.state.puts.map(p => p.path), ['editions/semana-03.json', 'editions/index.json', 'data.json'], 'data.json goes last');
     A.deep(github.state.puts.map(p => p.message), ['Semana 3: edición archivada', 'Semana 3: índice de ediciones', 'Semana 3: tabla actualizada']);
     A.ok(github.state.puts.every(p => !p.hadSha), 'creating files sends no sha');
@@ -275,14 +276,14 @@ A.run('Publish.js', [
     A.equal(JSON.parse(github.state.file.text).week, 3);
 
     const r2 = ctx.publishLeaderboard();
-    A.match(r2, /No changes, nothing committed/);
+    A.match(r2.message, /No changes, nothing committed/);
     A.equal(github.state.puts.length, 3, 'same numbers, only the timestamp differs, no commit');
 
     // A score changes in the sheet. Edition and data.json update, the index does not.
     const rows = boardGrid().map((r, i) => i === 4 ? r.map((c, j) => j === 4 ? '88' : c) : r);
     const ctx2 = loadPublisher({ participants: participants(rows), model: model(), github });
     const r3 = ctx2.publishLeaderboard();
-    A.match(r3, /Committed editions\/semana-03\.json, data\.json/);
+    A.match(r3.message, /Committed editions\/semana-03\.json, data\.json/);
     A.equal(github.state.puts.length, 5);
     A.ok(github.state.puts[3].hadSha && github.state.puts[4].hadSha, 'updating sends the sha it read');
   }],
@@ -293,7 +294,7 @@ A.run('Publish.js', [
     const frozen = github.state.files['editions/semana-03.json'];
     const frozenText = frozen.text, frozenSha = frozen.sha;
     const ctx2 = loadPublisher({ participants: participants(boardWeek4()), model: model(), github });
-    A.match(ctx2.publishLeaderboard(), /Committed editions\/semana-04\.json, editions\/index\.json, data\.json \(week 4\)/);
+    A.match(ctx2.publishLeaderboard().message, /Committed editions\/semana-04\.json, editions\/index\.json, data\.json \(week 4\)/);
     A.deep(JSON.parse(github.state.files['editions/index.json'].text), { weeks: [3, 4] });
     A.equal(JSON.parse(github.state.files['editions/semana-04.json'].text).week, 4);
     A.equal(github.state.files['editions/semana-03.json'].text, frozenText, 'week 3 text untouched');
@@ -309,7 +310,7 @@ A.run('Publish.js', [
     delete github.state.files['editions/semana-03.json'];
     delete github.state.files['editions/index.json'];
     const before = github.state.puts.length;
-    A.match(ctx.publishLeaderboard(), /Committed editions\/semana-03\.json, editions\/index\.json \(week 3\)/);
+    A.match(ctx.publishLeaderboard().message, /Committed editions\/semana-03\.json, editions\/index\.json \(week 3\)/);
     A.deep(github.state.puts.slice(before).map(p => p.path), ['editions/semana-03.json', 'editions/index.json'], 'data.json left alone');
   }],
 
@@ -329,7 +330,7 @@ A.run('Publish.js', [
     ctx.publishLeaderboard();
     const field = FIELD.map(r => r[0] === 'My First-Rate Pick Set' ? [r[0], '3', r[2]] : r);
     const ctx2 = loadPublisher({ participants: participants(), model: model(field), github });
-    A.match(ctx2.publishLeaderboard(), /Committed/);
+    A.match(ctx2.publishLeaderboard().message, /Committed/);
     const written = JSON.parse(github.state.file.text);
     A.deep(written.survivorOut.map(o => o.name).sort(), ['KinkyKing', 'Steel Man']);
   }],
@@ -338,15 +339,15 @@ A.run('Publish.js', [
     const { ctx, github } = setup();
     ctx.publishLeaderboard();
     const n = github.state.puts.length;
-    A.match(ctx.publishLeaderboard(), /No changes/);
+    A.match(ctx.publishLeaderboard().message, /No changes/);
     A.equal(github.state.puts.length, n, 'same rows, no commit');
     const checked = TRIBUNE.map(r => r[4] === 'No marcado.' ? [r[0], r[1], r[2], r[3], r[4], 'TRUE'] : r);
     const ctx2 = loadPublisher({ participants: participants(null, { tribune: checked }), model: model(), github });
-    A.match(ctx2.publishLeaderboard(), /Committed/);
+    A.match(ctx2.publishLeaderboard().message, /Committed/);
     A.ok(JSON.parse(github.state.file.text).tribune.columna.some(x => x.texto === 'No marcado.'), 'it is in data.json');
     const edited = checked.map(r => r[4] === 'Se roasteó solo.' ? [r[0], r[1], r[2], r[3], 'Texto cambiado.', r[5]] : r);
     const ctx3 = loadPublisher({ participants: participants(null, { tribune: edited }), model: model(), github });
-    A.match(ctx3.publishLeaderboard(), /Committed/);
+    A.match(ctx3.publishLeaderboard().message, /Committed/);
     A.ok(JSON.parse(github.state.file.text).tribune.columna.some(x => x.texto === 'Texto cambiado.'), 'an edited Texto commits');
   }],
 
@@ -379,6 +380,105 @@ A.run('Publish.js', [
     let msg = '';
     try { ctx.publishLeaderboard(); } catch (e) { msg = e.message; }
     A.match(msg, /GitHub write failed \(409\) for data\.json/);
+  }],
+
+  ['status: published carries week, commit sha, updatedAt and the commit message', () => {
+    const { ctx, github } = setup();
+    const r = ctx.publishLeaderboard();
+    A.equal(r.status, 'published');
+    A.equal(r.week, 3);
+    A.equal(r.commitSha, 'commit3', 'sha of the last commit, data.json');
+    A.equal(r.commitSha, github.state.puts.length ? 'commit' + github.state.n : '', 'same sha the repo gave');
+    A.equal(r.updatedAt, JSON.parse(github.state.file.text).updated, 'updatedAt is the data.json timestamp');
+    A.match(r.message, /^Committed editions\/semana-03\.json, editions\/index\.json, data\.json/);
+    A.deep(Object.keys(r).sort(), ['commitSha', 'message', 'status', 'updatedAt', 'week']);
+  }],
+
+  ['status: no_changes when nothing but the timestamp differs', () => {
+    const { ctx, github } = setup();
+    ctx.publishLeaderboard();
+    const n = github.state.puts.length;
+    const r = ctx.publishLeaderboard();
+    A.equal(r.status, 'no_changes');
+    A.equal(r.week, 3);
+    A.equal(r.commitSha, '');
+    A.match(r.message, /^No changes, nothing committed/);
+    A.equal(github.state.puts.length, n);
+  }],
+
+  ['status: publishManual publishes, then reports no_changes, and never throws', () => {
+    const { ctx, github } = setup();
+    const r1 = ctx.publishManual();
+    A.equal(r1.status, 'published');
+    A.equal(r1.week, 3);
+    A.ok(/^commit\d+$/.test(r1.commitSha), 'sha');
+    A.equal(github.state.puts.length, 3);
+    A.equal(ctx.publishManual().status, 'no_changes');
+    A.equal(github.state.puts.length, 3, 'a second click commits nothing');
+  }],
+
+  ['status: publishManual turns a GitHub failure into error with the reason', () => {
+    const github = makeGithub('{"week":1}');
+    const { ctx } = setup({ github });
+    github.state.files['data.json'].sha = 'changed-under-us';
+    const realFetch = github.fetch;
+    ctx.UrlFetchApp.fetch = (url, opts) => {
+      const r = realFetch(url, opts);
+      if ((!opts || !opts.method) && /contents\/data\.json/.test(url)) {
+        return { getResponseCode: () => 200, getContentText: () => JSON.stringify({ sha: 'stale', content: Buffer.from('{"week":1}').toString('base64') }) };
+      }
+      return r;
+    };
+    let r;
+    try { r = ctx.publishManual(); } catch (e) { throw new Error('publishManual threw: ' + e.message); }
+    A.equal(r.status, 'error');
+    A.match(r.message, /GitHub write failed \(409\) for data\.json/);
+    A.equal(r.commitSha, '');
+    A.equal(ctx._lock.held, false, 'lock released after an error');
+  }],
+
+  ['status: publishManual with missing script properties is an error, publishLeaderboard still throws', () => {
+    const { ctx } = setup({ props: { GITHUB_TOKEN: '' } });
+    const r = ctx.publishManual();
+    A.equal(r.status, 'error');
+    A.match(r.message, /Missing Script properties/);
+    let msg = '';
+    try { ctx.publishLeaderboard(); } catch (e) { msg = e.message; }
+    A.match(msg, /Missing Script properties/, 'the trigger path keeps failing loudly');
+  }],
+
+  ['lock: a busy lock returns busy, touches nothing and never releases a lock it does not hold', () => {
+    const { ctx, github } = setup({ lockBusy: true });
+    const r = ctx.publishManual();
+    A.equal(r.status, 'busy');
+    A.equal(r.commitSha, '');
+    A.equal(github.state.puts.length, 0, 'nothing committed');
+    A.equal(github.state.gets, 0, 'GitHub not even read');
+    A.equal(ctx._lock.releases, 0, 'no release without a hold');
+    A.ok(ctx._lock.tries[0] > 0 && ctx._lock.tries[0] <= 10000, 'the button waits a few seconds at most: ' + ctx._lock.tries[0]);
+  }],
+
+  ['lock: the button takes the lock while it publishes and releases it after', () => {
+    const { ctx } = setup();
+    let heldDuring = null;
+    const realFetch = ctx.UrlFetchApp.fetch;
+    ctx.UrlFetchApp.fetch = (u, o) => { heldDuring = ctx._lock.held; return realFetch(u, o); };
+    ctx.publishManual();
+    A.equal(heldDuring, true, 'lock held during the GitHub calls');
+    A.equal(ctx._lock.held, false, 'released after');
+    A.equal(ctx._lock.releases, 1);
+  }],
+
+  ['lock: triggers still wait for the lock (waitLock), only the button gives up', () => {
+    const { ctx } = setup();
+    ctx.publishLeaderboard();
+    A.equal(ctx._lock.waits, 1);
+    A.equal(ctx._lock.tries.length, 0);
+    A.equal(ctx._lock.releases, 1);
+    const { ctx: c2 } = setup();
+    c2.publishManual();
+    A.equal(c2._lock.waits, 0);
+    A.equal(c2._lock.tries.length, 1);
   }],
 
   ['onBoardEdit publishes for PickEm_Board, Picks_Board and Tribune only', () => {

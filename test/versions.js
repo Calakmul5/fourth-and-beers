@@ -1,6 +1,6 @@
 'use strict';
 // Reads the version stamps (v functionality, c content) and checks they were bumped.
-//   node versions.js print   one line: page v, page c, publisher v, publisher c
+//   node versions.js print   one line: page v c, publisher v c, bound script v c
 //   node versions.js check   exits 1 if a file changed since HEAD but its stamp did not
 const fs = require('fs');
 const path = require('path');
@@ -12,6 +12,7 @@ const V = '(v\\d+\\.\\d+\\.\\d+) (c\\d+\\.\\d+\\.\\d+)';
 const FILES = {
   page: { file: 'index.html', re: new RegExp('^\\s*' + V + '\\s*$', 'm') },
   publisher: { file: 'gas/Publish.js', re: new RegExp('^// ' + V, 'm') },
+  bound: { file: 'gas-bound/Code.js', re: new RegExp('^// ' + V, 'm') },
   doc: { file: 'docs/LEADERBOARD_ARCHITECTURE.html', re: new RegExp('<dt>This document</dt><dd>' + V + '</dd>') },
 };
 
@@ -41,9 +42,9 @@ module.exports = { FILES, parse, read, versionOf };
 if (require.main === module) {
   const cmd = process.argv[2];
   if (cmd === 'print') {
-    const p = versionOf('page'), u = versionOf('publisher');
-    if (!p || !u) { console.error('Could not read the page or publisher version.'); process.exit(1); }
-    console.log(p + ' ' + u);
+    const p = versionOf('page'), u = versionOf('publisher'), b = versionOf('bound');
+    if (!p || !u || !b) { console.error('Could not read the page or publisher version.'); process.exit(1); }
+    console.log(p + ' ' + u + ' ' + b);
   } else if (cmd === 'check') {
     const problems = check();
     if (problems.length) { problems.forEach(x => console.log(x)); process.exit(1); }

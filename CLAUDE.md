@@ -6,6 +6,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 
 - `index.html`: the page. GitHub Pages serves the repo root from `main`. It fetches `data.json` (or `editions/semana-NN.json` for `?ed=N`) and falls back to a seed copy embedded in the page.
 - `data.json` and `editions/`: written ONLY by Publish.gs through the GitHub Contents API. Never edit, regenerate or commit them locally. Always take the remote version. `editions/semana-NN.json` is a full copy of that week's data.json, `editions/index.json` lists the weeks. A week that has moved on is never rewritten.
+- `gas-bound/`: the Publicar button project, bound to the participants workbook, managed with clasp. `Code.js` holds `publishNow`, the Tribune menu and `setupPublishButton`, and `appsscript.json` adds `gas/` as the library `Leaderboard` at HEAD. Its `.clasp.json` carries the workbook id, so it is gitignored (`.clasp.json.example` is the template). `assets/publicar.png` is the button image, served by Pages, drawn by `tools/make_publicar_button.ps1`.
 - `gas/`: the Apps Script project, managed with clasp. `Publish.js` is `Publish.gs` in the editor. The project holds only `Publish.js` and `appsscript.json`. History: the old web app host was undeployed and deleted on 2026-10-01.
 - `docs/LEADERBOARD_ARCHITECTURE.html`: architecture doc. Same layout and diagram conventions as the model's `ARCHITECTURE.html` in `..\Model`.
 - `docs/mockups/tribune-dia.html`: the approved mockup of the Tribune. Reference for layout, type, colors and copy tone.
@@ -18,6 +19,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 - Input, model workbook: `Field` (Entrant, Strikes). Read only.
 - Script properties: `GITHUB_TOKEN`, `GITHUB_REPO`, `SHEET_ID` (participants), `MODEL_SHEET_ID` (model).
 - Warnings: every publish checks the current week's checked Tribune rows and lists Spanish warnings in the Tribune tab, one per row from row 2: H is a color swatch, I the text, J the week it was raised (headers `Color`, `Warnings`, `Warning week` in H1:J1). Setup and every publish insert the separator G if the table still starts in G, and strip the checkboxes and tints Sheets copies into it from Publicar. The rows a warning points at get the same color in A:F, striped when several warnings share a row. It warns when the last place is named in more than one row or Columna paragraph, was also named last week, when Columna has no Portada, when there is more than one Edición or an unknown tema, or when a Clasificado has a blank Para (it is still published). This week's warnings are recomputed each publish, those of the previous 3 weeks stay below as a rolling log, older ones roll off. It never blocks a publish and never edits text. Only the palette colors are ever cleared.
+- Publicar button: image at K1 of the Tribune tab (and a Tribune menu) runs `publishNow` of `gas-bound`, which calls `Leaderboard.publishManual()` and shows a popup. `publishLeaderboard()` and `publishManual()` return `{status: published | no_changes | busy | error, week, commitSha, updatedAt, message}`. `publishLeaderboard()` still throws on failure and waits up to 60 seconds for the script lock, `publishManual()` never throws and gives up on the lock after 5 seconds (busy). K1 is right of everything the code uses on the Tribune tab (A:F, the G separator, H:J): never move the button onto those columns, never insert rows or columns for it. If the library reads the bound project's Script properties instead of its own, the four properties must also be set there.
 - Triggers: installable onEdit on the participants workbook (PickEm_Board, Picks_Board and Tribune) and a daily 7am `publishLeaderboard`. Runs are serialized with a script lock.
 - `publishLeaderboard` reads the live data.json first (for `survivorOut` and the sha), builds a new one, then writes the week's edition, the edition index and data.json, in that order. Each file is committed only when something other than `updated` changed. A missing Tribune tab publishes an empty `tribune`.
 - data.json fields: `season`, `week`, `weeks`, `updated`, `prizes {regular[], survivor[], playoffs[], weekly, weeks}`, `pickem[] {name, weeks[], total, dropped, droppedWeek?}`, `winners [[name]]` (one list per week), `strikes {name: n}`, `survivorOut[] {name, week}`, `fans {name: {nfl, ncaa} | {random, other}}`, `apodos {name: [alias]}`, `regularWeek` (only in the playoffs), `playoffs {week, rounds, pickem[] {name, weeks[], total}, winners [[name]]}` (only once Playoffs_Board has scores), `picks {week: {g: [[fav, spread, dog, res]], p: {callSign: [[team, conf] | null]}}}` (one key per stored week, res F, U, P or null, rebuilt from Picks_Log on every publish), `tribune {portada: {titulo, texto, para} | null, columna[] {titulo, para, texto}, clasificados[] {titulo, para, texto}, datos[] {titulo, para, texto}, edicion: {titulo, texto, tema} | null}`. Yahoo is canon for the weekly winner and the dropped week, as for Total and Dropped: in the pasted PickEm_Board a green font marks the week's winner (Yahoo already applied its tiebreakers) and a red font the dropped week. The publisher reads the cell font colors (so paste with formatting, not as plain text) into `winners` and `droppedWeek`. Without colors the previous data.json's marks stand while that week's scores are unchanged, a single top score wins by itself, and an unmarked tie is a warning and splits on the page. Never recompute a winner or a dropped week in code or in comments, read these fields. The prize amounts live in one `PRIZES` constant in Publish.js.
@@ -34,7 +36,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 ## Rules
 
 - Versioning: every file carries `v major.minor.bug c major.minor.bug`. v tracks functionality, c tracks content. `index.html` (footer), `Publish.js` (header comment) and the doc (masthead and footer) version independently. Bump on every change.
-- Deploy only with `deploy.bat`. Never run `clasp push`, `git push` or `git commit` by hand.
+- Deploy only with `deploy.bat` (it pushes `gas/`, then `gas-bound/` when its `.clasp.json` exists). Never run `clasp push`, `git push` or `git commit` by hand.
 - `test.bat` must pass before any deploy.
 - When a tab, data.json field, flow function, trigger or page section is added, renamed or retired, update the architecture doc in the same change and bump its version.
 - Page: one self-contained HTML file, vanilla JS, no build step, mobile first. Newsprint, light only: `color-scheme: only light` plus explicit backgrounds so iOS dark mode cannot invert it. Every color is a token in the `:root` block and nowhere else. Every number and sentence is computed from data.json in the browser. The fact engine is deterministic rules, never a model call.
@@ -48,8 +50,9 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 ## Current versions
 
 - index.html v4.1.0 c2.4.0
-- Publish.js v3.0.0 c1.9.0
-- docs/LEADERBOARD_ARCHITECTURE.html v4.1.0 c4.1.0
+- Publish.js v3.1.0 c1.9.0
+- gas-bound/Code.js v1.0.0 c1.0.0
+- docs/LEADERBOARD_ARCHITECTURE.html v4.2.0 c4.2.0
 
 ## Roadmap
 

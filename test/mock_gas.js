@@ -122,7 +122,7 @@ function makeGithub(initialText, extra) {
       if (!cur && body.sha) return reply(422, { message: 'unexpected sha' });
       state.files[path] = { text: Buffer.from(body.content, 'base64').toString('utf8'), sha: 'sha' + (++state.n) };
       state.puts.push({ path, message: body.message, branch: body.branch, hadSha: !!body.sha, text: state.files[path].text, auth: opts.headers && opts.headers.Authorization });
-      return reply(cur ? 200 : 201, {});
+      return reply(cur ? 200 : 201, { commit: { sha: 'commit' + state.n } });
     }
     state.gets++;
     if (!cur) return reply(404, { message: 'Not Found' });
@@ -139,12 +139,19 @@ function makeGithub(initialText, extra) {
  */
 function loadPublisher(opts) {
   const logs = [];
+  const lock = { busy: !!opts.lockBusy, held: false, waits: 0, tries: [], releases: 0 };
   const props = Object.assign({ GITHUB_TOKEN: 'test-token', GITHUB_REPO: 'owner/repo', SHEET_ID: 'participants', MODEL_SHEET_ID: 'model' }, opts.props || {});
   const books = { participants: opts.participants, model: opts.model };
   const context = {
     Logger: { log: m => logs.push(String(m)) },
     PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null) }) },
-    LockService: { getScriptLock: () => ({ waitLock() {}, releaseLock() {} }) },
+    LockService: {
+      getScriptLock: () => ({
+        waitLock() { lock.waits++; lock.held = true; },
+        tryLock(ms) { lock.tries.push(ms); if (lock.busy) return false; lock.held = true; return true; },
+        releaseLock() { lock.held = false; lock.releases++; },
+      }),
+    },
     SpreadsheetApp: {
       openById: id => { if (!books[id]) throw new Error('unknown workbook ' + id); return books[id]; },
       newDataValidation: () => {
@@ -168,6 +175,7 @@ function loadPublisher(opts) {
   const file = path.join(__dirname, '..', 'gas', 'Publish.js');
   vm.runInContext(fs.readFileSync(file, 'utf8'), context, { filename: 'Publish.js' });
   context._logs = logs;
+  context._lock = lock;
   return context;
 }
 

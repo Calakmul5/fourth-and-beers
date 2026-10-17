@@ -1,0 +1,5 @@
+{
+  "scriptId": "SCRIPT_ID_OF_THE_BOUND_PROJECT",
+  "rootDir": "",
+  "parentId": ["PARTICIPANTS_WORKBOOK_ID"]
+}

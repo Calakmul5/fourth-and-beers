@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v3.0.0 c1.9.0
+// v3.1.0 c1.9.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -31,6 +31,10 @@
 //      result from the paste itself (Points must equal the confidence of the correct picks) and keeps the week in
 //      Picks_Log. data.json "picks" is rebuilt from Picks_Log on every publish.
 //   It only commits when something other than "updated" changed, so running it often is harmless.
+//  13. publishLeaderboard() returns a status object {status, week, commitSha, updatedAt, message}, status being "published"
+//      or "no_changes". publishManual() is the Publicar button's entry point (the container-bound project in gas-bound
+//      calls it through this project as a library). It never throws and adds "busy" (another publish holds the lock,
+//      it waits only a few seconds) and "error" (message holds the reason).
 //
 // One-time setup (Project Settings > Script properties)
 //   GITHUB_TOKEN  fine-grained token, this one repo only, permission Contents: Read and write
@@ -104,11 +108,30 @@ var SURVIVOR_TO_PICKEM = {
 // Entry points
 // ---------------------------------------------------------------------------
 
-/** Run by hand or by trigger. Builds data.json and commits it if anything changed. */
+var MANUAL_LOCK_MS = 5000;   // the Publicar button waits this long for a running publish, then answers "busy"
+
+/** Run by hand or by trigger. Builds data.json and commits it if anything changed. Returns a status object. */
 function publishLeaderboard() {
   var lock = LockService.getScriptLock();
   lock.waitLock(60000); // a burst of checkbox clicks runs one at a time
   try { return publishLeaderboard_(); } finally { lock.releaseLock(); }
+}
+
+/** The Publicar button. Same publish and same lock, but it never throws and never waits long: busy and error are statuses. */
+function publishManual() {
+  var lock = LockService.getScriptLock();
+  if (!lock.tryLock(MANUAL_LOCK_MS)) return publishStatus_('busy', 0, '', '', 'Otra publicación está en curso.');
+  try {
+    return publishLeaderboard_();
+  } catch (e) {
+    return publishStatus_('error', 0, '', '', String(e && e.message ? e.message : e).slice(0, 220));
+  } finally {
+    lock.releaseLock();
+  }
+}
+
+function publishStatus_(status, week, commitSha, updatedAt, message) {
+  return { status: status, week: week, commitSha: commitSha, updatedAt: updatedAt, message: message };
 }
 
 function publishLeaderboard_() {
@@ -127,19 +150,19 @@ function publishLeaderboard_() {
     var cur = readFile_(repo, token, CFG.path);
     data = buildData_(ss, model, cur ? cur.data : null, picksWarn);
     try { warnTexts = reviewTribune_(ss, data, picksWarn); } catch (e) { Logger.log('Warnings skipped: ' + e); warnTexts = picksWarn.slice(); }
-    result = commitAll_(repo, token, data, cur);
+    result = commitAll_(repo, token, data, cur);   // {text, sha}
   } catch (e) {
     reportStatus_(ss, 'ERROR ' + stamp_() + '. La publicación falló, revisa Executions en Apps Script.', [String(e && e.message ? e.message : e).slice(0, 220)]);
     throw e;
   }
-  Logger.log(result);
+  Logger.log(result.text);
   var weeks = Object.keys(data.picks || {}).map(Number).sort(function (x, y) { return x - y; });
   reportStatus_(ss, (warnTexts.length ? 'OK CON AVISOS ' : 'OK ') + stamp_() + '. Semana ' + data.week + ' ' +
-    (/^Committed/.test(result) ? 'publicada' : 'sin cambios') + '. Picks guardados: ' +
+    (result.sha ? 'publicada' : 'sin cambios') + '. Picks guardados: ' +
     (weeks.length ? 'semana' + (weeks.length > 1 ? 's ' : ' ') + weeks.join(', ') : 'ninguno') + '. Avisos: ' +
     (warnTexts.length ? warnTexts.length + ' (abajo y en Tribune, columna I)' : 'ninguno') + '.',
     warnTexts.slice(0, 2).map(function (t) { return '• ' + t; }));
-  return result;
+  return publishStatus_(result.sha ? 'published' : 'no_changes', data.week, result.sha, data.updated, result.text);
 }
 
 function stamp_() { return Utilities.formatDate(new Date(), 'America/Chicago', 'yyyy-MM-dd HH:mm'); }
@@ -1193,6 +1216,7 @@ function readFile_(repo, token, path) {
   return { sha: cur.sha, text: text, data: data };
 }
 
+/** Commits one file and returns the sha of the commit the API reports ('' if the reply carries none). */
 function writeFile_(repo, token, path, obj, message, cur) {
   var body = {
     message: message,
@@ -1206,6 +1230,7 @@ function writeFile_(repo, token, path, obj, message, cur) {
   });
   var code = put.getResponseCode();
   if (code !== 200 && code !== 201) throw new Error('GitHub write failed (' + code + ') for ' + path + ': ' + put.getContentText());
+  try { return String(JSON.parse(put.getContentText()).commit.sha || ''); } catch (e) { return ''; }
 }
 
 function editionPath_(week) { return CFG.editionsDir + '/semana-' + (week < 10 ? '0' : '') + week + '.json'; }
@@ -1216,11 +1241,11 @@ function editionPath_(week) { return CFG.editionsDir + '/semana-' + (week < 10 ?
  * Editions of earlier weeks are never touched.
  */
 function commitAll_(repo, token, data, cur) {
-  var done = [];
+  var done = [], sha = '';
   var epath = editionPath_(data.week);
   var ed = readFile_(repo, token, epath);
   if (!ed || !sameNumbers_(ed.text, data)) {
-    writeFile_(repo, token, epath, data, 'Semana ' + data.week + ': edición archivada', ed);
+    sha = writeFile_(repo, token, epath, data, 'Semana ' + data.week + ': edición archivada', ed) || sha;
     done.push(epath);
   }
   var ipath = CFG.editionsDir + '/index.json';
@@ -1229,14 +1254,18 @@ function commitAll_(repo, token, data, cur) {
   if (weeks.indexOf(data.week) < 0) {
     weeks.push(data.week);
     weeks.sort(function (a, b) { return a - b; });
-    writeFile_(repo, token, ipath, { weeks: weeks }, 'Semana ' + data.week + ': índice de ediciones', idx);
+    sha = writeFile_(repo, token, ipath, { weeks: weeks }, 'Semana ' + data.week + ': índice de ediciones', idx) || sha;
     done.push(ipath);
   }
   if (!cur || !sameNumbers_(cur.text, data)) {
-    writeFile_(repo, token, CFG.path, data, 'Semana ' + data.week + ': tabla actualizada', cur);
+    sha = writeFile_(repo, token, CFG.path, data, 'Semana ' + data.week + ': tabla actualizada', cur) || sha;
     done.push(CFG.path);
   }
-  return done.length ? 'Committed ' + done.join(', ') + ' (week ' + data.week + ').' : 'No changes, nothing committed (week ' + data.week + ').';
+  // sha is the last commit made. A committed file whose reply carried no sha still counts as published.
+  return {
+    text: done.length ? 'Committed ' + done.join(', ') + ' (week ' + data.week + ').' : 'No changes, nothing committed (week ' + data.week + ').',
+    sha: done.length ? (sha || 'unknown') : ''
+  };
 }
 
 /** Ignores the timestamp so a rerun with the same numbers does not create a commit. */
