@@ -98,14 +98,14 @@
  },
  "tribune": {
   "portada": {
-   "titulo": "Dallas no alcanzÃ³ y el Comish sigue de lÃ­der",
+   "titulo": "Dallas no alcanzó y el Comish sigue de líder",
    "texto": "Silverback manda con 304 tras tirar su peor semana. Steel Man ya huele las pizzas del Super Bowl.",
    "para": ""
   },
   "columna": [
    {
     "para": "Silverback",
-    "texto": "LÃ­der con 304 y todavÃ­a no sÃ© por quÃ©. Si alguien lo averigua que me avise antes de que corrijan la tabla."
+    "texto": "Líder con 304 y todavía no sé por qué. Si alguien lo averigua que me avise antes de que corrijan la tabla."
    },
    {
     "para": "Steel Man",
@@ -113,10 +113,10 @@
    },
    {
     "para": "Juan1768",
-    "texto": "Cero rayas en Survivor y 34 puntos en la semana cuatro. Se ve que ahÃ­ sÃ­ hubo cuidado."
+    "texto": "Cero rayas en Survivor y 34 puntos en la semana cuatro. Se ve que ahí sí hubo cuidado."
    },
    {
-    "para": "Rastaman, Conquistador, This is our year, Chitownâ€™DemBoyz, Cyber70, Mean Machine, SinCasco, X-Men Letâ€™s go Boys",
+    "para": "Rastaman, Conquistador, This is our year, Chitown’DemBoyz, Cyber70, Mean Machine, SinCasco, X-Men Let’s go Boys",
     "texto": "Ocho confiaron en Dallas otra vez. La esperanza es gratis. Los puntos no."
    },
    {
@@ -125,7 +125,7 @@
    },
    {
     "para": "",
-    "texto": "Recordatorio de la regla. El Ãºltimo lugar paga las pizzas del Super Bowl para todos. Familias incluidas."
+    "texto": "Recordatorio de la regla. El último lugar paga las pizzas del Super Bowl para todos. Familias incluidas."
    },
    {
     "para": "",
@@ -154,7 +154,7 @@
    {
     "titulo": "SE BUSCA",
     "para": "Billy Beaner",
-    "texto": "Tercera raya de Survivor. Visto por Ãºltima vez en la semana 4. Se ofrece recompensa por su regreso."
+    "texto": "Tercera raya de Survivor. Visto por última vez en la semana 4. Se ofrece recompensa por su regreso."
    },
    {
     "titulo": "SE REGALA",
@@ -187,7 +187,7 @@
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-17T00:16:59.309Z",
+ "updated": "2026-10-17T00:20:13.784Z",
  "prizes": {
   "regular": [
    1050,
