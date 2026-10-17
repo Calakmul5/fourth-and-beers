@@ -10,11 +10,20 @@ const A = require('./assert');
 const HTML = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
 const SEED = JSON.parse(/<script type="application\/json" id="seed">([\s\S]*?)<\/script>/.exec(HTML)[1]);
 const W5 = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'week5.json'), 'utf8'));
+const FULL = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'week5-full.json'), 'utf8'));
 const W5_OLD = JSON.parse(fs.readFileSync(path.join(__dirname, 'fixtures', 'week5-old.json'), 'utf8'));
 const clone = x => JSON.parse(JSON.stringify(x));
 const PF = require('./picks_fixture');
 const PICK_RULES = ['lealtad', 'mismoequipo', 'costalazo', 'llanero', 'borregada', 'empate', 'olvido', 'rachapicks', 'perros', 'corriente'];
 /** Week 5 data.json with the picks the publisher builds from the real Group Picks paste. */
+/** The league as it stood after week k (picks, winners, strikes), with no hand-written rows. */
+let TRUNC = null;
+async function weekAt(k) {
+  if (!TRUNC) TRUNC = (await load(clone(FULL))).T.truncate;
+  const d = TRUNC(clone(FULL), k);
+  if (k < 5) d.tribune = { portada: null, columna: [], clasificados: [], datos: [], edicion: null };
+  return d;
+}
 const P5 = () => { const d = clone(W5); d.picks = PF.picks5().picks; return d; };
 
 // ---- Page harness -----------------------------------------------------------
@@ -152,8 +161,8 @@ A.run('index.html', [
     A.deep([f.remontada.data.name, f.remontada.data.from, f.remontada.data.to, f.remontada.data.streak], ['Silverback', 17, 1, 3], '17th to first, led 3 weeks');
     A.equal(f.remontada.valor, '17º→1º');
     A.deep([f.survivor.data.week, f.survivor.data.count], [4, 4], 'week 4 had 4 eliminations');
-    A.deep([f.aficiones.data.inMoney, f.aficiones.data.total, f.aficiones.data.bases.slice().sort()], [0, 15, ['CHI', 'DAL']], '0 of the 15 Bears and Dallas fans');
-    A.equal(f.aficiones.valor, '0/15');
+    A.equal(f.aficiones, undefined, 'aficiones lives in the fan-base note, not in Datos');
+    A.equal(f.sotano, undefined, 'and the sótano gap in the pizza box');
   }],
 
   ['facts: La cifra de la semana is KinkyKing +60, and the facts read right', async () => {
@@ -169,21 +178,20 @@ A.run('index.html', [
     const e = c.T.facts(c.M).filter(x => x.rule === 'remontada')[0];
     A.match(e.texto, /^El Comish era 17º después de la semana 1\. Lleva tres semanas de líder\. Nadie lo vio venir, ni él\.$/, 'the commissioner is el Comish');
     A.match(c.T.facts(c.M).filter(x => x.rule === 'fotocopia')[0].texto, /^Osos de Grayslake, Mean Machine y Jorge_B: 281 cada uno\./);
-    A.match(c.T.facts(c.M).filter(x => x.rule === 'aficiones')[0].texto, /^Hay 15 fans de Chicago y Dallas\. Ninguno cobra hoy\. Los que cobran le van a Pittsburgh y San Francisco\.$/);
   }],
 
   ['facts: a rule that ran last week goes to the back when another candidate exists', async () => {
     const c = await load(W5);
     A.ok(c.T.prevRules(c.M).indexOf('survivor') >= 0, 'week 4 would have run the Survivor fact');
-    const prev = ['aficiones', 'racha', 'remontada', 'rebote', 'survivor', 'arriba'];
+    const prev = ['racha', 'remontada', 'rebote', 'survivor', 'arriba'];
     const r = c.T.pickFacts(c.M, prev);
     A.equal(r.picks.length, 6);
     ['fotocopia', 'disco', 'siempre'].forEach(x => A.ok(r.picks.some(p => p.rule === x), x + ' is fresh and stays in'));
-    A.ok(!r.picks.some(p => p.rule === 'peor' || p.rule === 'sotano'), 'a second fact about the last place is over budget even when fresh');
+    A.ok(!r.picks.some(p => p.rule === 'peor'), 'a second fact about the last place is over budget even when fresh');
     A.equal(r.picks.filter(p => prev.indexOf(p.rule) >= 0).length, 3, 'only as many repeats as it takes to reach 6');
     A.equal(r.cifra.rule, 'rebote', 'La cifra can still repeat when nothing else is as big');
     const none = c.T.pickFacts(c.M, [], false);
-    A.deep(none.picks.map(p => p.rule), ['rebote', 'aficiones', 'racha', 'remontada', 'fotocopia', 'survivor'], 'with no history the 6 highest scores');
+    A.deep(none.picks.map(p => p.rule), ['rebote', 'racha', 'remontada', 'fotocopia', 'survivor', 'arriba'], 'with no history the 6 highest scores');
   }],
 
   ['facts: nothing mentions the model or the random picker, and every text stays short', async () => {
@@ -198,18 +206,26 @@ A.run('index.html', [
     }
   }],
 
-  ['facts: every template line is clean', async () => {
+  ['facts: every template group has 3 or more templates in 3 or more styles, an albur, and clean copy', async () => {
     const c = await load(W5);
     let n = 0;
-    Object.keys(c.T.TPL).forEach(k => c.T.TPL[k].forEach(t => {
-      n++;
-      lint(t.replace(/\{\w+\}/g, 'Ab'), 'template ' + k);
-      A.ok(t.replace(/\{\w+\}/g, 'Abogado').length <= 135, k + ' template is short: ' + t);
-    }));
-    A.ok(n >= 40, 'enough templates (' + n + ')');
-    ['rebote', 'caida', 'arriba', 'fotocopia', 'disco', 'racha', 'record', 'remontada', 'siempre', 'peor', 'surv', 'aficiones'].forEach(p =>
-      A.ok(Object.keys(c.T.TPL).some(k => k.toLowerCase().indexOf(p) === 0) , 'templates for ' + p));
-    A.ok(c.T.TPL.reboteUp.length >= 2 && c.T.TPL.fotocopia.length >= 2 && c.T.TPL.survMuchos.length >= 2, '2 or 3 per rule');
+    Object.keys(c.T.FT).forEach(k => {
+      const g = c.T.FT[k], styles = {};
+      g.forEach(t => {
+        n++;
+        styles[t.s] = 1;
+        A.ok(c.T.STYLES.indexOf(t.s) >= 0, k + ' has a known style: ' + t.s);
+        lint(t.t.replace(/\{\w+\}/g, 'Ab'), 'template ' + k);
+        A.ok(t.t.replace(/\{\w+\}/g, 'Abogado').length <= 150 || t.s === 'calaverita', k + ' template is short: ' + t.t);
+        if (t.s === 'calaverita') A.equal(t.t.split(' / ').length, 4, k + ' calaverita has 4 lines');
+      });
+      A.ok(g.length >= 3, k + ' has 3 or more templates');
+      A.ok(Object.keys(styles).filter(x => x !== 'calaverita').length >= 3, k + ' has 3 or more styles');
+      A.ok(styles.albur, k + ' has an albur');
+      A.ok(g[0].s === 'carrilla' || g[0].s === 'albur' || g[0].s === 'refran' || g[0].s === 'nimodo' || g[0].s === 'nunca', k + ' starts with a plain template');
+    });
+    A.ok(n >= 150, 'enough templates (' + n + ')');
+    A.ok(c.T.TPL.portadaStart.length === 1 && c.T.TPL.portadaCodas.length === 3, 'the portada fallbacks stay plain');
   }],
 
   ['facts: rules that do not fire with thin data return nothing', async () => {
@@ -602,17 +618,14 @@ A.run('index.html', [
 
   // ---- v3.1: last-place budget ------------------------------------------------
 
-  ['last place: with no hand-written rows, Siempre ahí and Cuentas del sótano compete and only one is printed', async () => {
+  ['last place: with no hand-written rows, only one printed fact is about the last place', async () => {
     const c = await load(W5);
     const rules = c.T.facts(c.M).map(f => f.rule);
-    A.ok(rules.indexOf('siempre') >= 0 && rules.indexOf('sotano') >= 0, 'both are candidates');
-    const sotano = c.T.facts(c.M).filter(f => f.rule === 'sotano')[0];
-    A.equal(sotano.titulo, 'Cuentas del sótano');
-    A.deep(sotano.sujetos, ['Steel Man']);
-    A.match(sotano.texto, /^Los picks de Steel Man suman 179, a 32 del penúltimo lugar\. Las pizzas ya traen su nombre\.$/);
+    A.ok(rules.indexOf('siempre') >= 0, 'Siempre ahí is a candidate');
+    A.equal(rules.indexOf('sotano'), -1, 'and the sótano gap is only in the pizza box');
     const shown = all(c.doc, '#facts .fact, .cifra').filter(e => /Steel Man/.test(e.textContent));
     A.equal(shown.length, 1, 'one roast of the last place, got ' + shown.length);
-    A.match(shown[0].textContent, /Siempre ahí/, 'the higher-scoring candidate takes the slot');
+    A.match(shown[0].textContent, /Siempre ahí/);
     A.equal(c.M.plan.used, true);
     A.deep(c.M.plan.protect, ['Steel Man']);
     common(c, 'budget');
@@ -954,19 +967,22 @@ A.run('index.html', [
     A.match(f.texto, /seis picks seguidos|Racha de seis aciertos/);
   }],
 
-  ['Lealtad cara skips Jorge_B and the Suiza players', async () => {
-    const withFans = await load(P5());
-    const f = withFans.M.pk.all.filter(x => x.rule === 'lealtad')[0];
+  ['Lealtad is about fan bases of 2 or more, never one player, and skips Jorge_B and the Suiza players', async () => {
+    const c = await load(FULL);
+    const f = c.M.pk.all.filter(x => x.rule === 'lealtad')[0];
     A.ok(f, 'fires with fan teams');
-    A.ok(['Jorge_B'].indexOf(f.data.name) < 0);
-    const d = P5();
+    A.deep([f.data.team, f.data.fans, f.data.net, f.data.kind], ['CHI', 7, 79, 'for'], 'the Bears fans won 79 picking for their team');
+    A.deep(f.sujetos, [], 'it names the team, not a player');
+    A.deep(f.alts.map(a => a.data.team), ['SF', 'PIT'], 'and keeps the next fan bases as alternates');
+    A.noMatch(f.texto, /KinkyKing|Packers/, 'one fan (the Packers) is never a fan base');
+    const d = clone(FULL);
     d.fans = { 'Jorge_B': { random: true, other: 'League of Legends' } };      // everybody else is Suiza
-    const c = await load(d);
-    A.equal(c.M.pk.all.filter(x => x.rule === 'lealtad').length, 0, 'random and Suiza never qualify');
-    const d2 = P5();
-    Object.keys(d2.fans).forEach(n => { if (n !== 'Billy Beaner') delete d2.fans[n]; });
-    const c2 = await load(d2);
-    A.deep(c2.M.pk.all.filter(x => x.rule === 'lealtad').map(x => x.data.name), ['Billy Beaner']);
+    const c2 = await load(d);
+    A.equal(c2.M.pk.all.filter(x => x.rule === 'lealtad').length, 0, 'random and Suiza never qualify');
+    const d2 = clone(FULL);
+    Object.keys(d2.fans).forEach(n => { if (d2.fans[n].nfl !== 'CHI' && n !== 'Jorge_B') delete d2.fans[n]; });
+    const c3 = await load(d2);
+    A.deep(c3.M.pk.all.filter(x => x.rule === 'lealtad').map(x => x.data.team), ['CHI'], 'only the seven Bears fans make a fan base');
   }],
 
   ['Mismo equipo, Amante de los perros and Contra la corriente behave on a second week', async () => {
@@ -978,8 +994,11 @@ A.run('index.html', [
     A.ok(same, 'the same team in weeks 4 and 5');
     A.equal(same.data.weeks, 2);
     lint(same.texto, 'mismoequipo');
-    const dog = c.M.pk.all.filter(x => x.rule === 'perros')[0];
-    A.ok(dog && dog.data.picks >= 8, 'underdog lover');
+    A.equal(c.M.pk.all.filter(x => x.rule === 'perros').length, 0, 'a tie at the top share names nobody');
+    const live = await load(FULL);
+    const dog = live.M.pk.all.filter(x => x.rule === 'perros')[0];
+    A.deep([dog.data.name, dog.data.gap], ['Niners', 6], 'Niners 51% of underdogs against 46%, named with the gap and never the share');
+    A.noMatch(dog.texto, /%|51|28/, 'no share or hits printed');
     A.ok(c.M.pk.all.filter(x => x.rule === 'corriente')[0], 'against the grain');
     const t = c.T.truncate(d, 4);
     A.deep(Object.keys(t.picks), ['4'], 'the league as it stood in week 4 has no week 5 picks');
@@ -1020,8 +1039,10 @@ A.run('index.html', [
     const c3 = await load(d3);
     const l = c3.T.tusPicks(c3.M, 'Silverback')[0];
     A.match(l.t, /en la temporada\. .* en las últimas 3 semanas\./);
-    A.ok(l.a === 'up' || l.a === 'down' || l.a === '', 'arrow is up, down or none');
-    A.equal(l.a, 'down', 'the last 3 weeks (1 of 3 each) trail a season that includes the better flipped week');
+    A.equal(l.a, '', 'the last 3 weeks trail the season by less than 10 points, so no arrow');
+    const live = await load(FULL);
+    A.equal(live.T.tusPicks(live.M, 'Steel Man')[0].a, '', 'Steel Man went from 1 of 15 to 1 of 9: no arrow');
+    A.equal(live.T.tusPicks(live.M, 'Abogado')[0].a, 'up', 'Abogado went from 7 of 15 (47%) to 7 of 9 (78%)');
   }],
 
   ['Tus picks is hidden without picks, and the panel looks as it does today', async () => {
@@ -1114,7 +1135,9 @@ A.run('index.html', [
     A.match(box.textContent, /Terminó\. Solo paga primer lugar\./);
     A.match(text(c.doc, '#p-head'), /Se acabó la temporada/);
     A.match(text(c.doc, '#banner'), /Edición 22, playoffs, archivo/);
-    A.ok(c.M.pk.all.some(f => f.rule === 'playoffs' && /Cyber70 ganó los playoffs con 400 puntos y se lleva \$700|Los playoffs terminaron\. Cyber70 se queda con \$700/.test(f.texto)), 'champion fact');
+    const champ = c.M.pk.all.filter(f => f.rule === 'playoffs')[0];
+    A.ok(champ && /Cyber70/.test(champ.texto) && /\$700/.test(champ.texto), 'champion fact: ' + (champ && champ.texto));
+    A.ok(champ.tpls.length >= 4, 'with the same styled templates');
     const solo = c.T.model(d);
     A.equal(solo.paid['Cyber70'] - c.T.model(Object.assign({}, d, { playoffs: undefined, week: 5 })).paid['Cyber70'], 700);
     const t = clone(d);
@@ -1142,5 +1165,158 @@ A.run('index.html', [
     A.equal('regularWeek' in c.T.truncate(p, 17), false);
     const m = c.T.model(p);
     A.equal(c.T.prevRules(m).length >= 0, true, 'the no-repeat rule runs on the previous round');
+  }],
+
+  // ---- v4.1: Datos que nadie pidió ---------------------------------------------------------------------
+
+  ['datos: the live week 5 Tribune owns Fotocopia, so neither it nor La cifra repeats it, and it returns without that Clasificado', async () => {
+    const c = await load(FULL);
+    A.ok(c.M.pk.picks.every(f => f.rule !== 'fotocopia'), 'Fotocopia is not printed');
+    A.ok(c.M.pk.cifra && c.M.pk.cifra.rule !== 'fotocopia', 'and it is not La cifra');
+    const dr = c.M.plan.pk.dropped.filter(x => x.rule === 'fotocopia')[0];
+    A.ok(dr, 'T.plan lists the dropped fact');
+    A.match(dr.por, /Clasificado "Fotocopia": nombra a Osos de Grayslake, Mean Machine y Jorge_B y trae 281/);
+    const d = clone(FULL);
+    d.tribune.clasificados = d.tribune.clasificados.filter(x => x.titulo !== 'Fotocopia');
+    const c2 = await load(d);
+    A.ok(c2.M.pk.all.some(f => f.rule === 'fotocopia'), 'it is a candidate again');
+    A.ok(!c2.M.plan.pk.dropped.some(x => x.rule === 'fotocopia'), 'and nothing drops it');
+    A.ok(c2.M.pk.picks.some(f => f.rule === 'fotocopia') || c2.T.prevRules(c2.M).indexOf('fotocopia') >= 0, 'it prints unless last week already ran it');
+  }],
+
+  ['datos: aficiones and sótano never print, and nobody prints a number their own Tus picks lines show', async () => {
+    const seen = {};
+    for (const k of [1, 2, 3, 4, 5]) {
+      const c = await load(await weekAt(k));
+      const M = c.M;
+      const pk = c.M.pk;
+      pk.picks.forEach(f => {
+        seen[f.rule] = 1;
+        A.ok(['aficiones', 'sotano'].indexOf(f.rule) < 0, f.rule + ' is retired from Datos');
+        A.noMatch(f.texto, /−34/, 'KinkyKing Packers 1 of 5 stays out of Datos');
+        const h = f.huella;
+        if (h && h.nombres.length === 1) {
+          const lines = c.T.tusPicks(M, h.nombres[0]) || [];
+          const nums = {};
+          lines.forEach(l => (l.k + ' ' + l.t).replace(/semanas? \d+/g, '').split(/\D+/).filter(Boolean).forEach(x => { nums[x] = 1; }));
+          h.numeros.forEach(x => A.ok(!nums[x], 'week ' + k + ' ' + f.rule + ' prints ' + x + ' that ' + h.nombres[0] + ' sees in Tus picks'));
+        }
+      });
+    }
+    A.ok(Object.keys(seen).length >= 8, 'a variety of rules printed across the weeks');
+    const c5 = await load(FULL);
+    A.noMatch(c5.doc.querySelector('#datos').textContent, /−34/);
+  }],
+
+  ['styles: every printed fact has an estilo, quotas hold for weeks 1 to 5, no albur on Andrea or Juan1768', async () => {
+    for (const k of [1, 2, 3, 4, 5]) {
+      const c = await load(await weekAt(k));
+      const used = {};
+      c.M.pk.picks.forEach(f => {
+        A.ok(f.estilo, 'week ' + k + ' ' + f.rule + ' has an estilo');
+        used[f.estilo] = (used[f.estilo] || 0) + 1;
+        if (f.estilo === 'albur') A.noMatch(f.texto + ' ' + f.sujetos.join(' '), /Andrea’s Picks|Juan1768/, 'no albur on them');
+        lint(f.texto, 'week ' + k + ' ' + f.rule);
+        A.ok(f.texto.length <= 125 || f.estilo === 'calaverita', f.rule + ' week ' + k + ' is ' + f.texto.length + ': ' + f.texto);
+      });
+      A.ok((used.carrilla || 0) <= 2 && (used.albur || 0) <= 2, 'week ' + k + ' carrilla and albur quotas: ' + JSON.stringify(used));
+      Object.keys(used).filter(x => x !== 'carrilla' && x !== 'albur').forEach(x => A.ok(used[x] <= 1, 'week ' + k + ' ' + x + ' once: ' + JSON.stringify(used)));
+      A.equal(used.calaverita || 0, 0, 'no calaveritas outside muertos');
+      const shown = all(c.doc, '#datos [data-estilo]').map(e => e.getAttribute('data-estilo'));
+      A.equal(shown.length, c.M.pk.picks.filter(f => c.M.pk.cifra === f || c.M.pk.list.indexOf(f) >= 0).length, 'each rendered fact carries data-estilo');
+      A.equal(all(c.doc, '#datos .est, #datos .estilo').length, 0, 'and no visible label');
+    }
+  }],
+
+  ['styles: apodo only when a named player has one, and it uses it', async () => {
+    const d = clone(FULL);
+    const c = await load(d);
+    const f = c.T.facts(c.M).filter(x => x.rule === 'rebote')[0];                // KinkyKing, apodo Kinky
+    const ap = f.tpls.filter(t => t.s === 'apodo')[0];
+    A.ok(ap, 'rebote has an apodo template');
+    A.match(c.T.assignStyles(c.M, [Object.assign({}, f, { tpls: [ap] })])[0].texto, /^Kinky /, 'it names the apodo');
+    A.equal(c.T.FT.costalazo1.filter(t => t.s === 'apodo').length, 1, 'single-player groups carry an apodo template');
+    const noApodo = clone(FULL); noApodo.apodos = {};
+    const c2 = await load(noApodo);
+    c2.M.pk.picks.forEach(x => A.ok(x.estilo !== 'apodo', 'no apodo style without apodos'));
+  }],
+
+  ['rules 26 to 30 return the week 5 values', async () => {
+    const c = await load(FULL);
+    const f = {}; c.M.pk.all.forEach(x => { f[x.rule] = x; });
+    A.deep([f.nunca.data.name, f.nunca.data.hits, f.nunca.data.hitsRank, f.nunca.data.pointsRank, f.nunca.data.gap], ['MVP21', 10, 2, 8, 6], 'MVP21 10 hits 2nd, 71 points 8th, gap 6 beats the tie with Steel Man and Juan1768');
+    A.deep(f.orden.data.names.slice().sort(), ['Manolito’s winning picks', 'Puto el que lo lea'], 'same 15 games');
+    A.deep([f.orden.data.games, f.orden.data.gap], [15, 14]);
+    A.match(f.orden.texto, /14 puntos/);
+    A.deep([f.polos.data.name, f.polos.data.agree, f.polos.data.both, f.polos.data.others], ['Niners', 2, 14, 3], 'Niners agreed on 2 of 14 with three players');
+    A.deep([f.cuervos.data.team, f.cuervos.data.conf], ['GB', 572], 'the Packers cost 572');
+    A.deep([f.acomodador.data.name, f.acomodador.data.points, f.acomodador.data.possible, f.acomodador.data.kind], ['Steel Man', 219, 386, 'worst'], 'the worst is Steel Man, last place');
+    A.deep(f.acomodador.alts.map(a => [a.data.name, a.data.points, a.data.possible]).slice(0, 2), [['This is our year', 308, 516], ['Silverback', 354, 468]], 'This is our year is the worst outside last place, Silverback the best');
+    [f.nunca, f.orden, f.polos, f.cuervos, f.acomodador].forEach(x => {
+      A.ok(x.score >= 50 && x.score <= 95, x.rule + ' scores by rarity: ' + x.score);
+      A.equal(x.alts.length <= 3, true, 'at most 3 alternates');
+      A.equal(x.data.pct === undefined || x.data.pct >= 0.9 || x.rule === 'orden', true, x.rule + ' is in the top decile');
+    });
+    A.equal(f.acomodador.alts[0].data.name, 'This is our year');
+  }],
+
+  ['the last-place budget hands the slot to an alternate: This is our year when Steel Man is spent', async () => {
+    const d = clone(FULL);
+    d.tribune.columna = [{ titulo: '', para: '', texto: 'Steel Man sigue en el sótano.' }];
+    d.tribune.clasificados = []; d.tribune.datos = [];
+    const c = await load(d);
+    const printed = c.M.pk.picks.filter(f => f.rule === 'acomodador')[0];
+    if (printed) A.ok(printed.data.name !== 'Steel Man', 'Steel Man is not printed twice');
+    const direct = c.T.pickFacts(c.M, [], true, []);
+    const ac = direct.picks.filter(f => f.rule === 'acomodador')[0];
+    A.ok(ac && ac.data.name === 'This is our year', 'with the slot spent the alternate prints: ' + (ac && ac.data.name));
+  }],
+
+  ['muertos: at most 2 calaveritas, 4 lines each, every line up to 34 characters', async () => {
+    let seen = 0;
+    for (const k of [1, 2, 3, 4, 5]) {
+      const dk = await weekAt(k);
+      dk.tribune.edicion = { titulo: 'Día de muertos', texto: '', tema: 'muertos' };
+      const c = await load(dk);
+      const cal = c.M.pk.picks.filter(f => f.estilo === 'calaverita');
+      A.ok(cal.length <= 2, 'week ' + k + ' at most 2 calaveritas');
+      cal.forEach(f => {
+        seen++;
+        const lines = f.texto.split(' / ');
+        A.equal(lines.length, 4, 'four lines');
+        lines.forEach(l => A.ok(l.length <= 34, 'line up to 34: ' + l));
+        lint(f.texto, 'calaverita');
+      });
+      A.equal(c.doc.documentElement.getAttribute('data-tema'), 'muertos');
+    }
+    A.ok(seen >= 1, 'the muertos edition prints calaveritas when names fit (' + seen + ')');
+  }],
+
+  ['every template, filled with the week 5 data, stays at 120 characters and passes the copy lint', async () => {
+    const c = await load(FULL);
+    const cases = [];
+    const grab = x => { cases.push(x); (x.alts || []).forEach(a => cases.push(a)); };
+    for (const k of [1, 2, 3, 4, 5]) {
+      const M = k === 5 ? c.M : c.T.model(await weekAt(k));
+      c.T.facts(M).forEach(grab);
+    }
+    const flip = clone(FULL);                                 // forces llanero, empate and a tie-free playoff
+    flip.picks['5'].g[6][3] = 'U';
+    const cf = await load(flip); cf.T.facts(cf.M).forEach(grab);
+    const push = clone(FULL);
+    push.picks['5'].g[6][3] = 'P';
+    const cp = await load(push); cp.T.facts(cp.M).forEach(grab);
+    const rules = {}, long = {};
+    cases.forEach(f => {
+      rules[f.rule] = 1;
+      f.tpls.forEach(t => {
+        const text = c.T.renderFor(c.M, f, t);
+        lint(text, f.rule + ' ' + t.s);
+        if (t.s !== 'calaverita' && text.length > 120) long[text] = f.rule + ' ' + t.s + ' ' + text.length;
+      });
+    });
+    A.deep(Object.keys(long).map(k => long[k] + ': ' + k), [], 'templates over 120 characters');
+    ['rebote', 'racha', 'remontada', 'fotocopia', 'survivor', 'costalazo', 'llanero', 'borregada', 'empate', 'olvido', 'rachapicks', 'nunca', 'orden', 'polos', 'cuervos', 'acomodador', 'lealtad'].forEach(r =>
+      A.ok(rules[r], r + ' was exercised'));
   }],
 ]);

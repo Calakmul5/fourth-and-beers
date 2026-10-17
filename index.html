@@ -179,7 +179,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.0.0 c2.3.0
+      v4.1.0 c2.4.0
     </div>
   </div>
 </div>
@@ -541,109 +541,505 @@ T.groupCity = function(key){
 // A fact is {rule, valor, titulo, texto, score, num, data}.
 // ---------------------------------------------------------------------------
 var TPL = {
-  reboteRecord: ["{n} hizo {a} en la semana {p} y {b} en la {c}. Nadie ha rebotado tanto."],
-  reboteUp: [
-    "{n} pasó de {a} a {b} en una semana. Los picks anteriores quedaron en la banca.",
-    "{n} subió {d} puntos de una semana a otra. Alguien por fin leyó el reporte de lesionados.",
-    "De {a} a {b}. Los picks de la semana {p} fueron un experimento."
-  ],
-  caidaRecord: ["{n} cayó de {a} a {b} en una semana. Nadie había caído tanto."],
-  caida: [
-    "{n} cayó de {a} a {b} en una semana. Los picks de la semana {c} no pasaron el filtro.",
-    "{n} bajó {d} puntos de golpe. Esos picks se escogieron con muchas ganas y poca información.",
-    "De {a} a {b}. Los picks de {n} se tomaron la semana libre."
-  ],
-  arriba1: [
-    "{n} le ha ganado al promedio de la liga las {N} semanas. Los demás lo hacen por turnos.",
-    "Solo {n} ha estado arriba del promedio todas las semanas. Que alguien lo anote."
-  ],
-  arriba2: [
-    "{n} han estado arriba del promedio las {N} semanas. Los demás, de visita.",
-    "Solo {n} le han ganado al promedio cada semana. El resto, cuando se acuerda."
-  ],
-  fotocopia: [
-    "{names}: {t} cada uno. Mismos puntos, distintas excusas.",
-    "{tie} en {t}. {names} llegaron al mismo lugar por caminos distintos."
-  ],
-  disco: [
-    "{n} sacó {s} puntos en {cw} semanas. Los picks cambian, el resultado no.",
-    "{s} puntos, {cw} veces. {n} encontró una cifra y no la suelta."
-  ],
-  rachaUp: [
-    "{n}: {series}. Cada semana mejor que la anterior.",
-    "{n} sube desde la semana {w0}: {series}. Los picks por fin hacen caso."
-  ],
-  rachaDown: [
-    "{n}: {series}. Cada semana peor que la anterior.",
-    "{n} baja desde la semana {w0}: {series}. El piso todavía no aparece."
-  ],
-  recordBest: [
-    "{n} hizo {s} en la semana {c}, la mejor de la liga en todo el año.",
-    "{s} puntos de {n}. Ninguna semana de nadie había llegado tan lejos."
-  ],
-  recordWorst: [
-    "{n} hizo {s} en la semana {c}, la peor de la liga en todo el año.",
-    "{s} puntos de {n}. Esos picks descubrieron un piso nuevo."
-  ],
-  remontadaLider: [
-    "{n} era {from}º después de la semana 1. {streak} {coda}",
-    "{n} arrancó {from}º y hoy manda la tabla. {streak}"
-  ],
-  remontada: [
-    "{n} era {from}º después de la semana 1 y hoy es {to}º.{lead}",
-    "De {from}º a {to}º. {n} remontó {up} lugares desde la semana 1.{lead}"
-  ],
-  siempreUltimo: [
-    "{n} ha sido último las {N} semanas. Sus picks ya tienen domicilio fijo.",
-    "Último lugar {N} semanas seguidas. {n} no se mueve, y sus picks tampoco."
-  ],
-  siempreLider: [
-    "{n} ha liderado las {N} semanas. Lo único que cambia es la excusa de los demás.",
-    "Primer lugar {N} semanas seguidas. {n} no suelta el volante."
-  ],
-  peor: [
-    "La peor semana de {a} ({x}) le gana a la mejor de {b} ({y}).",
-    "{b} nunca pasó de {y}. {a} nunca bajó de {x}."
-  ],
-  survMuchos: [
-    "La semana {m} sacó a {cw} de Survivor de un jalón.",
-    "{cw} eliminados en la semana {m}. Survivor no avisa, solo cobra."
-  ],
-  survSemana1: ["{n} se despidió de Survivor esta semana. Quedan {alive} vivos."],
-  survSemanaN: ["{cw} se fueron de Survivor esta semana. Quedan {alive}."],
-  survSolo: [
-    "{n} es el único sin strikes en Survivor. Los demás ya conocen la derrota.",
-    "Un solo jugador sigue limpio en Survivor: {n}. Los demás ya tienen apuntes."
-  ],
-  sotano: [
-    "Los picks de {n} suman {t}, a {gap} del penúltimo lugar. Las pizzas ya traen {nombre}.",
-    "{gap} puntos separan a {n} del penúltimo lugar. Es la distancia entre pagar las pizzas y pedirlas."
-  ],
-  aficionesCero: [
-    "Hay {sum} fans de {bases}. Ninguno cobra hoy. Los que cobran le van a {money}.",
-    "De {sum} fans de {bases}, ninguno cobra. La lana es de {money}."
-  ],
-  aficionesPocos: ["Los dos lugares con premio son de fans de {money}. Poca porra, mucho pick."],
-  aficionesSeco: ["Los {n} fans de {team} suman $0 en premios. La afición más grande y la más seca."],
-  portadaClimb1: [
-    "{n} sube {up} {lugares} en una semana. {coda}"
-  ],
-  portadaClimbN: [
-    "{names} suben {up} {lugares} cada uno en una semana. {coda}"
-  ],
+  // Portada fallbacks are plain strings, not facts.
+  portadaClimb1: ["{n} sube {up} {lugares} en una semana. {coda}"],
+  portadaClimbN: ["{names} suben {up} {lugares} cada uno en una semana. {coda}"],
   portadaCodas: ["Nadie pidió explicaciones.", "Fue trámite, no trampa.", "El elevador funciona."],
   portadaStart: ["{n} abre con {pts} puntos. Quedan {left} semanas para que nadie lo recuerde."],
   portadaQuiet: ["Nadie subió lo suficiente para ser noticia. {n} sigue arriba con {pts}."]
 };
 T.TPL = TPL;
 
+// Humor styles. Every fact group has templates {s, t}: a style and a Spanish sentence. The first template of a group is
+// the plain carrilla that the page used before styles. Albur is adults-only doble sentido on the picks, the numbers and the
+// teams, never on anyone's real life. Calaverita (4 lines, joined with " / ", lines 2 and 4 rhyme) is only used in the
+// muertos edition. Apodo templates use {apodo}, the first nickname of a player the fact names.
+var STYLES = ["carrilla","albur","refran","nunca","nimodo","apodo","calaverita"];
+T.STYLES = STYLES;
+function st(s){ return function(t){ return {s:s, t:t}; }; }
+var sc = st("carrilla"), sa = st("albur"), sr = st("refran"), sn = st("nunca"), si = st("nimodo"), sp = st("apodo"), sk = st("calaverita");
+
+var FT = {
+  reboteRecord: [
+    sc("{n} hizo {a} en la semana {p} y {b} en la {c}. Nadie ha rebotado tanto."),
+    sa("De {a} a {b} en una semana. {n} demostró que sí importa cómo se agarran los picks."),
+    sn("{n} jugó como nunca: {a} la semana {p} y {b} la {c}. Nadie había rebotado tanto."),
+    si("{n} subió de {a} a {b}. Ni modo, a veces los picks también se despiertan con ganas."),
+    sr("Camarón que se duerme se lo lleva la corriente. {n} despertó a tiempo: de {a} a {b}."),
+    sp("{apodo} pasó de {a} a {b} en una semana. Ese rebote es récord de la liga.")
+  ],
+  reboteUp: [
+    sc("{n} pasó de {a} a {b} en una semana. Los picks anteriores quedaron en la banca."),
+    sc("{n} subió {d} puntos de una semana a otra. Alguien por fin leyó el reporte de lesionados."),
+    sa("{n} subió {d} puntos de un jalón. Se nota que a veces sí es cuestión de ponerse duro con los picks."),
+    sr("No hay mal que dure una semana: {n} pasó de {a} a {b}."),
+    sn("{n} jugó como nunca: de {a} a {b}. La semana pasada perdió como siempre."),
+    si("{n} hizo {b} después de {a}. Ni modo, alguien tenía que salir del hoyo."),
+    sp("{apodo} pasó de {a} a {b}. Cuando se le para el pick, no hay quien lo detenga.")
+  ],
+  caidaRecord: [
+    sc("{n} cayó de {a} a {b} en una semana. Nadie había caído tanto."),
+    sa("{n} cayó de {a} a {b}. Dicen que después de venirse abajo hay que esperar un rato."),
+    sn("{n} perdió como siempre: de {a} a {b} en una semana, y es récord de caída."),
+    si("De {a} a {b}. Ni modo, {n}, también se vale tocar fondo."),
+    sr("Al que mucho se encumbra, la semana lo baja: {n} pasó de {a} a {b}."),
+    sk("{n} cayó de {a} a {b} / directo hasta el panteón / La Catrina le dio el aviso / y le tocó la maldición")
+  ],
+  caida: [
+    sc("{n} cayó de {a} a {b} en una semana. Los picks de la semana {c} no pasaron el filtro."),
+    sc("{n} bajó {d} puntos de golpe. Esos picks se escogieron con muchas ganas y poca información."),
+    sa("{n} bajó {d} puntos de golpe. Se le fue todo lo que traía en la mano."),
+    sr("Del plato a la boca se cae la sopa, y a {n} se le cayeron {d} puntos."),
+    sn("{n} jugó como nunca y perdió como siempre: de {a} a {b}."),
+    si("{n} hizo {b}. Ni modo, no todos los domingos se amanece parado."),
+    sp("{apodo} bajó {d} puntos. Hasta el apodo se le quedó chico."),
+    sk("{n} cayó de {a} a {b} / directo hasta el panteón / La Catrina le dio el aviso / y le tocó la maldición")
+  ],
+  arriba1: [
+    sc("{n} le ha ganado al promedio de la liga las {N} semanas. Los demás lo hacen por turnos."),
+    sc("Solo {n} ha estado arriba del promedio todas las semanas. Que alguien lo anote."),
+    sa("{n} ha estado arriba del promedio las {N} semanas. Constancia y buen fondo: así se mantiene uno firme."),
+    sr("Quien a buen árbol se arrima: {n} lleva {N} semanas arriba del promedio y los demás debajo."),
+    si("Arriba del promedio las {N} semanas: {n}. Ni modo, a alguien le tenía que tocar cumplir."),
+    sn("{n} jugó como siempre y ganó como siempre: {N} semanas arriba del promedio."),
+    sp("{apodo} no baja del promedio. {N} semanas y contando.")
+  ],
+  arriba2: [
+    sc("{n} han estado arriba del promedio las {N} semanas. Los demás, de visita."),
+    sc("Solo {n} le han ganado al promedio cada semana. El resto, cuando se acuerda."),
+    sa("{n} no se bajan del promedio las {N} semanas. Se nota quién aguanta más."),
+    sr("Dime con quién andas: {n} llevan {N} semanas arriba del promedio."),
+    si("{n} suman {N} semanas arriba del promedio. Ni modo, alguien tenía que hacerlo bien.")
+  ],
+  fotocopia: [
+    sc("{names}: {t} cada uno. Mismos puntos, distintas excusas."),
+    sc("{tie} en {t}. {names} llegaron al mismo lugar por caminos distintos."),
+    sa("{tie} en {t}. {names} salieron del mismo molde y a ninguno le sobra nada."),
+    sr("Dios los cría y ellos se juntan: {names}, {t} puntos cada uno."),
+    sn("{names} jugaron como nunca y quedaron como siempre: {t} cada uno."),
+    si("{names} suman {t} cada uno. Ni modo, coincidir también es un talento."),
+    sk("{tie} en {t} / la Flaca los quiso contar / Iguales como calaveras / no se supieron salvar")
+  ],
+  disco: [
+    sc("{n} sacó {s} puntos en {cw} semanas. Los picks cambian, el resultado no."),
+    sc("{s} puntos, {cw} veces. {n} encontró una cifra y no la suelta."),
+    sa("{s} puntos, {cw} veces. {n} repite la misma postura y no se cansa."),
+    sr("Más vale lo malo conocido: {n} sacó {s} puntos en {cw} semanas."),
+    sn("{n} jugó como nunca y salió como siempre: {s} puntos, {cw} veces."),
+    si("{n} sacó {s} otra vez. Ni modo, lo que se repite ya es costumbre."),
+    sp("{apodo} se aferra a los {s} puntos. {cw} semanas con la misma.")
+  ],
+  rachaUp: [
+    sc("{n}: {series}. Cada semana mejor que la anterior."),
+    sc("{n} sube desde la semana {w0}: {series}. Los picks por fin hacen caso."),
+    sa("{n}: {series}. Cada semana más arriba y más duro. Así sí."),
+    sr("Poco a poco se anda lejos: {n} sube desde la semana {w0}, {series}."),
+    sn("{n} juega como nunca desde la semana {w0}: {series}."),
+    si("{n}: {series}. Ni modo, a veces los picks también maduran."),
+    sp("{apodo}: {series}. Va para arriba y no pide permiso.")
+  ],
+  rachaDown: [
+    sc("{n}: {series}. Cada semana peor que la anterior."),
+    sc("{n} baja desde la semana {w0}: {series}. El piso todavía no aparece."),
+    sa("{n}: {series}. Cada semana se le baja más. Que alguien le eche ganas."),
+    sr("Al mal paso darle prisa: {n} cae desde la semana {w0}, {series}."),
+    sn("{n} pierde como siempre desde la semana {w0}: {series}."),
+    si("{n}: {series}. Ni modo, no todas las rachas son para presumir."),
+    sp("{apodo}: {series}. Se le sigue yendo para abajo.")
+  ],
+  recordBest: [
+    sc("{n} hizo {s} en la semana {c}, la mejor de la liga en todo el año."),
+    sc("{s} puntos de {n}. Ninguna semana de nadie había llegado tan lejos."),
+    sa("El tamaño sí importa: {s} puntos de {n}, ninguno había llegado tan lejos."),
+    sr("Después de la tormenta: {n} hizo {s}, la mejor semana del año."),
+    sn("{n} jugó como nunca y ganó como siempre: {s} en la semana {c}, récord del año."),
+    si("{n} hizo {s}, el techo de la liga. Ni modo, alguien tenía que presumir."),
+    sp("{apodo} hizo {s}, el techo de la liga. Que lo presuma con calma.")
+  ],
+  recordWorst: [
+    sc("{n} hizo {s} en la semana {c}, la peor de la liga en todo el año."),
+    sc("{s} puntos de {n}. Esos picks descubrieron un piso nuevo."),
+    sa("{s} puntos de {n}, el más chiquito del año. Dicen que no importa, pero aquí se nota."),
+    sr("A todo puerco le llega su semana: {n} hizo {s}, la peor del año."),
+    sn("{n} perdió como siempre y jugó como nunca: {s} en la semana {c}, piso del año."),
+    si("{n} hizo {s}. Ni modo, alguien tenía que estrenar el sótano."),
+    sp("{apodo} hizo {s}, la semana más baja del año. Se ve que hubo madrugada.")
+  ],
+  remontadaLider: [
+    sc("{n} era {from}º después de la semana 1. {streak} {coda}"),
+    sc("{n} arrancó {from}º y hoy manda la tabla. {streak}"),
+    sa("{n} arrancó {from}º y se fue metiendo hasta el primer lugar. {streak}"),
+    sr("No por mucho madrugar amanece más temprano: {n} arrancó {from}º y hoy es líder. {streak}"),
+    sn("{n} jugó como nunca para pasar del {from}º al primero. {streak}"),
+    si("{n} venía {from}º y ahora es líder. Ni modo, alguien tenía que remontar. {streak}"),
+    sp("{apodo} venía {from}º y hoy lidera. {streak}")
+  ],
+  remontada: [
+    sc("{n} era {from}º después de la semana 1 y hoy es {to}º.{lead}"),
+    sc("De {from}º a {to}º. {n} remontó {up} lugares desde la semana 1.{lead}"),
+    sa("{n} se fue abriendo paso del {from}º al {to}º. Con paciencia todo entra.{lead}"),
+    sr("Camino largo, paso corto: {n} subió {up} lugares, del {from}º al {to}º.{lead}"),
+    sn("{n} jugó como nunca y subió {up} lugares desde la semana 1.{lead}"),
+    si("{n} pasó del {from}º al {to}º. Ni modo, alguien tenía que remontar.{lead}"),
+    sp("{apodo} subió del {from}º al {to}º. Va con todo.{lead}")
+  ],
+  siempreUltimo: [
+    sc("{n} ha sido último las {N} semanas. Sus picks ya tienen domicilio fijo."),
+    sc("Último lugar {N} semanas seguidas. {n} no se mueve, y sus picks tampoco."),
+    sa("{n} ha sido último las {N} semanas. Se acomodó en el fondo y no se piensa mover."),
+    sr("Cría fama y échate a dormir: {n} lleva {N} semanas en el sótano."),
+    si("{n} es último las {N} semanas. Ni modo, alguien tenía que sostener la tabla."),
+    sn("{n} perdió como siempre las {N} semanas. Último y sin cambios.")
+  ],
+  siempreLider: [
+    sc("{n} ha liderado las {N} semanas. Lo único que cambia es la excusa de los demás."),
+    sc("Primer lugar {N} semanas seguidas. {n} no suelta el volante."),
+    sa("{n} ha liderado las {N} semanas. Se puso arriba y no se la han podido sacar."),
+    sr("El que nace para tamal, del cielo le caen las hojas: {n} lidera las {N} semanas."),
+    si("{n} lidera las {N} semanas. Ni modo, alguien tenía que mandar."),
+    sn("{n} jugó como siempre y ganó como siempre: {N} semanas en el primer lugar.")
+  ],
+  peor: [
+    sc("La peor semana de {a} ({x}) le gana a la mejor de {b} ({y})."),
+    sc("{b} nunca pasó de {y}. {a} nunca bajó de {x}."),
+    sa("La peor semana de {a} ({x}) le gana a la mejor de {b} ({y}). Hay quien nace con más."),
+    sr("Entre cojos y mancos: {a} nunca bajó de {x} y {b} nunca pasó de {y}."),
+    sn("{a} jugó como siempre y su peor semana ({x}) supera la mejor de {b} ({y})."),
+    si("{b} nunca pasó de {y}. Ni modo, {a} nunca bajó de {x}.")
+  ],
+  survMuchos: [
+    sc("La semana {m} sacó a {cw} de Survivor de un jalón."),
+    sc("{cw} eliminados en la semana {m}. Survivor no avisa, solo cobra."),
+    sa("La semana {m} sacó a {cw} de Survivor de un jalón. Quedaron todos sin ganas."),
+    sr("Muchos son los llamados y pocos los vivos: la semana {m} sacó a {cw} de Survivor."),
+    sn("Survivor jugó como nunca la semana {m} y eliminó a {cw} como siempre."),
+    si("{cw} afuera en la semana {m}. Ni modo, Survivor no perdona."),
+    sk("La semana {m} se llevó a {cw} / de Survivor, qué mal sabor / La Flaca no perdona strikes / ni el pan de muerto da valor")
+  ],
+  survSemana1: [
+    sc("{n} se despidió de Survivor esta semana. Quedan {alive} vivos."),
+    sa("{n} se salió de Survivor esta semana. Quedan {alive} vivos y bien apretados."),
+    sr("El que mucho abarca, poco aprieta: {n} salió de Survivor. Quedan {alive}."),
+    sn("{n} jugó como nunca y salió como siempre de Survivor. Quedan {alive} vivos."),
+    si("{n} se despidió de Survivor. Ni modo, quedan {alive} vivos."),
+    sp("{apodo} salió de Survivor. Quedan {alive} vivos.")
+  ],
+  survSemanaN: [
+    sc("{cw} se fueron de Survivor esta semana. Quedan {alive}."),
+    sa("{cw} se salieron de Survivor esta semana. Quedan {alive} bien apretados."),
+    sr("Se juntaron los que se caen: {cw} salieron de Survivor. Quedan {alive}."),
+    sn("Survivor jugó como nunca y sacó a {cw} como siempre. Quedan {alive}."),
+    si("{cw} salieron de Survivor. Ni modo, quedan {alive}.")
+  ],
+  survSolo: [
+    sc("{n} es el único sin strikes en Survivor. Los demás ya conocen la derrota."),
+    sc("Un solo jugador sigue limpio en Survivor: {n}. Los demás ya tienen apuntes."),
+    sa("{n} es el único que sigue limpio en Survivor. Los demás ya se mancharon."),
+    sr("Árbol que crece derecho: {n} es el único sin strikes en Survivor."),
+    si("{n} sigue sin strikes. Ni modo, alguien tenía que quedar limpio."),
+    sn("{n} juega como siempre y sigue sin un strike en Survivor."),
+    sp("{apodo} sigue limpio en Survivor. Los demás ya se rayaron.")
+  ],
+  lealtadFor: [
+    sc("Los {k} fans de {team} han perdido {x} puntos apostando por ellos esta temporada. El cariño no cobra."),
+    sa("Los {k} fans de {team} se le han entregado por {x} puntos y no han recibido nada a cambio."),
+    sr("Amor con amor se paga, pero a los {k} fans de {team} les deben {x} puntos."),
+    sn("Los {k} fans de {team} apostaron como nunca y perdieron como siempre: {x} puntos."),
+    si("{team}: {x} puntos perdidos entre sus {k} fans. Ni modo, el corazón no sabe de spreads.")
+  ],
+  lealtadForWon: [
+    sc("Los {k} fans de {team} han ganado {x} puntos apostando por ellos. Por lo menos el cariño cobra."),
+    sa("Los {k} fans de {team} le entran a lo suyo y han sacado {x} puntos. Amor propio con buen retorno."),
+    sr("Amor con amor se paga: los {k} fans de {team} llevan {x} puntos picando por ellos."),
+    sn("Los {k} fans de {team} apostaron como siempre por ellos y cobraron como nunca: {x} puntos."),
+    si("{x} puntos para los {k} fans de {team}. Ni modo, a veces la fe sí paga.")
+  ],
+  lealtadAgainstLost: [
+    sc("Los {k} fans de {team} le fueron en contra y perdieron {x} puntos. La traición no salió."),
+    sa("Los {k} fans de {team} le fueron en contra por {x} puntos y se quedaron con las ganas."),
+    sr("El que a hierro mata: los {k} fans de {team} perdieron {x} puntos picando contra ellos."),
+    sn("Los {k} fans de {team} traicionaron como nunca y perdieron como siempre: {x} puntos."),
+    si("Los {k} fans de {team} perdieron {x} puntos picando en contra. Ni modo, la culpa pesa.")
+  ],
+  lealtadAgainst: [
+    sc("Los {k} fans de {team} le fueron en contra y ganaron {x} puntos. Traición que sí cobra."),
+    sa("Los {k} fans de {team} le fueron en contra por {x} puntos. Por la traición sí se paga."),
+    sr("El que a hierro mata: los {k} fans de {team} ganaron {x} puntos picando contra ellos."),
+    sn("Los {k} fans de {team} traicionaron como nunca y cobraron como siempre: {x} puntos."),
+    si("{x} puntos para los fans de {team} que apostaron en contra. Ni modo, el negocio es el negocio.")
+  ],
+  mismoUp: [
+    sc("{n} lleva {cw} semanas seguidas con {team}. Hasta hoy le ha dejado {x} puntos."),
+    sc("{cw} semanas con {team} en la boleta de {n}. Van {x} puntos a favor."),
+    sa("{n} lleva {cw} semanas con {team} metido en la boleta. Le ha dejado {x} puntos y no se queja."),
+    sr("Al que buen equipo se arrima: {n} suma {x} puntos con {team} en {cw} semanas."),
+    sn("{n} juega como siempre con {team}: {cw} semanas y {x} puntos."),
+    si("{n} insiste con {team} {cw} semanas. Ni modo, ya le pagó {x} puntos."),
+    sp("{apodo} le sigue con {team}: {cw} semanas y {x} puntos.")
+  ],
+  mismoDown: [
+    sc("{n} lleva {cw} semanas seguidas con {team}. Hasta hoy le ha costado {x} puntos."),
+    sc("{cw} semanas con {team} en la boleta de {n}. Van {x} puntos en contra."),
+    sa("{n} lleva {cw} semanas con {team} metido en la boleta. Le ha costado {x} puntos y sigue."),
+    sr("Terco como mula: {n} suma {cw} semanas con {team} y {x} puntos perdidos."),
+    sn("{n} pierde como siempre con {team}: {cw} semanas y {x} puntos."),
+    si("{n} insiste con {team} {cw} semanas. Ni modo, ya le costó {x} puntos."),
+    sp("{apodo} no suelta a {team}: {cw} semanas y {x} puntos perdidos.")
+  ],
+  costalazo1: [
+    sc("{names} le puso su {c} a {team} y lo perdió. Fue el costalazo de la semana.{tail}"),
+    sc("Un {c} de {names} en {team}. No cubrieron y el piso se sintió.{tail}"),
+    sa("{names} se la jugó con un {c} en {team} y no le entró. Se quedó con las ganas.{tail}"),
+    sr("Zapatero a tus zapatos: {names} puso un {c} en {team} y se fue de bruces.{tail}"),
+    sn("{names} apostó como nunca su {c} a {team} y perdió como siempre.{tail}"),
+    si("{names} puso su {c} en {team}. Ni modo, a veces el pick no responde.{tail}"),
+    sp("{apodo} le puso su {c} a {team} y se lo bajaron.{tail}")
+  ],
+  costaloN: [
+    sc("{k} jugadores le pusieron su {c} a {team} y lo perdieron. Costalazo colectivo.{tail}"),
+    sc("{k} jugadores pusieron su {c} en {team} y se hundieron. Nadie salió ileso.{tail}"),
+    sa("{k} jugadores le metieron su {c} a {team} y no entró. Nadie salió satisfecho.{tail}"),
+    sr("No todo lo que brilla es oro: {k} jugadores pusieron su {c} en {team} y se hundieron.{tail}"),
+    sn("{k} jugadores apostaron como nunca su {c} a {team} y perdieron como siempre.{tail}"),
+    si("{k} jugadores perdieron su {c} con {team}. Ni modo, alguien tenía que pagar.{tail}"),
+    sk("{k} le pusieron un {c} a {team} / y la Flaca los vino a buscar / No cubrió y se hizo el muerto / ahora les toca ir a velar")
+  ],
+  llanero1: [
+    sc("{names} fue el único con {team} y cubrió. {c} puntos bien puestos."),
+    sc("Nadie más escogió a {team}. {names} sí, y cobró {c} puntos."),
+    sa("{names} fue el único que se la jugó con {team} y le quedó. {c} puntos de puro gusto."),
+    sr("Más vale solo que mal acompañado: {names} escogió a {team} y cobró {c} puntos."),
+    sn("{names} jugó como nunca con {team} y cobró como siempre: {c} puntos."),
+    si("{names} escogió a {team} sin compañía. Ni modo, alguien tenía que cobrar {c}."),
+    sp("{apodo} fue solo con {team} y se llevó {c} puntos.")
+  ],
+  llanero2: [
+    sc("{names} fueron los únicos con {team} y cubrieron. {c} puntos entre los dos."),
+    sc("Solo {names} escogieron a {team}. Cubrieron y cobraron {c} puntos."),
+    sa("{names} fueron los únicos que le entraron a {team} y les quedó. {c} puntos entre los dos."),
+    sr("Dos son compañía: {names} escogieron a {team} y cobraron {c} puntos."),
+    sn("{names} jugaron como nunca con {team} y cobraron como siempre: {c} puntos."),
+    si("{names} fueron solos con {team}. Ni modo, alguien tenía que cobrar {c}.")
+  ],
+  borregada: [
+    sc("{k} de {t} escogieron a {team}. Cubrieron {other}. La mayoría también se equivoca."),
+    sc("{k} de {t} se fueron con {team} y no cubrieron. {Other} sí. Así se pierde en manada."),
+    sa("{k} de {t} se la metieron a {team} y no entró. {Other} sí. Así se pierde en manada."),
+    sr("Donde va Vicente va la gente: {k} de {t} escogieron a {team} y no cubrieron."),
+    sn("{k} de {t} jugaron como nunca con {team} y perdieron como siempre."),
+    si("{k} de {t} fueron con {team}. Ni modo, la manada también se cae."),
+    sk("{k} de {t} fueron con {team} / y la Calaca los vino a llamar / No cubrieron, qué desgracia / ni el pan los pudo salvar")
+  ],
+  empate1: [
+    sc("{game} cayó justo en el spread. {k} jugadores se quedaron sin {c} puntos de confianza."),
+    sc("{game} empató contra el spread. {c} puntos de confianza se fueron a ningún lado."),
+    sa("{game} quedó justo en el spread. {k} jugadores se quedaron a medias, con {c} puntos en el aire."),
+    sr("Ni para ti ni para mí: {game} cayó en el spread y {c} puntos de confianza se perdieron."),
+    sn("{game} empató contra el spread. Se jugó como nunca y no ganó nadie: {c} puntos en el aire."),
+    si("{game} cayó en el spread. Ni modo, {c} puntos de confianza sin dueño.")
+  ],
+  empateN: [
+    sc("{cw} juegos cayeron justo en el spread. {c} puntos de confianza se fueron a ningún lado."),
+    sa("{cw} juegos quedaron justo en el spread. {c} puntos de confianza se quedaron a medias."),
+    sr("Ni para ti ni para mí: {cw} juegos cayeron en el spread y {c} puntos se perdieron."),
+    si("{cw} empates contra el spread. Ni modo, {c} puntos sin dueño.")
+  ],
+  olvido1: [
+    sc("{names} dejó vacío el juego {line}. Esa casilla valía hasta {m} puntos."),
+    sc("{names} no puso pick en {line}. Eran hasta {m} puntos."),
+    sa("{names} dejó vacío el juego {line}. Esa casilla valía hasta {m} puntos y nadie la llenó."),
+    sr("Al que no madruga: {names} dejó {line} sin pick y se quedó sin hasta {m} puntos."),
+    sn("{names} jugó como nunca: dejó vacío {line}. Hasta {m} puntos sin llenar."),
+    si("{names} dejó {line} en blanco. Ni modo, eran hasta {m} puntos."),
+    sp("{apodo} dejó {line} vacío. Eran hasta {m} puntos.")
+  ],
+  olvidoN: [
+    sc("{names} dejaron picks vacíos. Eran hasta {m} puntos en total."),
+    sc("Casillas vacías de {names}. Hasta {m} puntos que nadie cobró."),
+    sa("{names} dejaron casillas vacías. Hasta {m} puntos que nadie se atrevió a llenar."),
+    sr("Al que no madruga: {names} dejaron picks en blanco y perdieron hasta {m} puntos."),
+    sn("{names} jugaron como nunca y dejaron hasta {m} puntos sin llenar."),
+    si("{names} dejaron picks en blanco. Ni modo, eran hasta {m} puntos."),
+    sk("Casillas vacías: {m} puntos / se los llevó la Flaca a bailar / Un pick sin dueño es de la Muerte / y ni el tequila los va a salvar")
+  ],
+  rachaPicks: [
+    sc("{n} acertó {cw} picks seguidos, de {a} a {b}. Tardó en ser genio, pero llegó."),
+    sc("Racha de {cw} aciertos para {n}, de {a} a {b}. Luego volvió a ser humano."),
+    sa("{n} acertó {cw} seguidos, de {a} a {b}. Cuando agarra ritmo no lo para nadie."),
+    sr("Tanto va el cántaro al agua: {n} acertó {cw} seguidos, de {a} a {b}."),
+    sn("{n} acertó como nunca: {cw} seguidos, de {a} a {b}."),
+    si("{n} acertó {cw} seguidos. Ni modo, a veces los picks se alinean."),
+    sp("{apodo} acertó {cw} seguidos, de {a} a {b}. Con ritmo."),
+    sk("{n} acertó {cw} seguidos / la Muerte lo vio pasar / Pero un pick lo hizo tropezar / y ahora lo viene a visitar")
+  ],
+  perros: [
+    sc("{n} es el que más se va con el underdog en la liga. Le saca {gap} puntos porcentuales al siguiente."),
+    sa("Los perros de {n} no ladran, aprietan. Le lleva {gap} puntos porcentuales de underdogs al segundo."),
+    sr("Perro que ladra no muerde: {n} lleva {gap} puntos porcentuales de ventaja en underdogs."),
+    sn("{n} apostó como nunca por los underdogs. Va {gap} puntos porcentuales arriba del siguiente."),
+    si("{n} se va con el underdog más que nadie, {gap} puntos porcentuales más que el siguiente. Ni modo."),
+    sp("{apodo} es el rey de los underdogs, con {gap} puntos porcentuales más que el siguiente.")
+  ],
+  corriente: [
+    sc("{n} se fue con la minoría en {m} de {t} picks y sumó {p} puntos con ellos."),
+    sc("{m} de {t} picks de {n} fueron contra la manada. Dejaron {p} puntos."),
+    sa("{n} se fue contra la manada en {m} de {t} picks y sacó {p} puntos. Le gusta entrar por donde nadie entra."),
+    sr("Nadar contra la corriente: {n}, {m} de {t} picks con la minoría y {p} puntos."),
+    sn("{n} jugó como nunca contra la manada: {m} de {t} picks y {p} puntos."),
+    si("{n} fue con la minoría en {m} de {t}. Ni modo, alguien tenía que llevar la contraria."),
+    sp("{apodo} nada contra la corriente: {m} de {t} picks y {p} puntos.")
+  ],
+  nunca26: [
+    sa("{n} le atinó a {h}, pero puras chiquitas. Quedó {r}º. Dicen que el tamaño no importa, aquí sí."),
+    sn("{n} jugó como nunca y perdió como siempre: {h} aciertos y {r}º en puntos."),
+    sc("{n} acertó {h} juegos y aun así quedó {r}º. Tiene la puntería, le falta el valor en la boleta."),
+    si("{n} le pegó a {h} y quedó {r}º en puntos. Ni modo, no basta con acertar, hay que saber dónde ponerlo."),
+    sr("Mucho ruido y pocas nueces: {n} acertó {h} juegos y quedó {r}º en puntos."),
+    sp("{apodo} le atinó a {h} juegos y quedó {r}º en puntos. Mucho tino, poco peso.")
+  ],
+  orden27: [
+    sr("{a} y {b} llenaron la misma boleta. El orden sí alteró el producto: {gap} puntos."),
+    sc("{a} y {b} escogieron los mismos {g} equipos. {gap} puntos de diferencia."),
+    sa("{a} y {b} metieron lo mismo en {g} juegos. El acomodo hizo la diferencia: {gap} puntos."),
+    si("Mismos {g} equipos para {a} y {b}. Ni modo, el orden importa: {gap} puntos."),
+    sn("{a} y {b} jugaron igual y quedaron {gap} puntos aparte. Perdieron como siempre.")
+  ],
+  polosN: [
+    si("{n} coincidió en {agree} de {both} juegos con {k} jugadores distintos. Ni modo, alguien tenía que llevar la contraria."),
+    sc("{n} coincidió en {agree} de {both} juegos con {k} jugadores distintos. Piensa distinto a media liga."),
+    sa("{n} apenas se puso de acuerdo en {agree} de {both} juegos con {k} jugadores. Cada quien con su postura."),
+    sr("Cada cabeza es un mundo: {n} coincidió con {k} jugadores en solo {agree} de {both} juegos."),
+    sn("{n} coincidió en {agree} de {both} juegos con {k} jugadores. Opuestos como nunca, regulares como siempre."),
+    sp("{apodo} coincidió en {agree} de {both} con {k} jugadores. Polos opuestos."),
+    sk("{n} coincidió en {agree} de {both} / con la Flaca se quiso pelear / Piensa distinto hasta de muerto / y hasta ella lo va a evitar")
+  ],
+  polos2: [
+    sc("{a} y {b} coincidieron en {agree} de {both} juegos. Polos opuestos."),
+    sa("{a} y {b} apenas se pusieron de acuerdo en {agree} de {both} juegos. Cada quien con su postura."),
+    sr("Cada cabeza es un mundo: {a} y {b} coincidieron en solo {agree} de {both} juegos."),
+    si("{a} y {b} coincidieron en {agree} de {both} juegos. Ni modo, alguien tenía que llevar la contraria."),
+    sn("{a} y {b} coincidieron en {agree} de {both} juegos. Opuestos como nunca, regulares como siempre.")
+  ],
+  cuervos: [
+    sa("{Team} se le han clavado a la liga por {x} puntos de confianza. Y todavía hay quien se agacha por ellos."),
+    sr("Cría cuervos y te sacarán los puntos: {team} le han costado {x} a la liga."),
+    sc("{Team} le han costado {x} puntos de confianza a la liga este año. Y siguen en la boleta."),
+    sn("La liga apostó como nunca por {team} y perdió como siempre: {x} puntos de confianza."),
+    si("{x} puntos de confianza se fueron con {team}. Ni modo, el cariño no siempre es correspondido."),
+    sk("{Team} se llevaron {x} puntos / de confianza para enterrar / Cría cuervos, dijo la Muerte / y la liga los fue a velar")
+  ],
+  acomodadorWorst: [
+    sa("{n} acierta, pero los números gordos se los mete donde no le entran. {got} de {max} posibles."),
+    sc("{n} cobró {got} de {max} puntos posibles ({pct}%). Acomoda las confianzas como si las fuera a olvidar."),
+    sr("Cada oveja con su pareja, pero {n} acomoda mal las suyas: {got} de {max} posibles."),
+    sn("{n} cobró solo {got} de {max}. Acertó como siempre y acomodó como nunca."),
+    si("{n} sumó {got} de {max} posibles. Ni modo, lo bueno no siempre queda en el lugar bueno."),
+    sp("{apodo} cobró {got} de {max} posibles ({pct}%). Los números gordos no le caen donde deben."),
+    sk("{n}: {got} de {max} / No supo dónde acomodar / los números en el panteón / pero la Flaca los iba a cobrar")
+  ],
+  acomodadorBest: [
+    sa("{n} sabe dónde meter los números gordos: {got} de {max} posibles ({pct}%)."),
+    sc("{n} cobró {got} de {max} posibles ({pct}%). Siempre acomoda lo grande donde pega."),
+    sr("Más sabe el diablo por viejo: {n} acomoda sus confianzas y cobra {got} de {max}."),
+    sn("{n} acertó como siempre y acomodó como nunca: {got} de {max} posibles."),
+    si("{n} cobró {got} de {max} posibles. Ni modo, alguien tenía que acomodar bien."),
+    sp("{apodo} cobró {got} de {max} posibles ({pct}%). Sabe dónde poner cada número.")
+  ],
+  poLider: [
+    sc("{n} lidera los playoffs con {t} puntos, a {gap} del segundo. Solo paga el primero."),
+    sc("{n} manda en los playoffs: {t} puntos y {gap} de ventaja. El segundo no cobra."),
+    sa("{n} lidera los playoffs con {t} puntos, a {gap} del segundo. Va arriba y bien parado."),
+    sr("A quien madruga: {n} lidera los playoffs con {t} puntos, a {gap} del segundo."),
+    si("{n} va primero en los playoffs con {t}. Ni modo, solo paga el primero."),
+    sn("{n} juega como nunca en los playoffs y lidera como siempre: {t} puntos.")
+  ],
+  poEmpate: [
+    sc("{names} empatan arriba en los playoffs con {t} puntos. Si nadie desempata, el premio se parte."),
+    sc("{t} puntos para {names} en lo alto de los playoffs. Solo uno cobra, o se parten el premio."),
+    sa("{names} empatan en los playoffs con {t} puntos. Cualquiera de los dos puede meterse al premio."),
+    sr("Dos que se quieren: {names} empatan en los playoffs con {t} puntos."),
+    si("{names} empatan con {t} en los playoffs. Ni modo, a ver quién se despega.")
+  ],
+  poFinal: [
+    sc("{n} ganó los playoffs con {t} puntos y se lleva {money}."),
+    sc("Los playoffs terminaron. {n} se queda con {money}."),
+    sa("{n} ganó los playoffs con {t} puntos. Se lleva {money} y se va satisfecho."),
+    sr("Al final del camino: {n} ganó los playoffs y se lleva {money}."),
+    si("{n} ganó los playoffs con {t}. Ni modo, {money} para quien lo merece.")
+  ],
+  poFinalTie: [
+    sc("Los playoffs terminaron en empate: {names}, {t} puntos. Se parten {money} cada uno."),
+    sa("Los playoffs terminaron en empate entre {names}, {t} puntos. Se reparten el premio a medias."),
+    sr("Dos que se quieren: {names} terminaron los playoffs con {t} puntos y se parten {money}."),
+    si("{names} terminaron empatados con {t}. Ni modo, a partir {money}.")
+  ],
+  poRonda: [
+    sc("{n} ganó la ronda {ronda} de los playoffs con {pts} puntos."),
+    sc("Ronda {ronda}: {n}, {pts} puntos. Yahoo ya lo anotó."),
+    sa("{n} ganó la ronda {ronda} con {pts} puntos. Entró fuerte en los playoffs."),
+    sr("A quien madruga: {n} ganó la ronda {ronda} con {pts} puntos."),
+    sn("{n} jugó como nunca la ronda {ronda}: {pts} puntos y la ganó."),
+    si("{n} ganó la ronda {ronda} con {pts}. Ni modo, alguien tenía que ganarla.")
+  ],
+  poSube: [
+    sc("{n} subió {up} lugares en la ronda {ronda}, del {from}º al {to}º."),
+    sc("Del {from}º al {to}º. {n} se movió {up} lugares en los playoffs."),
+    sa("{n} subió {up} lugares en la ronda {ronda}, del {from}º al {to}º. Se fue abriendo paso."),
+    sr("Camino largo, paso corto: {n} pasó del {from}º al {to}º en los playoffs."),
+    si("{n} subió al {to}º en los playoffs. Ni modo, a veces se sube.")
+  ]
+};
+T.FT = FT;
+
 // Week 5 shows the first line of every list, then they rotate week by week.
 function rot(M, list){ var len = list.length; return list[(((M.EW-5)%len)+len)%len]; }
 
-// sujetos: the players the sentence names. The last-place budget reads it.
-function fact(rule, valor, titulo, texto, score, num, data, sujetos){
-  return {rule:rule, valor:valor, titulo:titulo, texto:texto, score:score, num:!!num, data:data||{}, sujetos:sujetos||[]};
+function theme(M){ var e = M.D.tribune && M.D.tribune.edicion; return e && THEMES[e.tema] ? e.tema : ""; }
+
+// The first nickname of the first named player who has one. "Comish" reads as "el Comish".
+function apodoOf(M, names){
+  var by = {};
+  Object.keys(M.D.apodos||{}).forEach(function(n){ by[normName(n)] = M.D.apodos[n]; });
+  for (var i=0;i<names.length;i++){
+    var l = by[normName(names[i])];
+    if (l && l.length) return /^comish$/i.test(l[0]) ? "el Comish" : l[0];
+  }
+  return "";
 }
+function renderTpl(M, f, t){
+  var vv = {};
+  Object.keys(f.v).forEach(function(k){ vv[k] = f.v[k]; });
+  vv.apodo = apodoOf(M, f.sujetos);
+  return fill(t.t, vv);
+}
+T.renderFor = renderTpl;
+
+// sujetos: the players the sentence names. The last-place budget reads it.
+// grp: the styled templates of this fact. texto starts as the first template at this week's rotation that needs nothing special,
+// and T.pickFacts may swap it for another style once the 6 facts are known.
+function fact(M, rule, valor, titulo, grp, v, score, num, data, sujetos){
+  var f = {rule:rule, valor:valor, titulo:titulo, tpls:grp, v:v, score:score, num:!!num, data:data||{}, sujetos:sujetos||[], alts:[]};
+  var len = grp.length, off = (((M.EW-5)%len)+len)%len, pick = 0;
+  for (var j=0;j<len;j++){
+    var t = grp[(off+j)%len];
+    if (t.s!=="calaverita" && t.s!=="apodo"){ pick = (off+j)%len; break; }
+  }
+  f.t0 = pick;
+  f.texto = renderTpl(M, f, grp[pick]);
+  f.estilo = grp[pick].s;
+  return f;
+}
+// The first fact of a list leads and up to 3 more are its alternates, tried when the leader is skipped.
+function chain(list){
+  if (!list.length) return null;
+  var p = list[0];
+  p.alts = list.slice(1,4);
+  return p;
+}
+// Rarity of a value among the same measure for every player-week so far. 1 means the top (or the bottom for pctLow).
+function pctHigh(vals, v){ return vals.length ? vals.filter(function(x){return x<=v}).length/vals.length : 0; }
+function pctLow(vals, v){ return vals.length ? vals.filter(function(x){return x>=v}).length/vals.length : 0; }
+function rareScore(p){ return Math.round(50+45*p); }
 
 function fRebote(M){
   if (M.N<2) return null;
@@ -658,9 +1054,9 @@ function fRebote(M){
   });
   if (!best || Math.abs(best.d)<20) return null;
   var record = Math.abs(best.d)>earlier, up = best.d>0;
-  var tpl = up ? (record ? TPL.reboteRecord : TPL.reboteUp) : (record ? TPL.caidaRecord : TPL.caida);
+  var grp = up ? (record ? FT.reboteRecord : FT.reboteUp) : (record ? FT.caidaRecord : FT.caida);
   var v = {n:who(best.p.name), a:best.a, b:best.b, d:Math.abs(best.d), p:M.N-1, c:M.N};
-  return fact("rebote", (up?"+":"−")+Math.abs(best.d), up?"Rebote":"Caída", fill(rot(M,tpl),v), Math.min(100,40+Math.abs(best.d)), true,
+  return fact(M, "rebote", (up?"+":"−")+Math.abs(best.d), up?"Rebote":"Caída", grp, v, Math.min(100,40+Math.abs(best.d)), true,
     {name:best.p.name, delta:best.d, from:best.a, to:best.b, record:record}, [best.p.name]);
 }
 
@@ -670,7 +1066,7 @@ function fArriba(M){
   if (list.length<1 || list.length>2) return null;
   var names = list.map(function(p){return p.name});
   var v = {n:J(names.map(who)), N:M.N};
-  return fact("arriba", M.N+"/"+M.N, "Arriba del promedio", fill(rot(M, list.length===1 ? TPL.arriba1 : TPL.arriba2), v), 62, false, {names:names, weeks:M.N}, names);
+  return fact(M, "arriba", M.N+"/"+M.N, "Arriba del promedio", list.length===1 ? FT.arriba1 : FT.arriba2, v, 62, false, {names:names, weeks:M.N}, names);
 }
 
 function fFotocopia(M){
@@ -684,7 +1080,7 @@ function fFotocopia(M){
   if (!best) return null;
   var k = best.l.length;
   var v = {names: k<=4 ? J(best.l) : k+" jugadores", t:best.t, tie: k===3 ? "Empate triple" : "Empate de "+nw(k)};
-  return fact("fotocopia", "×"+k, "Fotocopia", fill(rot(M,TPL.fotocopia),v), 76, true, {names:best.l, total:best.t}, best.l);
+  return fact(M, "fotocopia", "×"+k, "Fotocopia", FT.fotocopia, v, 76, true, {names:best.l, total:best.t}, best.l);
 }
 
 function fDisco(M){
@@ -695,7 +1091,7 @@ function fDisco(M){
     Object.keys(c).forEach(function(s){ if (c[s]>=3 && (!best || c[s]>best.c)) best = {p:p, s:Number(s), c:c[s]}; });
   });
   if (!best) return null;
-  return fact("disco", "×"+best.c, "Disco rayado", fill(rot(M,TPL.disco),{n:who(best.p.name), s:best.s, cw:nw(best.c)}), 60, true, {name:best.p.name, score:best.s, times:best.c}, [best.p.name]);
+  return fact(M, "disco", "×"+best.c, "Disco rayado", FT.disco, {n:who(best.p.name), s:best.s, cw:nw(best.c)}, 60, true, {name:best.p.name, score:best.s, times:best.c}, [best.p.name]);
 }
 
 function fRacha(M){
@@ -714,8 +1110,8 @@ function fRacha(M){
   var series = J(best.p.w.slice(best.from, M.N).map(String));
   var up = best.dir>0;
   var v = {n:who(best.p.name), series:series, w0:best.from+1};
-  return fact("racha", (up?"+":"−")+Math.abs(best.gain), (best.L+1)+(up?" semanas en ascenso":" semanas en descenso"),
-    fill(rot(M, up?TPL.rachaUp:TPL.rachaDown), v), Math.min(94,84+(best.L-3)*2), true,
+  return fact(M, "racha", (up?"+":"−")+Math.abs(best.gain), (best.L+1)+(up?" semanas en ascenso":" semanas en descenso"),
+    up ? FT.rachaUp : FT.rachaDown, v, Math.min(94,84+(best.L-3)*2), true,
     {name:best.p.name, streak:best.L, weeks:best.p.w.slice(best.from, M.N), gain:best.gain, dir:best.dir}, [best.p.name]);
 }
 
@@ -727,11 +1123,11 @@ function fRecord(M){
   var low = lows.length ? min(lows) : null;
   if (cur.max>max(earlier)){
     var w = cur.winners[0];
-    return fact("record", String(cur.max), "Récord de la temporada", fill(rot(M,TPL.recordBest),{n:who(w), s:cur.max, c:M.N}), 58, true, {name:w, score:cur.max, kind:"best"}, [w]);
+    return fact(M, "record", String(cur.max), "Récord de la temporada", FT.recordBest, {n:who(w), s:cur.max, c:M.N}, 58, true, {name:w, score:cur.max, kind:"best"}, [w]);
   }
   if (low!==null && low<min(earlier)){
     var l = M.players.filter(function(p){return p.w[M.N-1]===low})[0];
-    return fact("record", String(low), "Piso nuevo", fill(rot(M,TPL.recordWorst),{n:who(l.name), s:low, c:M.N}), 58, true, {name:l.name, score:low, kind:"worst"}, [l.name]);
+    return fact(M, "record", String(low), "Piso nuevo", FT.recordWorst, {n:who(l.name), s:low, c:M.N}, 58, true, {name:l.name, score:low, kind:"worst"}, [l.name]);
   }
   return null;
 }
@@ -750,18 +1146,20 @@ function fRemontada(M){
     if (up>=5 && (!best || up>best.up)) best = {p:p, up:up, from:r1[p.name], to:rN[p.name]};
   });
   if (!best) return null;
-  var leader = M.players[0].name, st = leaderStreak(M, leader);
+  var leader = M.players[0].name, st0 = leaderStreak(M, leader);
   var isLeader = best.p.name===leader && best.to===1;
-  var text;
+  var v, grp;
   if (isLeader){
-    var streak = st>=2 ? "Lleva "+nw(st)+" semanas de líder." : "Es líder desde esta semana.";
-    text = fill(rot(M,TPL.remontadaLider), {n:who(best.p.name), from:best.from, streak:streak, coda: best.p.name===COMISH ? "Nadie lo vio venir, ni él." : "Nadie lo vio venir."});
+    var streak = st0>=2 ? "Lleva "+nw(st0)+" semanas de líder." : "Es líder desde esta semana.";
+    v = {n:who(best.p.name), from:best.from, streak:streak, coda: best.p.name===COMISH ? "Nadie lo vio venir, ni él." : "Nadie lo vio venir."};
+    grp = FT.remontadaLider;
   } else {
-    var lead = st>=3 ? " "+fill("{l} lleva "+nw(st)+" semanas arriba.",{l:who(leader)}) : "";
-    text = fill(rot(M,TPL.remontada), {n:who(best.p.name), from:best.from, to:best.to, up:best.up, lead:lead});
+    var lead = st0>=3 ? " "+fill("{l} lleva "+nw(st0)+" semanas arriba.",{l:who(leader)}) : "";
+    v = {n:who(best.p.name), from:best.from, to:best.to, up:best.up, lead:lead};
+    grp = FT.remontada;
   }
-  return fact("remontada", ord(best.from)+"→"+ord(best.to), "Remontada", text, 82, false,
-    {name:best.p.name, from:best.from, to:best.to, leader:leader, streak:st}, !isLeader && st>=3 ? [best.p.name, leader] : [best.p.name]);
+  return fact(M, "remontada", ord(best.from)+"→"+ord(best.to), "Remontada", grp, v, 82, false,
+    {name:best.p.name, from:best.from, to:best.to, leader:leader, streak:st0}, !isLeader && st0>=3 ? [best.p.name, leader] : [best.p.name]);
 }
 
 function fSiempre(M){
@@ -779,7 +1177,7 @@ function fSiempre(M){
     else if (last) hit = {p:p, kind:"last"};
   });
   if (!hit) return null;
-  return fact("siempre", M.N+"/"+M.N, "Siempre ahí", fill(rot(M, hit.kind==="last"?TPL.siempreUltimo:TPL.siempreLider), {n:who(hit.p.name), N:M.N}), 55, false, {name:hit.p.name, kind:hit.kind, weeks:M.N}, [hit.p.name]);
+  return fact(M, "siempre", M.N+"/"+M.N, "Siempre ahí", hit.kind==="last" ? FT.siempreUltimo : FT.siempreLider, {n:who(hit.p.name), N:M.N}, 55, false, {name:hit.p.name, kind:hit.kind, weeks:M.N}, [hit.p.name]);
 }
 
 function fPeor(M){
@@ -792,7 +1190,7 @@ function fPeor(M){
   if (a===b) return null;
   var m = min(a.w)-max(b.w);
   if (m<5) return null;
-  return fact("peor", "+"+m, "Peor que tu mejor", fill(rot(M,TPL.peor), {a:who(a.name), b:who(b.name), x:min(a.w), y:max(b.w)}), 50, true, {worst:a.name, best:b.name, margin:m}, [a.name, b.name]);
+  return fact(M, "peor", "+"+m, "Peor que tu mejor", FT.peor, {a:who(a.name), b:who(b.name), x:min(a.w), y:max(b.w)}, 50, true, {worst:a.name, best:b.name, margin:m}, [a.name, b.name]);
 }
 
 function fSurvivor(M){
@@ -801,125 +1199,28 @@ function fSurvivor(M){
   M.outs.forEach(function(o){ if (o.week!=null) (byWeek[o.week] = byWeek[o.week]||[]).push(o.name); });
   var many = null;
   Object.keys(byWeek).forEach(function(w){ var c = byWeek[w].length; if (c>=3 && (!many || c>=many.c)) many = {w:Number(w), c:c}; });
-  var thisWeek = byWeek[M.N] || [];
+  var thisWk = byWeek[M.N] || [];
   var clean = M.players.filter(function(p){return M.strikeOf(p.name)===0});
   var alive = M.alive.length;
-  if (many) return fact("survivor", String(many.c), "Survivor", fill(rot(M,TPL.survMuchos), {m:many.w, cw:nw(many.c)}), 72, true, {sub:"many", week:many.w, count:many.c});
-  if (thisWeek.length>=2) return fact("survivor", String(thisWeek.length), "Survivor", fill(rot(M,TPL.survSemanaN), {cw:nw(thisWeek.length).replace(/^./,function(c){return c.toUpperCase()}), alive:alive}), 70, true, {sub:"week", week:M.N, count:thisWeek.length});
-  if (thisWeek.length===1) return fact("survivor", "1", "Survivor", fill(rot(M,TPL.survSemana1), {n:who(thisWeek[0]), alive:alive}), 60, true, {sub:"week", week:M.N, count:1}, [thisWeek[0]]);
-  if (clean.length===1) return fact("survivor", "0", "Survivor", fill(rot(M,TPL.survSolo), {n:who(clean[0].name)}), 58, true, {sub:"clean", name:clean[0].name}, [clean[0].name]);
+  if (many) return fact(M, "survivor", String(many.c), "Survivor", FT.survMuchos, {m:many.w, cw:nw(many.c)}, 72, true, {sub:"many", week:many.w, count:many.c});
+  if (thisWk.length>=2) return fact(M, "survivor", String(thisWk.length), "Survivor", FT.survSemanaN, {cw:nw(thisWk.length).replace(/^./,function(c){return c.toUpperCase()}), alive:alive}, 70, true, {sub:"week", week:M.N, count:thisWk.length});
+  if (thisWk.length===1) return fact(M, "survivor", "1", "Survivor", FT.survSemana1, {n:who(thisWk[0]), alive:alive}, 60, true, {sub:"week", week:M.N, count:1}, [thisWk[0]]);
+  if (clean.length===1) return fact(M, "survivor", "0", "Survivor", FT.survSolo, {n:who(clean[0].name)}, 58, true, {sub:"clean", name:clean[0].name}, [clean[0].name]);
   return null;
 }
 
-function fAficiones(M){
-  if (!M.hasFans) return null;
-  var moneyNames = Object.keys(M.inMoney);
-  if (!moneyNames.length) return null;
-  var moneyGroups = uniq(moneyNames.map(function(n){return M.byName[n].group}));
-  var team = M.groups.filter(function(g){ return NFL[g.key]; });
-  var dry = team.filter(function(g){ return g.n>=3 && !g.members.some(function(p){return M.inMoney[p.name]}); });
-  if (dry.length){
-    var total = sum(dry.map(function(g){return g.n}));
-    var v = {sum:total, bases:J(dry.map(function(g){return g.city})), money:J(moneyGroups.map(function(k){return T.groupCity(k)}))};
-    return fact("aficiones", "0/"+total, "Aficiones", fill(rot(M,TPL.aficionesCero),v), 86, false,
-      {inMoney:0, total:total, bases:dry.map(function(g){return g.key}), money:moneyGroups});
-  }
-  var fewAll = moneyNames.length===2 && moneyNames.every(function(n){ var g = M.groups.filter(function(x){return x.key===M.byName[n].group})[0]; return g.n<=2; });
-  if (fewAll) return fact("aficiones", "2/2", "Aficiones", fill(rot(M,TPL.aficionesPocos),{money:J(moneyGroups.map(function(k){return T.groupCity(k)}))}), 70, false, {money:moneyGroups});
-  var dryBig = M.groups.filter(function(g){return g.money===0 && g.n>=3 && NFL[g.key]}).sort(function(a,b){return b.n-a.n})[0];
-  if (dryBig) return fact("aficiones", "$0", "Aficiones", fill(rot(M,TPL.aficionesSeco),{n:dryBig.n, team:dryBig.city}), 55, false, {team:dryBig.key, n:dryBig.n});
-  return null;
-}
-
-function fSotano(M){
-  if (M.N<2 || M.regular.length<2) return null;
-  var lp = T.lastPlace(M);
-  if (!lp.gap) return null;
-  var v = {n:J(lp.names.map(who)), t:lp.total, gap:lp.gap, nombre: lp.names.length>1 ? "sus nombres" : "su nombre"};
-  return fact("sotano", "+"+lp.gap, "Cuentas del sótano", fill(rot(M,TPL.sotano),v), 52, true, {names:lp.names, gap:lp.gap, total:lp.total}, lp.names);
-}
-
 // ---------------------------------------------------------------------------
-// Pick-level facts (rules 16 to 25) and "Tus picks". They read data.json "picks". A game without a known result is
-// skipped, a missed pick is left out, and a confidence 0 pick counts for loyalty and herd facts but never for points.
+// Pick-level facts and "Tus picks". They read data.json "picks". A game without a known result is skipped, a missed
+// pick is left out, and a confidence 0 pick counts for loyalty and herd facts but never for points.
 // ---------------------------------------------------------------------------
-TPL.lealtadFor = [
-  "{n} va {w} de {c} con {team}: {net} puntos. Querer tanto cuesta.",
-  "Apostar por {team} le cuesta {x} puntos a {n} este año. El amor es ciego y los picks también."
-];
-TPL.lealtadAgainst = [
-  "{n} le fue en contra a {team} y ganó {x} puntos. Traición bien pagada.",
-  "Contra {team}, {n} suma {x} puntos. La traición sí cobra."
-];
-TPL.mismoUp = [
-  "{n} lleva {cw} semanas seguidas con {team}. Hasta hoy le ha dejado {x} puntos.",
-  "{cw} semanas con {team} en la boleta de {n}. Van {x} puntos a favor."
-];
-TPL.mismoDown = [
-  "{n} lleva {cw} semanas seguidas con {team}. Hasta hoy le ha costado {x} puntos.",
-  "{cw} semanas con {team} en la boleta de {n}. Van {x} puntos en contra."
-];
-TPL.costalazo1 = [
-  "{names} le puso su {c} a {team} y lo perdió. Fue el costalazo de la semana.{tail}",
-  "Un {c} de {names} en {team}. No cubrieron y el piso se sintió.{tail}"
-];
-TPL.costaloN = [
-  "{k} jugadores le pusieron su {c} a {team} y lo perdieron. Costalazo colectivo.{tail}",
-  "{k} jugadores pusieron su {c} en {team} y se hundieron. Nadie salió ileso.{tail}"
-];
-TPL.llanero1 = [
-  "{names} fue el único con {team} y cubrió. {c} puntos bien puestos.",
-  "Nadie más escogió a {team}. {names} sí, y cobró {c} puntos."
-];
-TPL.llanero2 = [
-  "{names} fueron los únicos con {team} y cubrieron. {c} puntos entre los dos.",
-  "Solo {names} escogieron a {team}. Cubrieron y cobraron {c} puntos."
-];
-TPL.borregada = [
-  "{k} de {t} escogieron a {team}. Cubrieron {other}. La mayoría también se equivoca.",
-  "{k} de {t} se fueron con {team} y no cubrieron. {Other} sí. Así se pierde en manada."
-];
-TPL.empate1 = [
-  "{game} cayó justo en el spread. {k} jugadores se quedaron sin {c} puntos de confianza.",
-  "{game} empató contra el spread. {c} puntos de confianza se fueron a ningún lado."
-];
-TPL.empateN = [
-  "{cw} juegos cayeron justo en el spread. {c} puntos de confianza se fueron a ningún lado."
-];
-TPL.olvido1 = [
-  "{names} dejó vacío el juego {line}. Esa casilla valía hasta {m} puntos.",
-  "{names} no puso pick en {line}. Eran hasta {m} puntos."
-];
-TPL.olvidoN = [
-  "{names} dejaron picks vacíos. Eran hasta {m} puntos en total.",
-  "Casillas vacías de {names}. Hasta {m} puntos que nadie cobró."
-];
-TPL.rachaPicks = [
-  "{n} acertó {cw} picks seguidos, de {a} a {b}. Tardó en ser genio, pero llegó.",
-  "Racha de {cw} aciertos para {n}, de {a} a {b}. Luego volvió a ser humano."
-];
-TPL.fuertesUp = [
-  "{n} acierta {rl}% de sus picks fuertes en 3 semanas, contra {rs}% en el año. Se le prendió el foco."
-];
-TPL.fuertesDown = [
-  "{n} acierta {rl}% de sus picks fuertes en 3 semanas, contra {rs}% en el año. Se le apagó el foco."
-];
-TPL.perros = [
-  "{n} se fue con el underdog en {k} de {t} picks y acertó {h}. {coda}",
-  "{pct}% de los picks de {n} son underdogs. Pegó {h} de {k}. {coda}"
-];
-TPL.corriente = [
-  "{n} se fue con la minoría en {m} de {t} picks y sumó {p} puntos con ellos.",
-  "{m} de {t} picks de {n} fueron contra la manada. Dejaron {p} puntos."
-];
-
 function tm(code){ return NFL[code] ? "los "+NFL[code] : code; }
+function cap(s){ return s.replace(/^./,function(c){return c.toUpperCase()}); }
 function sgn(n){ return (n<0 ? "−" : "+")+Math.abs(n); }
 function decided(r){ return !!(r && r.res && r.side); }
 function pickPts(r){ return r.won===true ? r.conf : r.won===false ? -r.conf : 0; }
 function fanTeam(M, name){ var p = M.byName[name]; return p && NFL[p.group] ? p.group : null; }
 
-// The picks of every week up to the current one, with Yahoo's results inferred by the publisher.
+// The picks of every week up to the edition, with Yahoo's results inferred by the publisher.
 // pm.W[w].p[name] is one record or null per game, in kickoff order. pm.R are the weeks with every result known.
 T.pickModel = function(M){
   if (M.pm !== undefined) return M.pm;
@@ -960,39 +1261,36 @@ function thisWeek(M){
   return W && W.solved ? W : null;
 }
 
-// Hits on the 3 highest confidence picks of each week in `weeks`: {h, t}.
-function topHits(pm, name, weeks){
-  var h = 0, t = 0;
-  weeks.forEach(function(w){
-    var l = ((pm.W[w].p[name])||[]).filter(function(r){ return decided(r) && r.conf>0; }).sort(function(a,b){ return b.conf-a.conf; }).slice(0,3);
-    l.forEach(function(r){ t++; if (r.won) h++; });
-  });
-  return {h:h, t:t};
+// A player's points in week w of the whole season (1 to 18 regular, 19 to 22 playoffs).
+function weekPts(M, name, w){
+  if (w<=M.WK){ var p = M.byName[name]; return p && typeof p.w[w-1]==="number" ? p.w[w-1] : null; }
+  var q = M.po && M.po.byName[name];
+  return q && typeof q.w[w-M.WK-1]==="number" ? q.w[w-M.WK-1] : null;
 }
 
 function fLealtad(M){
-  var pm = T.pickModel(M), best = null;
+  var pm = T.pickModel(M), list = [];
   if (!pm) return null;
-  M.players.forEach(function(p){
-    var ft = fanTeam(M, p.name), s = {fw:0,fc:0,fn:0,aw:0,ac:0,an:0};
-    if (!ft) return;
-    (pm.recs[p.name]||[]).forEach(function(r){
-      if (!decided(r) || (r.g.fav!==ft && r.g.dog!==ft)) return;
-      var f = r.team===ft;
-      s[f?"fc":"ac"]++;
-      if (r.won) s[f?"fw":"aw"]++;
-      s[f?"fn":"an"] += pickPts(r);
+  M.groups.forEach(function(g){
+    if (!NFL[g.key] || g.n<2) return;
+    var s = {fn:0, an:0};
+    g.members.forEach(function(p){
+      (pm.recs[p.name]||[]).forEach(function(r){
+        if (!decided(r) || (r.g.fav!==g.key && r.g.dog!==g.key)) return;
+        s[r.team===g.key ? "fn" : "an"] += pickPts(r);
+      });
     });
-    [{kind:"for", net:s.fn, w:s.fw, c:s.fc, ok:s.fn<=-12}, {kind:"against", net:s.an, w:s.aw, c:s.ac, ok:s.an>=12}].forEach(function(c){
-      if (c.ok && (!best || Math.abs(c.net)>Math.abs(best.net))){ c.p = p; c.team = ft; best = c; }
-    });
+    if (Math.abs(s.fn)>=30) list.push({g:g, kind:"for", net:s.fn});
+    if (Math.abs(s.an)>=30) list.push({g:g, kind:"against", net:s.an});
   });
-  if (!best) return null;
-  var v = {n:who(best.p.name), w:best.w, c:best.c, team:tm(best.team), net:sgn(best.net), x:Math.abs(best.net)};
-  var f = fact("lealtad", sgn(best.net), best.kind==="for" ? "Lealtad cara" : "Traición que paga",
-    fill(rot(M, best.kind==="for" ? TPL.lealtadFor : TPL.lealtadAgainst), v), 70, true,
-    {name:best.p.name, team:best.team, net:best.net, kind:best.kind}, [best.p.name]);
-  return f;
+  list.sort(function(a,b){ return Math.abs(b.net)-Math.abs(a.net); });
+  return chain(list.slice(0,4).map(function(c){
+    var v = {k:nw(c.g.n), team:tm(c.g.key), x:Math.abs(c.net)};
+    var grp = c.kind==="for" ? (c.net<0 ? FT.lealtadFor : FT.lealtadForWon) : (c.net>0 ? FT.lealtadAgainst : FT.lealtadAgainstLost);
+    var titulo = c.kind==="for" ? (c.net<0 ? "Lealtad cara" : "Lealtad que paga") : (c.net>0 ? "Traición que paga" : "Traición cara");
+    return fact(M, "lealtad", sgn(c.net), titulo, grp, v, 70, true,
+      {team:c.g.key, fans:c.g.n, net:c.net, kind:c.kind}, []);
+  }));
 }
 
 function fMismoEquipo(M){
@@ -1012,7 +1310,7 @@ function fMismoEquipo(M){
   });
   if (!best) return null;
   var v = {n:who(best.p.name), cw:nw(best.L), team:tm(best.team), x:Math.abs(best.net)};
-  return fact("mismoequipo", sgn(best.net), "Mismo equipo", fill(rot(M, best.net>0 ? TPL.mismoUp : TPL.mismoDown), v), 58, true,
+  return fact(M, "mismoequipo", sgn(best.net), "Mismo equipo", best.net>0 ? FT.mismoUp : FT.mismoDown, v, 58, true,
     {name:best.p.name, team:best.team, weeks:best.L, net:best.net}, [best.p.name]);
 }
 
@@ -1032,7 +1330,7 @@ function fCostalazo(M){
   var names = by[team], k = names.length, tail = atTop.length>k ? " En total, "+atTop.length+" perdieron un "+top+"." : "";
   var v = {names:J(names.map(who)), k:k, c:top, team:tm(team), tail:tail};
   var small = k===1;
-  return fact("costalazo", "−"+top, "Costalazo", fill(rot(M, small ? TPL.costalazo1 : TPL.costaloN), v), 74, true,
+  return fact(M, "costalazo", "−"+top, "Costalazo", small ? FT.costalazo1 : FT.costaloN, v, 74, true,
     {conf:top, team:team, names:names, total:atTop.length}, small ? names : []);
 }
 
@@ -1045,16 +1343,16 @@ function fLlanero(M){
     var by = {};
     M.players.forEach(function(p){
       var r = (W.p[p.name]||[])[i];
-      if (r && r.side) (by[r.side] = by[r.side]||[]).push(r);
+      if (r && r.side) (by[r.side] = by[r.side]||[]).push({r:r, name:p.name});
     });
-    var s = g.res, list = by[s]||[];
+    var list = by[g.res]||[];
     if (list.length<1 || list.length>2) return;
-    var conf = sum(list.map(function(r){return r.conf}));
-    if (!best || conf>best.conf) best = {team:list[0].team, names:list.map(function(r){ return M.players.filter(function(p){ return (W.p[p.name]||[])[i]===r; })[0].name; }), conf:conf};
+    var conf = sum(list.map(function(x){return x.r.conf}));
+    if (!best || conf>best.conf) best = {team:list[0].r.team, names:list.map(function(x){return x.name}), conf:conf};
   });
   if (!best) return null;
   var v = {names:J(best.names.map(who)), team:tm(best.team), c:best.conf};
-  return fact("llanero", best.names.length===1 ? "1 solo" : "2 solos", "Llanero solitario", fill(rot(M, best.names.length===1 ? TPL.llanero1 : TPL.llanero2), v), 66+Math.min(8,best.conf/2), false,
+  return fact(M, "llanero", best.names.length===1 ? "1 solo" : "2 solos", "Llanero solitario", best.names.length===1 ? FT.llanero1 : FT.llanero2, v, 66+Math.min(8,best.conf/2), false,
     {team:best.team, names:best.names, conf:best.conf}, best.names);
 }
 
@@ -1075,7 +1373,7 @@ function fBorregada(M){
   });
   if (!best) return null;
   var team = best.side==="F" ? best.g.fav : best.g.dog, other = best.side==="F" ? best.g.dog : best.g.fav;
-  return fact("borregada", best.k+"/"+best.t, "Borregada", fill(rot(M,TPL.borregada), {k:best.k, t:best.t, team:tm(team), other:tm(other), Other:tm(other).replace(/^./,function(c){return c.toUpperCase()})}), 68, true,
+  return fact(M, "borregada", best.k+"/"+best.t, "Borregada", FT.borregada, {k:best.k, t:best.t, team:tm(team), other:tm(other), Other:cap(tm(other))}, 68, true,
     {team:team, k:best.k, total:best.t, covered:other});
 }
 
@@ -1092,8 +1390,8 @@ function fEmpate(M){
     });
   });
   var one = games.length===1;
-  var v = {game:games[0].fav+" contra "+games[0].dog, k:k, c:c, cw:nw(games.length).replace(/^./,function(x){return x.toUpperCase()})};
-  return fact("empate", String(c), "Empate", fill(rot(M, one ? TPL.empate1 : TPL.empateN), v), 68, true, {games:games.length, conf:c, picks:k});
+  var v = {game:games[0].fav+" contra "+games[0].dog, k:k, c:c, cw:cap(nw(games.length))};
+  return fact(M, "empate", String(c), "Empate", one ? FT.empate1 : FT.empateN, v, 68, true, {games:games.length, conf:c, picks:k});
 }
 
 function fOlvido(M){
@@ -1115,14 +1413,14 @@ function fOlvido(M){
   var one = list.length===1 && list[0].k===1;
   var line = one ? list[0].game.fav+" -"+list[0].game.spread : "";
   var v = {names:J(names.map(who)), m:m, line:line};
-  return fact("olvido", String(m), "Se le olvidó", fill(rot(M, one ? TPL.olvido1 : TPL.olvidoN), v), 62, true, {names:names, left:m}, names);
+  return fact(M, "olvido", String(m), "Se le olvidó", one ? FT.olvido1 : FT.olvidoN, v, 62, true, {names:names, left:m}, names);
 }
 
+// Correct picks in a row, in kickoff order, this week.
 function fRachaPicks(M){
-  var pm = T.pickModel(M), best = null;
-  if (!pm) return null;
-  var W = thisWeek(M);
-  if (W) M.players.forEach(function(p){
+  var W = thisWeek(M), best = null;
+  if (!W) return null;
+  M.players.forEach(function(p){
     var rs = W.p[p.name];
     if (!rs) return;
     var run = [];
@@ -1132,43 +1430,29 @@ function fRachaPicks(M){
       run = [];
     });
   });
-  var streak = best ? {score:58+Math.min(12,(best.run.length-5)*3), best:best} : null;
-  // top 3 confidence hit rate over the last 3 weeks against the season
-  var swing = null;
-  if (pm.R.length>=4){
-    var last = pm.R.slice(-3);
-    M.players.forEach(function(p){
-      var a = topHits(pm, p.name, pm.R), b = topHits(pm, p.name, last);
-      if (b.t<9 || a.t<12) return;
-      var d = b.h/b.t-a.h/a.t;
-      if (Math.abs(d)>=0.25 && (!swing || Math.abs(d)>Math.abs(swing.d))) swing = {p:p, d:d, a:a, b:b};
-    });
-  }
-  if (swing && (!streak || streak.score<66)){
-    var v2 = {n:who(swing.p.name), rl:Math.round(swing.b.h/swing.b.t*100), rs:Math.round(swing.a.h/swing.a.t*100)};
-    return fact("rachapicks", v2.rl+"%", "Picks fuertes", fill(rot(M, swing.d>0 ? TPL.fuertesUp : TPL.fuertesDown), v2), 66, true,
-      {name:swing.p.name, last3:swing.b, season:swing.a}, [swing.p.name]);
-  }
-  if (!streak) return null;
-  var run = streak.best.run, v = {n:who(streak.best.p.name), cw:nw(run.length), a:tm(run[0].team), b:tm(run[run.length-1].team)};
-  return fact("rachapicks", String(run.length), "Racha de picks", fill(rot(M,TPL.rachaPicks), v), streak.score, true,
-    {name:streak.best.p.name, run:run.length}, [streak.best.p.name]);
+  if (!best) return null;
+  var run = best.run, v = {n:who(best.p.name), cw:nw(run.length), a:tm(run[0].team), b:tm(run[run.length-1].team)};
+  return fact(M, "rachapicks", String(run.length), "Racha de picks", FT.rachaPicks, v, 58+Math.min(12,(run.length-5)*3), true,
+    {name:best.p.name, run:run.length}, [best.p.name]);
 }
 
+// The player who goes with the underdog most often. The popup keeps their own numbers, so this names the gap to the next one.
 function fPerros(M){
-  var pm = T.pickModel(M), best = null;
+  var pm = T.pickModel(M), list = [];
   if (!pm) return null;
   M.players.forEach(function(p){
     var rs = (pm.recs[p.name]||[]).filter(function(r){ return r.side && r.res; });
-    var dogs = rs.filter(function(r){return r.side==="U"}), hit = dogs.filter(function(r){return r.won}).length;
-    if (rs.length<8 || dogs.length/rs.length<0.6) return;
-    var share = dogs.length/rs.length;
-    if (!best || share>best.share) best = {p:p, share:share, k:dogs.length, t:rs.length, h:hit, dec:dogs.filter(function(r){return r.res!=="P"}).length};
+    var dogs = rs.filter(function(r){return r.side==="U"});
+    if (rs.length<8) return;
+    list.push({p:p, share:dogs.length/rs.length, k:dogs.length, t:rs.length});
   });
-  if (!best) return null;
-  var v = {n:who(best.p.name), k:best.k, t:best.t, h:best.h, pct:Math.round(best.share*100), coda: best.h*2>=best.k ? "Los perros sí muerden." : "Ladran más de lo que muerden."};
-  return fact("perros", Math.round(best.share*100)+"%", "Amante de los perros", fill(rot(M,TPL.perros), v), 56, true,
-    {name:best.p.name, underdogs:best.k, picks:best.t, hits:best.h}, [best.p.name]);
+  list.sort(function(a,b){ return b.share-a.share || b.k-a.k; });
+  if (list.length<2 || list[0].share<0.5) return null;
+  var gap = Math.round((list[0].share-list[1].share)*100);
+  if (gap<1) return null;
+  var best = list[0];
+  return fact(M, "perros", "1º", "Amante de los perros", FT.perros, {n:who(best.p.name), gap:gap}, 56, true,
+    {name:best.p.name, underdogs:best.k, picks:best.t, gap:gap}, [best.p.name]);
 }
 
 function fCorriente(M){
@@ -1199,11 +1483,190 @@ function fCorriente(M){
     if (share>=0.3 && (!best || share>best.share)) best = {p:p, share:share, m:m, t:t, pts:pts};
   });
   if (!best) return null;
-  return fact("corriente", Math.round(best.share*100)+"%", "Contra la corriente", fill(rot(M,TPL.corriente), {n:who(best.p.name), m:best.m, t:best.t, p:best.pts}), 54, true,
+  return fact(M, "corriente", Math.round(best.share*100)+"%", "Contra la corriente", FT.corriente, {n:who(best.p.name), m:best.m, t:best.t, p:best.pts}, 54, true,
     {name:best.p.name, minority:best.m, picks:best.t, points:best.pts}, [best.p.name]);
 }
 
+// ---- 26. Jugamos como nunca: many hits, few points ----
+function weekGaps(M, pm, w){
+  var W = pm.W[w], rows = [];
+  if (!W || !W.solved) return rows;
+  M.players.forEach(function(p){
+    var rs = W.p[p.name], pts = weekPts(M, p.name, w);
+    if (!rs || pts==null) return;
+    rows.push({name:p.name, hits:rs.filter(function(r){return decided(r) && r.won}).length, pts:pts});
+  });
+  rows.forEach(function(a){
+    a.hr = 1+rows.filter(function(b){return b.hits>a.hits}).length;
+    a.pr = 1+rows.filter(function(b){return b.pts>a.pts}).length;
+    a.gap = a.pr-a.hr;
+  });
+  return rows;
+}
+function fNunca(M){
+  var pm = T.pickModel(M), W = thisWeek(M);
+  if (!pm || !W) return null;
+  var cur = weekGaps(M, pm, M.EW), ref = [];
+  pm.R.forEach(function(w){ weekGaps(M, pm, w).forEach(function(r){ ref.push(r.gap); }); });
+  cur.sort(function(a,b){ return b.gap-a.gap || a.hr-b.hr || b.hits-a.hits; });
+  var out = [];
+  cur.forEach(function(r){
+    var p = pctHigh(ref, r.gap);
+    if (out.length>=4 || r.gap<1 || p<0.9) return;
+    out.push(fact(M, "nunca", "+"+r.gap, "Jugamos como nunca", FT.nunca26, {n:who(r.name), h:r.hits, r:r.pr, hr:r.hr}, rareScore(p), true,
+      {name:r.name, hits:r.hits, hitsRank:r.hr, pointsRank:r.pr, gap:r.gap, pct:p}, [r.name]));
+  });
+  return chain(out);
+}
+
+// ---- 27 and 28: pairs of players this week ----
+function weekPairs(M, pm, w){
+  var W = pm.W[w], out = [];
+  if (!W || !W.solved) return out;
+  var names = M.players.map(function(p){return p.name}).filter(function(n){return W.p[n]});
+  for (var a=0;a<names.length;a++) for (var b=a+1;b<names.length;b++){
+    var both = 0, same = 0, x = W.p[names[a]], y = W.p[names[b]];
+    for (var g=0;g<W.games.length;g++) if (x[g] && y[g]){ both++; if (x[g].team===y[g].team) same++; }
+    var pa = weekPts(M, names[a], w), pb = weekPts(M, names[b], w);
+    if (both>=10 && pa!=null && pb!=null) out.push({a:names[a], b:names[b], both:both, same:same, gap:Math.abs(pa-pb), ratio:same/both});
+  }
+  return out;
+}
+function fOrden(M){
+  var pm = T.pickModel(M), W = thisWeek(M);
+  if (!pm || !W) return null;
+  var ref = [];
+  pm.R.forEach(function(w){ weekPairs(M, pm, w).forEach(function(p){ if (p.same===p.both) ref.push(p.gap); }); });
+  var cur = weekPairs(M, pm, M.EW).filter(function(p){return p.same===p.both}).sort(function(a,b){ return b.gap-a.gap; });
+  var out = [];
+  cur.forEach(function(p){
+    var pc = pctHigh(ref, p.gap);
+    // Identical picks are common (4 of the first 5 weeks), so the gap carries the rarity: top decile, or at least 10 points apart.
+    if (out.length>=4 || p.gap<1 || (pc<0.9 && p.gap<10)) return;
+    out.push(fact(M, "orden", "±"+p.gap, "El orden sí altera el producto", FT.orden27, {a:who(p.a), b:who(p.b), g:p.both, gap:p.gap}, rareScore(pc), true,
+      {names:[p.a,p.b], games:p.both, gap:p.gap, pct:pc}, [p.a, p.b]));
+  });
+  return chain(out);
+}
+function fPolos(M){
+  var pm = T.pickModel(M), W = thisWeek(M);
+  if (!pm || !W) return null;
+  var ref = [];
+  pm.R.forEach(function(w){ weekPairs(M, pm, w).forEach(function(p){ ref.push(p.ratio); }); });
+  var cur = weekPairs(M, pm, M.EW);
+  if (!cur.length) return null;
+  var low = min(cur.map(function(p){return p.same})), tied = cur.filter(function(p){return p.same===low});
+  var pc = pctLow(ref, min(tied.map(function(p){return p.ratio})));
+  if (pc<0.9) return null;
+  var common = null;
+  if (tied.length>1){
+    [tied[0].a, tied[0].b].forEach(function(n){ if (tied.every(function(p){return p.a===n || p.b===n})) common = common || n; });
+  }
+  var out;
+  if (common){
+    out = fact(M, "polos", low+"/"+tied[0].both, "Polos opuestos", FT.polosN, {n:who(common), agree:low, both:tied[0].both, k:nw(tied.length)}, rareScore(pc), true,
+      {name:common, agree:low, both:tied[0].both, others:tied.length, pct:pc}, [common]);
+  } else {
+    var p0 = tied[0];
+    out = fact(M, "polos", p0.same+"/"+p0.both, "Polos opuestos", FT.polos2, {a:who(p0.a), b:who(p0.b), agree:p0.same, both:p0.both}, rareScore(pc), true,
+      {names:[p0.a,p0.b], agree:p0.same, both:p0.both, pct:pc}, [p0.a, p0.b]);
+  }
+  return out;
+}
+
+// ---- 29. Cría cuervos: the team whose losing picks cost the league the most confidence this season ----
+function fCuervos(M){
+  var pm = T.pickModel(M), tot = {};
+  if (!pm) return null;
+  M.players.forEach(function(p){
+    (pm.recs[p.name]||[]).forEach(function(r){ if (decided(r) && r.won===false && r.conf>0) tot[r.team] = (tot[r.team]||0)+r.conf; });
+  });
+  var teams = Object.keys(tot).sort(function(a,b){ return tot[b]-tot[a] || (a<b ? -1 : 1); });
+  if (!teams.length) return null;
+  var vals = teams.map(function(t){return tot[t]}), out = [];
+  teams.forEach(function(t){
+    var pc = pctHigh(vals, tot[t]);
+    if (out.length>=4 || pc<0.9) return;
+    out.push(fact(M, "cuervos", String(tot[t]), "Cría cuervos", FT.cuervos, {team:tm(t), Team:cap(tm(t)), x:tot[t]}, rareScore(pc), true, {team:t, conf:tot[t], pct:pc}, []));
+  });
+  return chain(out);
+}
+
+// ---- 30. El acomodador: points against the most the same hits could have scored in the top confidence slots ----
+function fAcomodador(M){
+  var pm = T.pickModel(M), rows = [];
+  if (!pm || !pm.R.length) return null;
+  M.players.forEach(function(p){
+    var got = 0, mx = 0;
+    pm.R.forEach(function(w){
+      var rs = (pm.W[w].p[p.name]||[]).filter(function(r){ return decided(r) && r.conf>=0; });
+      var hits = rs.filter(function(r){return r.won});
+      got += sum(hits.map(function(r){return r.conf}));
+      mx += sum(rs.map(function(r){return r.conf}).sort(function(a,b){return b-a}).slice(0,hits.length));
+    });
+    if (mx>0) rows.push({name:p.name, got:got, max:mx, ratio:got/mx});
+  });
+  if (rows.length<5) return null;
+  var vals = rows.map(function(r){return r.ratio});
+  rows.sort(function(a,b){ return a.ratio-b.ratio; });
+  var order = [rows[0], rows[1], rows[rows.length-1], rows[rows.length-2]], out = [];
+  order.forEach(function(r, i){
+    var worst = i<2, pc = worst ? pctLow(vals, r.ratio) : pctHigh(vals, r.ratio);
+    if (pc<0.9) return;
+    out.push(fact(M, "acomodador", Math.round(r.ratio*100)+"%", "El acomodador", worst ? FT.acomodadorWorst : FT.acomodadorBest,
+      {n:who(r.name), got:r.got, max:r.max, pct:Math.round(r.ratio*100)}, rareScore(pc), true,
+      {name:r.name, points:r.got, possible:r.max, kind:worst ? "worst" : "best", pct:pc}, [r.name]));
+  });
+  return chain(out);
+}
+
+// ---- playoffs ----
+var ROUNDS = ["Wild Card","Divisional","Final de conferencia","Super Bowl"];
+function roundName(r){ return ROUNDS[r] || ("ronda "+(r+1)); }
+
+// Rank of every playoff player after k rounds, ties share the better rank.
+function poRanksAt(M, k){
+  var rows = M.po.rows.map(function(q){ return {name:q.name, t:sum(q.w.slice(0,k))}; }), out = {};
+  rows.forEach(function(a){ out[a.name] = 1 + rows.filter(function(b){return b.t>a.t}).length; });
+  return out;
+}
+function fPlayoffLider(M){
+  if (!M.po) return null;
+  var lead = M.po.leaders, second = M.po.groups[1], gap = second ? M.po.top-second.score : M.po.top;
+  var v = {n:who(lead[0]), names:J(lead.map(who)), t:M.po.top, gap:gap, money:money(M.po.per)};
+  var grp = M.po.final ? (lead.length>1 ? FT.poFinalTie : FT.poFinal) : lead.length>1 ? FT.poEmpate : FT.poLider;
+  return fact(M, "playoffs", String(M.po.top), M.po.final ? "Campeón de playoffs" : "Playoffs", grp, v, M.po.final ? 98 : 92, true,
+    {names:lead, total:M.po.top, gap:gap, rounds:M.po.rounds}, lead);
+}
+function fPlayoffRonda(M){
+  if (!M.po || !M.po.rounds) return null;
+  var r = M.po.rounds-1, w = M.po.winners[r];
+  if (!w || !w.winners.length) return null;
+  var v = {n:J(w.winners.map(who)), ronda:roundName(r), pts:w.max};
+  return fact(M, "poronda", String(w.max), "Ronda de playoffs", FT.poRonda, v, 86, true, {names:w.winners, round:r+1, points:w.max}, w.winners);
+}
+function fPlayoffSubida(M){
+  if (!M.po || M.po.rounds<2) return null;
+  var before = poRanksAt(M, M.po.rounds-1), now = poRanksAt(M, M.po.rounds), best = null;
+  M.po.rows.forEach(function(q){
+    var up = before[q.name]-now[q.name];
+    if (up>=2 && (!best || up>best.up)) best = {q:q, up:up, from:before[q.name], to:now[q.name]};
+  });
+  if (!best) return null;
+  return fact(M, "posube", "+"+best.up, "Subida de playoffs", FT.poSube, {n:who(best.q.name), up:best.up, from:best.from, to:best.to, ronda:roundName(M.po.rounds-1)}, 70, true,
+    {name:best.q.name, from:best.from, to:best.to}, [best.q.name]);
+}
+
 // "Tus picks" in the name panel: up to 4 short lines from the weeks with results. null hides the block.
+// Hits on the 3 highest confidence picks of each week in `weeks`: {h, t}.
+function topHits(pm, name, weeks){
+  var h = 0, t = 0;
+  weeks.forEach(function(w){
+    var l = ((pm.W[w].p[name])||[]).filter(function(r){ return decided(r) && r.conf>0; }).sort(function(a,b){ return b.conf-a.conf; }).slice(0,3);
+    l.forEach(function(r){ t++; if (r.won) h++; });
+  });
+  return {h:h, t:t};
+}
 T.tusPicks = function(M, name){
   var pm = T.pickModel(M);
   if (!pm || !pm.R.length) return null;
@@ -1215,7 +1678,7 @@ T.tusPicks = function(M, name){
   if (all.t){
     if (pm.R.length>3){
       var l3 = topHits(pm, name, pm.R.slice(-3)), a = "";
-      if (l3.t && all.t){ var d = l3.h/l3.t-all.h/all.t; a = d>0.0001 ? "up" : d<-0.0001 ? "down" : ""; }
+      if (l3.t && all.t){ var d = l3.h/l3.t-all.h/all.t; a = d>=0.10 ? "up" : d<=-0.10 ? "down" : ""; }
       out.push({k:"Tus picks fuertes", t:all.h+" de "+all.t+" en la temporada. "+l3.h+" de "+l3.t+" en las últimas 3 semanas.", a:a});
     } else out.push({k:"Tus picks fuertes", t:all.h+" de "+all.t+" en tus 3 picks más altos de cada semana.", a:""});
   }
@@ -1231,7 +1694,7 @@ T.tusPicks = function(M, name){
   });
   var topOf = function(m){ var k = Object.keys(m).sort(function(a,b){ return m[b]-m[a] || (a<b ? -1 : 1); })[0]; return k ? {t:k, n:m[k]} : null; };
   var tp = topOf(pay), tc = topOf(cost);
-  out.push({k:"El que más te pagó", t:(tp ? tm(tp.t).replace(/^./,function(c){return c.toUpperCase()})+" te dieron más puntos (+"+tp.n+")." : "Todavía nadie te ha pagado.")+" "+(tc ? tm(tc.t).replace(/^./,function(c){return c.toUpperCase()})+" te costaron más (−"+tc.n+")." : "Ninguno te ha costado."), a:""});
+  out.push({k:"El que más te pagó", t:(tp ? cap(tm(tp.t))+" te dieron más puntos (+"+tp.n+")." : "Todavía nadie te ha pagado.")+" "+(tc ? cap(tm(tc.t))+" te costaron más (−"+tc.n+")." : "Ninguno te ha costado."), a:""});
   // 4. your team
   var ft = fanTeam(M, name);
   if (ft){
@@ -1244,71 +1707,107 @@ T.tusPicks = function(M, name){
   return out;
 };
 
-TPL.poLider = [
-  "{n} lidera los playoffs con {t} puntos, a {gap} del segundo. Solo paga el primero.",
-  "{n} manda en los playoffs: {t} puntos y {gap} de ventaja. El segundo no cobra."
-];
-TPL.poEmpate = [
-  "{names} empatan arriba en los playoffs con {t} puntos. Si nadie desempata, el premio se parte.",
-  "{t} puntos para {names} en lo alto de los playoffs. Solo uno cobra, o se parten el premio."
-];
-TPL.poFinal = [
-  "{n} ganó los playoffs con {t} puntos y se lleva {money}.",
-  "Los playoffs terminaron. {n} se queda con {money}."
-];
-TPL.poRonda = [
-  "{n} ganó la ronda {ronda} de los playoffs con {pts} puntos.",
-  "Ronda {ronda}: {n}, {pts} puntos. Yahoo ya lo anotó."
-];
-TPL.poSube = [
-  "{n} subió {up} lugares en la ronda {ronda}, del {from}º al {to}º.",
-  "Del {from}º al {to}º. {n} se movió {up} lugares en los playoffs."
-];
-var ROUNDS = ["Wild Card","Divisional","Final de conferencia","Super Bowl"];
-function roundName(r){ return ROUNDS[r] || ("ronda "+(r+1)); }
-
-// Rank of every playoff player after k rounds, ties share the better rank.
-function poRanksAt(M, k){
-  var rows = M.po.rows.map(function(q){ return {name:q.name, t:sum(q.w.slice(0,k))}; }), out = {};
-  rows.forEach(function(a){ out[a.name] = 1 + rows.filter(function(b){return b.t>a.t}).length; });
-  return out;
-}
-function fPlayoffLider(M){
-  if (!M.po) return null;
-  var lead = M.po.leaders, second = M.po.groups[1], gap = second ? M.po.top-second.score : M.po.top;
-  var v = {n:who(lead[0]), names:J(lead.map(who)), t:M.po.top, gap:gap, money:money(M.po.per)};
-  var text = M.po.final ? rot(M,TPL.poFinal) : lead.length>1 ? rot(M,TPL.poEmpate) : rot(M,TPL.poLider);
-  if (M.po.final && lead.length>1) text = "Los playoffs terminaron en empate: {names}, {t} puntos. Se parten {money} cada uno.";
-  return fact("playoffs", String(M.po.top), M.po.final ? "Campeón de playoffs" : "Playoffs", fill(text, v), M.po.final ? 98 : 92, true,
-    {names:lead, total:M.po.top, gap:gap, rounds:M.po.rounds}, lead);
-}
-function fPlayoffRonda(M){
-  if (!M.po || !M.po.rounds) return null;
-  var r = M.po.rounds-1, w = M.po.winners[r];
-  if (!w || !w.winners.length) return null;
-  var v = {n:J(w.winners.map(who)), ronda:roundName(r), pts:w.max};
-  return fact("poronda", String(w.max), "Ronda de playoffs", fill(rot(M,TPL.poRonda), v), 86, true, {names:w.winners, round:r+1, points:w.max}, w.winners);
-}
-function fPlayoffSubida(M){
-  if (!M.po || M.po.rounds<2) return null;
-  var before = poRanksAt(M, M.po.rounds-1), now = poRanksAt(M, M.po.rounds), best = null;
-  M.po.rows.forEach(function(q){
-    var up = before[q.name]-now[q.name];
-    if (up>=2 && (!best || up>best.up)) best = {q:q, up:up, from:before[q.name], to:now[q.name]};
-  });
-  if (!best) return null;
-  return fact("posube", "+"+best.up, "Subida de playoffs", fill(rot(M,TPL.poSube), {n:who(best.q.name), up:best.up, from:best.from, to:best.to, ronda:roundName(M.po.rounds-1)}), 70, true,
-    {name:best.q.name, from:best.from, to:best.to}, [best.q.name]);
-}
-
-var PICK_RULES_LIST = [fLealtad,fMismoEquipo,fCostalazo,fLlanero,fBorregada,fEmpate,fOlvido,fRachaPicks,fPerros,fCorriente];
-var RULES = [fRebote,fArriba,fFotocopia,fDisco,fRacha,fRecord,fRemontada,fSiempre,fPeor,fSurvivor,fAficiones,fSotano,
-  fLealtad,fMismoEquipo,fCostalazo,fLlanero,fBorregada,fEmpate,fOlvido,fRachaPicks,fPerros,fCorriente];
+var PICK_RULES_LIST = [fLealtad,fMismoEquipo,fCostalazo,fLlanero,fBorregada,fEmpate,fOlvido,fRachaPicks,fPerros,fCorriente,fNunca,fOrden,fPolos,fCuervos,fAcomodador];
+// Aficiones and the sótano gap live in the prize cards now (the fan-base note and the pizza box), not in Datos.
+var RULES = [fRebote,fArriba,fFotocopia,fDisco,fRacha,fRecord,fRemontada,fSiempre,fPeor,fSurvivor].concat(PICK_RULES_LIST);
 T.facts = function(M){
   var out = [];
   // The playoffs replace the regular-season facts, which would only repeat week 18. Survivor and the pick rules carry on.
   (M.po ? [fPlayoffLider,fPlayoffRonda,fPlayoffSubida,fSurvivor].concat(PICK_RULES_LIST) : RULES).forEach(function(f){ var r = f(M); if (r) out.push(r); });
   return out;
+};
+
+// ---------------------------------------------------------------------------
+// What a fact prints (huella), the duplicate check and the styles
+// ---------------------------------------------------------------------------
+var TEAM_RE = null;
+function teamsIn(text){
+  if (!TEAM_RE){
+    TEAM_RE = Object.keys(NFL).map(function(code){
+      var words = [NFL[code], (CITY[code]||"").replace(/^los /,"")].filter(Boolean).map(function(w){ return w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&"); });
+      return {code:code, abbr:new RegExp("(^|[^A-Za-zÀ-ÿ])"+code+"(?![A-Za-zÀ-ÿ])"), re:new RegExp("(^|[^A-Za-zÀ-ÿ])("+words.join("|")+")(?![A-Za-zÀ-ÿ])","i")};
+    });
+  }
+  return TEAM_RE.filter(function(t){ return t.abbr.test(text) || t.re.test(text); }).map(function(t){return t.code});
+}
+// Numbers as printed, whole tokens. "semana 4" and the edition number are context, not data.
+function numTokens(text, M){
+  var s = String(text).replace(/\b(?:semanas?|ronda|rondas)\s+\d+/gi," ");
+  return (s.match(/\d+(?:[.,]\d+)*/g) || []).filter(function(x){ return x!==String(M.EW); });
+}
+// The union over every template the fact could print, so a later style swap cannot bring a duplicate in.
+function huella(M, f){
+  if (f.huella) return f.huella;
+  var nombres = f.sujetos.slice(), equipos = [], numeros = [];
+  f.tpls.forEach(function(t){
+    var text = renderTpl(M, f, t);
+    mentions(M.idx, text).forEach(function(m){ if (nombres.indexOf(m.name)<0) nombres.push(m.name); });
+    teamsIn(text).forEach(function(c){ if (equipos.indexOf(c)<0) equipos.push(c); });
+    numTokens(text, M).forEach(function(x){ if (numeros.indexOf(x)<0) numeros.push(x); });
+  });
+  return f.huella = {nombres:nombres, equipos:equipos, numeros:numeros};
+}
+// A hand-written row that names one of the fact's players or teams and repeats one of its numbers.
+function dupReason(M, f, rows){
+  var h = huella(M, f);
+  for (var i=0;i<rows.length;i++){
+    var r = rows[i], txt = [r.titulo, r.texto, r.para].join("\n");
+    var rn = mentions(M.idx, txt).map(function(m){return m.name}), rt = teamsIn(txt);
+    var who2 = h.nombres.filter(function(n){return rn.indexOf(n)>=0}).concat(h.equipos.filter(function(c){return rt.indexOf(c)>=0}).map(function(c){ return tm(c); }));
+    if (!who2.length) continue;
+    var rnum = numTokens(txt, M).concat((String(txt).match(/\d+(?:[.,]\d+)*/g) || []));
+    var shared = h.numeros.filter(function(x){return rnum.indexOf(x)>=0});
+    if (shared.length) return r.kind+(r.titulo ? ' "'+r.titulo+'"' : "")+": nombra a "+J(who2)+" y trae "+J(shared);
+  }
+  return null;
+}
+// A fact about one player may not print a number that player's Tus picks lines show.
+function tusReason(M, f){
+  var h = huella(M, f);
+  if (h.nombres.length!==1) return null;
+  var lines = T.tusPicks(M, h.nombres[0]);
+  if (!lines) return null;
+  var tn = {};
+  lines.forEach(function(l){ numTokens(l.k+" "+l.t, M).forEach(function(x){ tn[x] = 1; }); });
+  var hit = h.numeros.filter(function(x){return tn[x]});
+  return hit.length ? "Tus picks de "+h.nombres[0]+" ya muestra "+J(hit) : null;
+}
+
+var RESTRICTED = ["andrea's picks","juan1768"];
+var QUOTA = {carrilla:2, albur:2, refran:1, nunca:1, nimodo:1, apodo:1, calaverita:2};
+function tplFits(M, f, t, used, muertos){
+  if ((used[t.s]||0)>=QUOTA[t.s]) return false;
+  var text = renderTpl(M, f, t);
+  if (t.s==="calaverita"){
+    if (!muertos) return false;
+    var lines = text.split(" / ");
+    return lines.length===4 && lines.every(function(l){return l.length<=34});
+  }
+  if (t.s==="apodo") return !!apodoOf(M, f.sujetos);
+  if (t.s==="albur"){
+    var named = mentions(M.idx, text).map(function(m){return normName(m.name)}).concat(f.sujetos.map(normName));
+    if (named.some(function(n){ return RESTRICTED.indexOf(n)>=0; })) return false;
+  }
+  return true;
+}
+// After the 6 facts are chosen, in score order: the first template, from this week's rotation, whose style still has room.
+// carrilla 2, albur 2, every other style 1. In the muertos edition up to 2 facts become calaveritas first.
+T.assignStyles = function(M, picks){
+  var muertos = theme(M)==="muertos", used = {};
+  return picks.map(function(f){
+    var len = f.tpls.length, off = (((M.EW-5)%len)+len)%len, chosen = null, j, t;
+    if (muertos){
+      for (j=0;j<len && !chosen;j++){ t = f.tpls[(off+j)%len]; if (t.s==="calaverita" && tplFits(M,f,t,used,true)) chosen = t; }
+    }
+    for (j=0;j<len && !chosen;j++){ t = f.tpls[(off+j)%len]; if (t.s!=="calaverita" && tplFits(M,f,t,used,muertos)) chosen = t; }
+    if (!chosen) chosen = f.tpls[f.t0];
+    used[chosen.s] = (used[chosen.s]||0)+1;
+    var g = {};
+    Object.keys(f).forEach(function(k){ g[k] = f[k]; });
+    g.texto = renderTpl(M, f, chosen);
+    g.estilo = chosen.s;
+    return g;
+  });
 };
 
 // The last place is roasted at most once per edition. These are the players the budget protects:
@@ -1319,23 +1818,34 @@ T.protectNames = function(M){
 };
 
 // The 6 best facts. A rule that ran last week goes to the back of the line when another candidate exists.
-// A fact that names the last place is skipped once the budget is spent (spent=true means hand-written copy already used it),
-// so the next candidate takes the slot. The highest-scoring numeric one is La cifra de la semana.
-T.pickFacts = function(M, prevRules, spent){
+// A fact is skipped, and its alternates (3 at most) or the next candidate take the slot, when:
+//   - a printed hand-written row names one of its players or teams and repeats one of its numbers (rows),
+//   - it is about one player and prints a number that player's Tus picks lines show,
+//   - it names the last place once the budget is spent (spent=true means hand-written copy already used it).
+// The highest-scoring numeric one is La cifra de la semana. Then T.assignStyles gives each fact its humor style.
+// dropped lists what the first two checks removed and why.
+T.pickFacts = function(M, prevRules, spent, rows){
   var all = T.facts(M).sort(function(a,b){ return b.score-a.score; });
   var prev = prevRules || [];
   var fresh = all.filter(function(f){return prev.indexOf(f.rule)<0}), stale = all.filter(function(f){return prev.indexOf(f.rule)>=0});
   var prot = {}; T.protectNames(M).forEach(function(n){ prot[n] = 1; });
-  var used = !!spent, picks = [];
+  var used = !!spent, picks = [], dropped = [];
+  function take(c){
+    var por = dupReason(M, c, rows||[]) || tusReason(M, c);
+    if (por){ dropped.push({rule:c.rule, por:por}); return false; }
+    if ((c.sujetos||[]).some(function(n){return prot[n]})){ if (used) return false; used = true; }
+    picks.push(c);
+    return true;
+  }
   fresh.concat(stale).forEach(function(f){
     if (picks.length>=6) return;
-    if ((f.sujetos||[]).some(function(n){return prot[n]})){ if (used) return; used = true; }
-    picks.push(f);
+    [f].concat(f.alts||[]).slice(0,4).some(take);
   });
   picks.sort(function(a,b){ return b.score-a.score; });
+  picks = T.assignStyles(M, picks);
   var cifra = null;
   picks.forEach(function(f){ if (f.num && !cifra) cifra = f; });
-  return {picks:picks, cifra:cifra, list:picks.filter(function(f){return f!==cifra}), all:all};
+  return {picks:picks, cifra:cifra, list:picks.filter(function(f){return f!==cifra}), all:all, dropped:dropped};
 };
 
 // What last week's edition ran, found by running the same engine on last week's league.
@@ -1393,7 +1903,13 @@ T.plan = function(M){
     used = true; return true;
   }
   var ads = tr.clasificados.filter(keep), datos = tr.datos.filter(keep);
-  var pk = T.pickFacts(M, T.prevRules(M), used);
+  // The rows actually printed, for the duplicate check
+  var rows = [];
+  if (pt.fromSheet) rows.push({kind:"Portada", titulo:pt.titulo, texto:pt.texto, para:tr.portada.para||""});
+  tr.columna.forEach(function(c){ rows.push({kind:"Columna", titulo:c.titulo||"", texto:c.texto, para:c.para||""}); });
+  ads.forEach(function(a){ rows.push({kind:"Clasificado", titulo:a.titulo, texto:a.texto, para:a.para||""}); });
+  datos.forEach(function(d){ rows.push({kind:"Dato", titulo:d.titulo, texto:d.texto, para:d.para||""}); });
+  var pk = T.pickFacts(M, T.prevRules(M), used, rows);
   return {pt:pt, ads:ads, datos:datos, pk:pk, used:used || pk.picks.some(function(f){return (f.sujetos||[]).some(function(n){return prot[n]})}), protect:Object.keys(prot)};
 };
 
@@ -1532,12 +2048,12 @@ function render(D, opts){
   var pk = plan.pk;
   M.pk = pk;
   if (pk.cifra){
-    $("cifra").innerHTML = '<div class="cifra"><div class="n">'+esc(pk.cifra.valor)+'</div><div><div class="k">La cifra de la semana</div><p>'+esc(pk.cifra.texto)+'</p></div></div>';
+    $("cifra").innerHTML = '<div class="cifra" data-estilo="'+esc(pk.cifra.estilo)+'"><div class="n">'+esc(pk.cifra.valor)+'</div><div><div class="k">La cifra de la semana</div><p>'+esc(pk.cifra.texto)+'</p></div></div>';
   }
   var items = plan.datos.map(function(d){ return {v:"✱", titulo:W(d.titulo), texto:W(d.texto)}; })
-    .concat(pk.list.map(function(f){ return {v:f.valor, titulo:esc(f.titulo), texto:esc(f.texto)}; })).slice(0,6);
+    .concat(pk.list.map(function(f){ return {v:f.valor, titulo:esc(f.titulo), texto:esc(f.texto), estilo:f.estilo}; })).slice(0,6);
   $("facts").innerHTML = items.map(function(f){
-    return '<div class="fact"><div class="v">'+esc(f.v)+'</div><div class="t"><strong>'+f.titulo+'</strong>'+f.texto+'</div></div>';
+    return '<div class="fact"'+(f.estilo ? ' data-estilo="'+esc(f.estilo)+'"' : '')+'><div class="v">'+esc(f.v)+'</div><div class="t"><strong>'+f.titulo+'</strong>'+f.texto+'</div></div>';
   }).join("");
 
   // ---- Premios
