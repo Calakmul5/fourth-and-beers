@@ -1,16 +1,19 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.0.0 c1.2.0
+// v2.1.0 c1.3.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
 //   2. Reads Survivor strikes from the model's Field tab.
 //   3. Reads the "Fan of" column from the participants list (call signs only, never emails).
 //   4. Reads the Tribune tab and publishes the rows checked for the current week:
-//      Portada, Columna, Clasificado and Dato.
+//      Portada, Columna (the paragraphs of the Portada story), Clasificado, Dato and Edición (special edition theme).
+//      Also reads the optional Apodo column of the participants list (nicknames, so the page can bold them).
 //   5. Keeps the Survivor elimination order (who went out, which week) by carrying it over from the last data.json.
 //   6. Builds data.json and commits it to the GitHub repo. GitHub Pages republishes the page by itself.
 //   7. Archives the week: editions/semana-NN.json is a full copy of that week's data.json and
 //      editions/index.json lists the weeks. A week that has moved on is never touched again.
+//   8. Writes a Revisión note to cell H1 of the Tribune tab (and tints the rows involved) when the last place
+//      is named more than once, or in two weeks in a row, and so on. It never blocks a publish or edits your text.
 //   It only commits when something other than "updated" changed, so running it often is harmless.
 //
 // One-time setup (Project Settings > Script properties)
@@ -19,13 +22,14 @@
 //   SHEET_ID        workbook that holds the PickEm_Board and Tribune tabs (participants workbook)
 //   MODEL_SHEET_ID  model workbook that holds the Field tab (Survivor strikes). Optional, defaults to SHEET_ID.
 // Then run installTriggers() once from the editor and approve the permissions.
-// Run setupTribuneTab() once to create the Tribune tab with its dropdown and checkboxes.
+// Run setupTribuneTab() once to create the Tribune tab with its dropdown and checkboxes. Safe to repeat: it also
+// adds the Edición option to an existing dropdown and the Apodo header to the participants list.
 // Moving from the old tabs: run migrateToTribune(true) to see what would move, then migrateToTribune(false).
 // Once the migration has run, migrateToTribune and LEGACY_TABS can be deleted.
 
 var CFG = {
   boardTab: 'PickEm_Board',   // paste Yahoo's weekly performance table here, header row included
-  tribuneTab: 'Tribune',      // Semana | Sección | Para | Título | Texto | Publicar (checkbox), in the participants workbook
+  tribuneTab: 'Tribune',      // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | Revisión, in the participants workbook
   fieldTab: 'Field',          // model tab with Entrant / Strikes columns
   path: 'data.json',
   editionsDir: 'editions',
@@ -45,8 +49,14 @@ var PRIZES = {
 };
 
 // Values of the Sección dropdown in the Tribune tab.
-var SECTIONS = ['Portada', 'Columna', 'Clasificado', 'Dato'];
+var SECTIONS = ['Portada', 'Columna', 'Clasificado', 'Dato', 'Edición'];
 var TRIBUNE_HEADER = ['Semana', 'Sección', 'Para', 'Título', 'Texto', 'Publicar'];
+// Revisión: the label sits in G1, the warnings in H1.
+var REVISION_LABEL = 'Revisión';
+var REVISION_CELL = 'H1';
+var REVISION_RED = '#f4cccc';
+// Themes the page knows. Add one here and in index.html (THEMES and its CSS block).
+var THEMES_KNOWN = ['muertos'];
 
 // Old tabs, read only by migrateToTribune.
 var LEGACY_TABS = { comments: 'Comentarios', awards: 'Premios' };
@@ -88,6 +98,7 @@ function publishLeaderboard_() {
   var model = modelId ? SpreadsheetApp.openById(String(modelId).trim()) : ss;
   var cur = readFile_(repo, token, CFG.path);
   var data = buildData_(ss, model, cur ? cur.data : null);
+  try { reviewTribune_(ss, data); } catch (e) { Logger.log('Revisión skipped: ' + e); }
   var result = commitAll_(repo, token, data, cur);
   Logger.log(result);
   return result;
@@ -112,6 +123,7 @@ function setupTribuneTab() {
 function setupTribune_(ss) {
   var sh = findTab_(ss, CFG.tribuneTab) || ss.insertSheet(CFG.tribuneTab);
   sh.getRange(1, 1, 1, 6).setValues([TRIBUNE_HEADER]).setFontWeight('bold');
+  sh.getRange(1, 7, 1, 1).setValues([[REVISION_LABEL]]).setFontWeight('bold');
   sh.setFrozenRows(1);
   var rule = SpreadsheetApp.newDataValidation().requireValueInList(SECTIONS, true).setAllowInvalid(false).build();
   sh.getRange('B2:B1000').setDataValidation(rule);
@@ -119,7 +131,17 @@ function setupTribune_(ss) {
   sh.setColumnWidth(1, 70); sh.setColumnWidth(2, 110); sh.setColumnWidth(3, 170);
   sh.setColumnWidth(4, 190); sh.setColumnWidth(5, 520); sh.setColumnWidth(6, 80);
   sh.getRange('E2:E1000').setWrap(true);
+  sh.setColumnWidth(7, 80); sh.setColumnWidth(8, 420);
+  sh.getRange(REVISION_CELL).setWrap(true);
+  addApodoHeader_(ss);
   return sh;
+}
+
+/** Adds the Apodo header to the participants list if it is missing. Touches no other cell. */
+function addApodoHeader_(ss) {
+  var f = fanSheet_(ss);
+  if (!f || f.apC >= 0) return;
+  f.sh.getRange(f.h + 1, f.width + 1, 1, 1).setValues([['Apodo']]).setFontWeight('bold');
 }
 
 /**
@@ -216,6 +238,7 @@ function buildData_(ss, model, prev) {
   return {
     survivorOut: survivorOut_(prev, strikes, board.week),
     fans: readFans_(ss, board.names),
+    apodos: readApodos_(ss, board.names),
     tribune: readTribune_(ss, board.week, board.names),
     season: CFG.season,
     week: board.week,
@@ -364,11 +387,8 @@ function parseFan_(text) {
   return out;
 }
 
-/** Fan info keyed by Pick'em name, read from the tab that has "Call Sign PickEm" and "Fan of" columns. */
-function readFans_(ss, pickemNames) {
-  var out = {};
-  var byNorm = {};
-  pickemNames.forEach(function (n) { byNorm[norm_(n)] = n; });
+/** The participants list: the tab that has "Call Sign PickEm" and "Fan of" columns. Apodo is optional. */
+function fanSheet_(ss) {
   var sheets = ss.getSheets();
   for (var i = 0; i < sheets.length; i++) {
     var values = sheets[i].getDataRange().getDisplayValues();
@@ -376,15 +396,74 @@ function readFans_(ss, pickemNames) {
       var row = values[h].map(function (c) { return String(c).trim().toLowerCase(); });
       var nC = row.indexOf('call sign pickem'), fC = row.indexOf('fan of');
       if (nC < 0 || fC < 0) continue;
-      for (var r = h + 1; r < values.length; r++) {
-        var pick = byNorm[norm_(values[r][nC])];
-        var fan = parseFan_(values[r][fC]);
-        if (pick && fan) out[pick] = fan;
-      }
-      return out;
+      return { sh: sheets[i], values: values, h: h, nC: nC, fC: fC, apC: row.indexOf('apodo'), width: row.length };
     }
   }
-  Logger.log('No tab with "Call Sign PickEm" and "Fan of" columns, skipping fans.');
+  return null;
+}
+
+/** Fan info keyed by Pick'em name, read from the participants list. */
+function readFans_(ss, pickemNames) {
+  var out = {};
+  var byNorm = {};
+  pickemNames.forEach(function (n) { byNorm[norm_(n)] = n; });
+  var f = fanSheet_(ss);
+  if (!f) { Logger.log('No tab with "Call Sign PickEm" and "Fan of" columns, skipping fans.'); return out; }
+  for (var r = f.h + 1; r < f.values.length; r++) {
+    var pick = byNorm[norm_(f.values[r][f.nC])];
+    var fan = parseFan_(f.values[r][f.fC]);
+    if (pick && fan) out[pick] = fan;
+  }
+  return out;
+}
+
+/**
+ * Nicknames keyed by Pick'em name, from the optional Apodo column (comma separated). The page bolds them in the copy.
+ * An alias that equals someone's call sign, or that two players claim, is dropped and logged. Emails are never read.
+ */
+function readApodos_(ss, pickemNames) {
+  var out = {};
+  var f = fanSheet_(ss);
+  if (!f || f.apC < 0) return out;
+  var byNorm = {};
+  pickemNames.forEach(function (n) { byNorm[norm_(n)] = n; });
+  var claimed = {};
+  for (var r = f.h + 1; r < f.values.length; r++) {
+    var pick = byNorm[norm_(f.values[r][f.nC])];
+    if (!pick) continue;
+    String(f.values[r][f.apC] || '').split(',').forEach(function (a) {
+      a = a.trim();
+      var k = norm_(a);
+      if (!k) return;
+      if (byNorm[k]) { Logger.log('Apodo "' + a + '" is a call sign, skipping it.'); return; }
+      if (claimed[k] && claimed[k] !== pick) { Logger.log('Apodo "' + a + '" belongs to two players, skipping it for ' + pick + '.'); return; }
+      claimed[k] = pick;
+      out[pick] = out[pick] || [];
+      if (out[pick].indexOf(a) < 0) out[pick].push(a);
+    });
+  }
+  return out;
+}
+
+/**
+ * Checked rows in Tribune for a week, in sheet order, with their sheet row number. Used by the publisher and by Revisión.
+ * Each row is {row, sec, secRaw, para, titulo, texto}, sec lowercased and without accents.
+ */
+function tribuneRows_(sh, week) {
+  var out = [];
+  if (!sh) return out;
+  var values = sh.getDataRange().getDisplayValues();
+  if (!values.length) return out;
+  var head = values[0].map(plain_);
+  var at = function (name, fallback) { var i = head.indexOf(name); return i >= 0 ? i : fallback; };
+  var cW = at('semana', 0), cS = at('seccion', 1), cP = at('para', 2), cT = at('titulo', 3), cX = at('texto', 4), cK = at('publicar', 5);
+  for (var r = 1; r < values.length; r++) {
+    var v = values[r];
+    var ok = /^(true|x|s[ií]|yes)$/i.test(String(v[cK] || '').trim());
+    if (!ok || toNum_(v[cW]) !== week) continue;
+    out.push({ row: r + 1, sec: plain_(v[cS]), secRaw: String(v[cS] || '').trim(), para: String(v[cP] || '').trim(),
+      titulo: String(v[cT] || '').trim(), texto: String(v[cX] || '').trim() });
+  }
   return out;
 }
 
@@ -392,40 +471,37 @@ function readFans_(ss, pickemNames) {
  * Checked rows in Tribune for this week, grouped by Sección, in sheet order.
  * Para is one or several Pick'em call signs separated by commas, or blank / Todos for everyone (published as '').
  * An unknown name is logged and published as typed. A missing tab gives an empty Tribune and the page uses its fallbacks.
+ * Line breaks inside a cell are kept, the ends are trimmed. Edición: at most one per week, Para is the theme key.
  */
 function readTribune_(ss, week, pickemNames) {
-  var out = { portada: null, columna: [], clasificados: [], datos: [] };
-  var sh = findTab_(ss, CFG.tribuneTab);
-  if (!sh) return out;
-  var values = sh.getDataRange().getDisplayValues();
-  if (!values.length) return out;
-  var head = values[0].map(plain_);
-  var at = function (name, fallback) { var i = head.indexOf(name); return i >= 0 ? i : fallback; };
-  var cW = at('semana', 0), cS = at('seccion', 1), cP = at('para', 2), cT = at('titulo', 3), cX = at('texto', 4), cK = at('publicar', 5);
+  var out = { portada: null, columna: [], clasificados: [], datos: [], edicion: null };
+  var rows = tribuneRows_(findTab_(ss, CFG.tribuneTab), week);
   var byNorm = {};
   pickemNames.forEach(function (n) { byNorm[norm_(n)] = n; });
 
-  for (var r = 1; r < values.length; r++) {
-    var v = values[r], row = r + 1;
-    var ok = /^(true|x|s[ií]|yes)$/i.test(String(v[cK] || '').trim());
-    if (!ok || toNum_(v[cW]) !== week) continue;
-    var sec = plain_(v[cS]);
-    var titulo = String(v[cT] || '').trim(), texto = String(v[cX] || '').trim();
-    var para = resolvePara_(v[cP], byNorm, row);
+  rows.forEach(function (x) {
+    var sec = x.sec, titulo = x.titulo, texto = x.texto, row = x.row;
+    if (sec === 'edicion') {
+      if (!titulo) { Logger.log('Tribune row ' + row + ' is a checked Edición without a Título, skipping it.'); return; }
+      if (out.edicion) { Logger.log('Tribune row ' + row + ': only one Edición per week, skipping this one.'); return; }
+      out.edicion = { titulo: titulo, texto: texto, tema: plain_(x.para) };
+      return;
+    }
+    var para = resolvePara_(x.para, byNorm, row);
     if (sec === 'portada') {
-      if (!titulo) { Logger.log('Tribune row ' + row + ' is a checked Portada without a Título, skipping it.'); continue; }
-      if (out.portada) { Logger.log('Tribune row ' + row + ': only one Portada per week, skipping this one.'); continue; }
+      if (!titulo) { Logger.log('Tribune row ' + row + ' is a checked Portada without a Título, skipping it.'); return; }
+      if (out.portada) { Logger.log('Tribune row ' + row + ': only one Portada per week, skipping this one.'); return; }
       out.portada = { titulo: titulo, texto: texto, para: para };
     } else if (sec === 'columna') {
-      if (!texto) { Logger.log('Tribune row ' + row + ' is a checked Columna without Texto, skipping it.'); continue; }
-      out.columna.push({ para: para, texto: texto });
+      if (!texto) { Logger.log('Tribune row ' + row + ' is a checked Columna without Texto, skipping it.'); return; }
+      out.columna.push({ titulo: titulo, para: para, texto: texto });
     } else if (sec === 'clasificado' || sec === 'dato') {
-      if (!titulo || !texto) { Logger.log('Tribune row ' + row + ' is checked but has no Título or no Texto, skipping it.'); continue; }
+      if (!titulo || !texto) { Logger.log('Tribune row ' + row + ' is checked but has no Título or no Texto, skipping it.'); return; }
       (sec === 'dato' ? out.datos : out.clasificados).push({ titulo: titulo, para: para, texto: texto });
     } else {
-      Logger.log('Tribune row ' + row + ' is checked but its Sección "' + String(v[cS]).trim() + '" is not one of ' + SECTIONS.join(', ') + ', skipping it.');
+      Logger.log('Tribune row ' + row + ' is checked but its Sección "' + x.secRaw + '" is not one of ' + SECTIONS.join(', ') + ', skipping it.');
     }
-  }
+  });
   return out;
 }
 
@@ -437,6 +513,103 @@ function resolvePara_(cell, byNorm, row) {
     if (!hit) Logger.log('Tribune row ' + row + ': "' + t + "\" is not a Pick'em name, publishing it as typed.");
     return hit || t;
   }).join(', ');
+}
+
+// BEGIN NAMES
+// Shared with index.html. Both files carry this exact block and a test fails if they differ.
+// Call signs plus apodos, case-insensitive, curly and straight apostrophes equal, whole words only, longest match first.
+function nameKey(s) { return String(s).replace(/[‘’`´]/g, "'").trim().toLowerCase(); }
+function nameIndex(names, apodos) {
+  var owner = {}, terms = [];
+  function add(t, who) { var k = nameKey(t); if (!k || owner[k]) return; owner[k] = who; terms.push(k); }
+  names.forEach(function (n) { add(n, n); });
+  Object.keys(apodos || {}).forEach(function (n) { (apodos[n] || []).forEach(function (a) { add(a, n); }); });
+  terms.sort(function (a, b) { return b.length - a.length || (a < b ? -1 : 1); });
+  var re = terms.length ? new RegExp("(^|[^\\p{L}\\p{N}_])(" + terms.map(function (t) { return t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }).join("|") + ")(?![\\p{L}\\p{N}_])", "giu") : null;
+  return { owner: owner, re: re };
+}
+function mentions(idx, text) {
+  var out = [], s = String(text).replace(/[‘’`´]/g, "'");
+  if (!idx.re) return out;
+  idx.re.lastIndex = 0;
+  var m;
+  while ((m = idx.re.exec(s))) {
+    var st = m.index + m[1].length, en = st + m[2].length;
+    out.push({ start: st, end: en, name: idx.owner[m[2].toLowerCase()] });
+    idx.re.lastIndex = en;
+  }
+  return out;
+}
+// END NAMES
+
+// ---------------------------------------------------------------------------
+// Revisión: a note in the Tribune tab, never a block
+// ---------------------------------------------------------------------------
+
+/** Every player tied for last on the Yahoo total (golf rule). */
+function lastPlace_(rows) {
+  var tot = function (p) { return p.total != null ? p.total : p.weeks.reduce(function (a, b) { return a + b; }, 0); };
+  var low = Math.min.apply(null, rows.map(tot));
+  return rows.filter(function (p) { return tot(p) === low; }).map(function (p) { return p.name; });
+}
+
+/**
+ * Checks this week's checked Tribune rows and writes the warnings (Spanish) to H1, tinting the rows involved.
+ * Warns when the last place is named in more than one row or Columna paragraph, was also named last week, when there is
+ * Columna without a Portada, more than one Edición, or an unknown tema. Returns the list of warnings.
+ */
+function reviewTribune_(ss, data) {
+  var sh = findTab_(ss, CFG.tribuneTab);
+  if (!sh) return [];
+  var names = data.pickem.map(function (p) { return p.name; });
+  var idx = nameIndex(names, data.apodos);
+  var last = lastPlace_(data.pickem);
+  var lastSet = {}; last.forEach(function (n) { lastSet[n] = true; });
+  var label = last.join(' y ');
+  var namesLast = function (x) {
+    var text = [x.titulo, x.texto, x.sec === 'edicion' ? '' : x.para].join('\n');
+    return mentions(idx, text).some(function (m) { return lastSet[m.name]; });
+  };
+  var rows = tribuneRows_(sh, data.week);
+  var warn = [], bad = {};
+  var flag = function (list) { list.forEach(function (x) { bad[x.row] = true; }); };
+  var rn = function (list) { return list.map(function (x) { return x.row; }).join(', '); };
+
+  var hits = rows.filter(namesLast);
+  if (hits.length > 1) { warn.push(label + ' sale en ' + hits.length + ' filas (' + rn(hits) + '). Mejor una sola.'); flag(hits); }
+  var colHits = hits.filter(function (x) { return x.sec === 'columna'; });
+  if (colHits.length > 1) { warn.push(label + ' sale en ' + colHits.length + ' párrafos de la Columna (filas ' + rn(colHits) + ').'); flag(colHits); }
+  if (hits.length && data.week > 1) {
+    var before = tribuneRows_(sh, data.week - 1).filter(namesLast);
+    if (before.length) { warn.push(label + ' ya salió en la Tribune de la semana ' + (data.week - 1) + '. Segunda semana seguida.'); flag(hits); }
+  }
+  var columna = rows.filter(function (x) { return x.sec === 'columna'; });
+  if (columna.length && !rows.some(function (x) { return x.sec === 'portada'; })) {
+    warn.push('Hay Columna sin fila de Portada (filas ' + rn(columna) + ').'); flag(columna);
+  }
+  var ediciones = rows.filter(function (x) { return x.sec === 'edicion'; });
+  if (ediciones.length > 1) { warn.push('Hay ' + ediciones.length + ' filas de Edición. Solo cuenta la primera (fila ' + ediciones[0].row + ').'); flag(ediciones.slice(1)); }
+  ediciones.forEach(function (x) {
+    if (THEMES_KNOWN.indexOf(plain_(x.para)) < 0) { warn.push('Tema desconocido "' + x.para + '" en la fila ' + x.row + '. Temas: ' + THEMES_KNOWN.join(', ') + '.'); flag([x]); }
+  });
+
+  writeRevision_(sh, warn, bad);
+  return warn;
+}
+
+/** Writes H1 and tints the flagged rows. Clears only the tint this function sets. */
+function writeRevision_(sh, warn, bad) {
+  var cell = sh.getRange(REVISION_CELL);
+  var text = warn.join('\n');
+  if (String(cell.getValue() || '') !== text) cell.setValue(text);
+  var n = sh.getDataRange().getDisplayValues().length;
+  if (n < 2) return;
+  var bg = sh.getRange(2, 1, n - 1, 6).getBackgrounds();
+  for (var i = 0; i < bg.length; i++) {
+    var row = i + 2, tinted = String(bg[i][0] || '').toLowerCase() === REVISION_RED;
+    if (bad[row] && !tinted) sh.getRange(row, 1, 1, 6).setBackground(REVISION_RED);
+    else if (!bad[row] && tinted) sh.getRange(row, 1, 1, 6).setBackground(null);
+  }
 }
 
 /** Lowercase without accents, for matching headers and Sección values. */

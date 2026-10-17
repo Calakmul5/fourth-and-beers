@@ -113,14 +113,14 @@ A.run('index.html', [
     A.equal(c.doc.querySelectorAll('#pick option').length, 23, 'placeholder plus 22 call signs');
   }],
 
-  ['page order: dateline, masthead, picker, portada, columna, clasificados, datos, premios, footer', async () => {
+  ['page order: dateline, masthead, picker, portada, clasificados, datos, premios, footer', async () => {
     const c = await load(W5);
-    const order = ['dateline', '.mast', 'pickbox', 'portada', 'columna', 'clasificados', 'datos', 'premios', '.foot'];
+    const order = ['dateline', '.mast', 'pickbox', 'portada', 'clasificados', 'datos', 'premios', '.foot'];
     const pos = order.map(s => { const e = c.doc.querySelector(s.charAt(0) === '.' ? s : '#' + s); A.ok(e, s + ' exists'); return e; });
     for (let i = 1; i < pos.length; i++) A.ok(pos[i - 1].compareDocumentPosition(pos[i]) & 4, order[i - 1] + ' comes before ' + order[i]);
     A.equal(all(c.doc, 'select').length, 1, 'the picker is the only control on the page');
     A.equal(all(c.doc, 'button').filter(b => !b.closest('#sheet')).length, 0, 'no other buttons outside the panel');
-    A.deep(all(c.doc, '.sec').map(e => e.textContent), ['Columna del Comish', 'Clasificados', 'Datos que nadie pidió', 'Premios, pizzas y carne asada'], 'the sections of the Tribune');
+    A.deep(all(c.doc, '.sec').map(e => e.textContent), ['Clasificados', 'Datos que nadie pidió', 'Premios, pizzas y carne asada'], 'the sections of the Tribune: the Columna is the body of the Portada story');
     ['Cada semana uno por uno', 'Premios que no pagan', 'Palabras del Comish', 'Castigos', 'Cómo se cuenta'].forEach(t => A.noMatch(visible(c.doc), new RegExp(t), 'removed section ' + t));
     A.equal(c.doc.querySelector('#page #bumpbox'), null, 'the chart lives only in the panel');
     A.equal(c.doc.querySelectorAll('#heat, #board, .award').length, 0, 'old structures are gone');
@@ -160,7 +160,7 @@ A.run('index.html', [
     A.match(text(c.doc, '.cifra p'), /^KinkyKing hizo 23 en la semana 4 y 83 en la 5\. Nadie ha rebotado tanto\.$/);
     const facts = all(c.doc, '#facts .fact');
     A.ok(facts.length >= 4 && facts.length <= 6, 'up to 6 facts, got ' + facts.length);
-    facts.forEach(f => A.ok(f.querySelector('.v').textContent && f.querySelector('b').textContent, 'each fact has a number and a red label'));
+    facts.forEach(f => A.ok(f.querySelector('.v').textContent && f.querySelector('strong').textContent, 'each fact has a number and a label'));
     A.equal(c.M.pk.picks.length, 6, 'the engine picks 6');
     const e = c.T.facts(c.M).filter(x => x.rule === 'remontada')[0];
     A.match(e.texto, /^El Comish era 17º después de la semana 1\. Lleva tres semanas de líder\. Nadie lo vio venir, ni él\.$/, 'the commissioner is el Comish');
@@ -174,10 +174,11 @@ A.run('index.html', [
     const prev = ['aficiones', 'racha', 'remontada', 'rebote', 'survivor', 'arriba'];
     const r = c.T.pickFacts(c.M, prev);
     A.equal(r.picks.length, 6);
-    ['fotocopia', 'disco', 'siempre', 'peor'].forEach(x => A.ok(r.picks.some(p => p.rule === x), x + ' is fresh and stays in'));
-    A.equal(r.picks.filter(p => prev.indexOf(p.rule) >= 0).length, 2, 'only as many repeats as it takes to reach 6');
+    ['fotocopia', 'disco', 'siempre'].forEach(x => A.ok(r.picks.some(p => p.rule === x), x + ' is fresh and stays in'));
+    A.ok(!r.picks.some(p => p.rule === 'peor' || p.rule === 'sotano'), 'a second fact about the last place is over budget even when fresh');
+    A.equal(r.picks.filter(p => prev.indexOf(p.rule) >= 0).length, 3, 'only as many repeats as it takes to reach 6');
     A.equal(r.cifra.rule, 'rebote', 'La cifra can still repeat when nothing else is as big');
-    const none = c.T.pickFacts(c.M, []);
+    const none = c.T.pickFacts(c.M, [], false);
     A.deep(none.picks.map(p => p.rule), ['rebote', 'aficiones', 'racha', 'remontada', 'fotocopia', 'survivor'], 'with no history the 6 highest scores');
   }],
 
@@ -400,18 +401,15 @@ A.run('index.html', [
     common(c3, 'week 1'); common(c4, 'quiet');
   }],
 
-  ['columna and clasificados show the Tribune rows, escaped, and hide when empty', async () => {
+  ['story and clasificados show the Tribune rows, escaped, and hide when empty', async () => {
     const c = await load(W5);
-    A.equal(c.doc.querySelector('#columna').hidden, false);
-    A.deep(all(c.doc, '#col p').map(p => p.textContent), W5.tribune.columna.map(x => x.texto));
-    A.equal(text(c.doc, '#col .sig'), 'El Comish');
-    A.match(text(c.doc, '#columna .sec'), /Columna del Comish/);
-    A.deep(all(c.doc, '#ads .ad b').map(b => b.textContent), W5.tribune.clasificados.map(x => x.titulo));
+    A.deep(all(c.doc, '#story p').map(p => p.textContent.replace(/■$/, '')), W5.tribune.columna.map(x => x.texto));
+    A.deep(all(c.doc, '#ads .ad strong').map(b => b.textContent), W5.tribune.clasificados.map(x => x.titulo));
     const d = make({ week: 2 });
     const c2 = await load(d);
-    A.equal(c2.doc.querySelector('#columna').hidden, true);
+    A.equal(c2.doc.querySelector('#story').children.length, 0);
     A.equal(c2.doc.querySelector('#clasificados').hidden, true);
-    const d3 = make({ week: 2, tribune: { portada: { titulo: SB, texto: SB, para: '' }, columna: [{ para: '', texto: SB }], clasificados: [{ titulo: SB, para: '', texto: SB }], datos: [{ titulo: SB, para: '', texto: SB }] } });
+    const d3 = make({ week: 2, tribune: { portada: { titulo: SB, texto: SB, para: '' }, columna: [{ titulo: SB, para: '', texto: SB }], clasificados: [{ titulo: SB, para: '', texto: SB }], datos: [{ titulo: SB, para: '', texto: SB }] } });
     const c3 = await load(d3);
     A.equal(c3.doc.querySelectorAll('#page script').length, 0, 'sheet text never becomes markup');
     A.deep(c3.errors, []);
@@ -422,8 +420,8 @@ A.run('index.html', [
     d.tribune.datos = [{ titulo: 'Dato a mano', para: '', texto: 'Escrito por el Comish.' }, { titulo: 'Otro', para: '', texto: 'Otro dato.' }];
     const c = await load(d);
     const facts = all(c.doc, '#facts .fact');
-    A.equal(facts[0].querySelector('b').textContent, 'Dato a mano');
-    A.equal(facts[1].querySelector('b').textContent, 'Otro');
+    A.equal(facts[0].querySelector('strong').textContent, 'Dato a mano');
+    A.equal(facts[1].querySelector('strong').textContent, 'Otro');
     A.ok(facts.length <= 6);
     A.equal(c.doc.querySelectorAll('.cifra').length, 1);
     const none = await load(W5);
@@ -580,7 +578,7 @@ A.run('index.html', [
     A.match(c.doc.querySelector('#prizes .box').textContent, /\$1,050/);
     A.match(c.doc.querySelector('#prizes .box').textContent, /\$350/);
     A.match(c.doc.querySelector('.grid18').parentNode.querySelector('.h').textContent, /\$50/);
-    A.equal(c.doc.querySelector('#columna').hidden, true, 'old comments are not read');
+    A.equal(c.doc.querySelector('#story').children.length, 0, 'old comments are not read');
     A.equal(c.doc.querySelector('#clasificados').hidden, true, 'old awards are not read');
     A.equal(text(c.doc, '#p-head'), 'Del sótano a la azotea');
   }],
@@ -592,10 +590,250 @@ A.run('index.html', [
     A.match(HTML, /<meta name="viewport" content="width=device-width, initial-scale=1/);
     A.match(HTML, /html,body\{background:var\(--paper\) !important/, 'explicit backgrounds so iOS cannot invert');
     ['UnifrakturMaguntia', 'Playfair+Display', 'Source+Serif+4', 'Libre+Franklin'].forEach(f => A.ok(HTML.indexOf(f) > 0, f));
-    ['--paper:#F3EEE3', '--paper2:#E9E2D3', '--ink:#161514', '--ink2:#3B3834', '--muted:#6B655C', '--rule:#161514', '--hair:#B9B0A0', '--red:#A3191F', '--up:#2E7D4F', '--down:#C2610C'].forEach(t => A.ok(HTML.indexOf(t) > 0, t));
+    ['--paper:#F3EEE3', '--paper2:#E9E2D3', '--ink:#161514', '--ink2:#3B3834', '--muted:#6B655C', '--rule:#161514', '--hair:#B9B0A0', '--red:#A3191F', '--up:#2E7D4F', '--down:#C2610C', '--accent:var(--red)', '--marigold:#935D00'].forEach(t => A.ok(HTML.indexOf(t) > 0, t));
     A.noMatch(HTML, /overflow-x:\s*scroll/, 'no horizontal page scroll');
     const c = await load(W5);
     A.deep(c.errors, []);
+  }],
+
+  // ---- v3.1: last-place budget ------------------------------------------------
+
+  ['last place: with no hand-written rows, Siempre ahí and Cuentas del sótano compete and only one is printed', async () => {
+    const c = await load(W5);
+    const rules = c.T.facts(c.M).map(f => f.rule);
+    A.ok(rules.indexOf('siempre') >= 0 && rules.indexOf('sotano') >= 0, 'both are candidates');
+    const sotano = c.T.facts(c.M).filter(f => f.rule === 'sotano')[0];
+    A.equal(sotano.titulo, 'Cuentas del sótano');
+    A.deep(sotano.sujetos, ['Steel Man']);
+    A.match(sotano.texto, /^Los picks de Steel Man suman 179, a 32 del penúltimo lugar\. Las pizzas ya traen su nombre\.$/);
+    const shown = all(c.doc, '#facts .fact, .cifra').filter(e => /Steel Man/.test(e.textContent));
+    A.equal(shown.length, 1, 'one roast of the last place, got ' + shown.length);
+    A.match(shown[0].textContent, /Siempre ahí/, 'the higher-scoring candidate takes the slot');
+    A.equal(c.M.plan.used, true);
+    A.deep(c.M.plan.protect, ['Steel Man']);
+    common(c, 'budget');
+  }],
+
+  ['last place: a Columna paragraph naming him spends the budget (facts, clasificados and datos about him go away)', async () => {
+    const d = clone(W5);
+    d.tribune.portada = { titulo: 'Titular', texto: 'Bajada.', para: '' };
+    d.tribune.columna = [{ titulo: '', para: '', texto: 'Steel Man sigue donde mismo.' }];
+    d.tribune.clasificados = [{ titulo: 'SE VENDE', para: 'Steel Man', texto: 'Picks usados.' }, { titulo: 'SE BUSCA', para: 'Abogado', texto: 'Un amigo.' }];
+    d.tribune.datos = [{ titulo: 'Sótano', para: '', texto: 'Steel Man otra vez.' }];
+    const c = await load(d);
+    A.match(text(c.doc, '#story'), /Steel Man sigue donde mismo/, 'the story is never cut');
+    A.deep(all(c.doc, '#ads .ad strong').map(e => e.textContent), ['SE BUSCA'], 'the clasificado about him is hidden');
+    const rest = all(c.doc, '#facts .fact, .cifra').map(e => e.textContent).join(' ');
+    A.noMatch(rest, /Steel Man/, 'no dato and no automatic fact about him');
+    A.equal(all(c.doc, '#facts .fact').length + all(c.doc, '.cifra').length >= 5, true, 'other candidates fill the slots');
+    A.equal(c.doc.querySelector('.box.pizza .big').textContent, 'Steel Man', 'the Pizzas card is exempt');
+    A.match(text(c.doc, '#prizes'), /Hoy pagaría las pizzas/);
+    common(c, 'budget story');
+  }],
+
+  ['last place: no story mention means the first clasificado keeps the slot, later ones and datos are hidden', async () => {
+    const d = clone(W5);
+    d.tribune.clasificados = [{ titulo: 'UNO', para: '', texto: 'Para Steel Man.' }, { titulo: 'DOS', para: 'Steel Man', texto: 'Otra vez.' }, { titulo: 'TRES', para: 'Abogado', texto: 'Sin él.' }];
+    d.tribune.datos = [{ titulo: 'D1', para: '', texto: 'Steel Man de nuevo.' }, { titulo: 'D2', para: '', texto: 'Abogado.' }];
+    const c = await load(d);
+    A.deep(all(c.doc, '#ads .ad strong').map(e => e.textContent), ['UNO', 'TRES']);
+    const dat = all(c.doc, '#facts .fact strong').map(e => e.textContent);
+    A.ok(dat.indexOf('D1') < 0 && dat.indexOf('D2') >= 0, 'the second mention is hidden, the clean dato stays');
+    A.noMatch(all(c.doc, '#facts .fact, .cifra').map(e => e.textContent).join(' '), /Steel Man/, 'the facts leave him alone');
+  }],
+
+  ['last place: only datos name him, so a Dato takes the slot before the automatic facts', async () => {
+    const d = clone(W5);
+    d.tribune.datos = [{ titulo: 'D1', para: 'Steel Man', texto: 'Constante.' }];
+    const c = await load(d);
+    A.equal(all(c.doc, '#facts .fact strong')[0].textContent, 'D1');
+    A.noMatch(all(c.doc, '#facts .fact:not(:first-child), .cifra').map(e => e.textContent).join(' '), /Steel Man/);
+  }],
+
+  ['last place: a tie for last protects both players and they share one slot', async () => {
+    const d = make({ week: 3, weeksTotal: 3, names: ['Ana', 'Beto', 'Chuy', 'Dora', 'Eli'],
+      weeks: { Ana: [80, 70, 60], Beto: [75, 70, 60], Chuy: [60, 60, 60], Dora: [50, 50, 50], Eli: [50, 50, 50] } });
+    d.pickem.forEach(p => { p.total = p.weeks.reduce((a, b) => a + b, 0) - Math.min.apply(null, p.weeks); p.dropped = Math.min.apply(null, p.weeks); });
+    d.tribune = { portada: null, columna: [], datos: [], clasificados: [{ titulo: 'A', para: 'Dora', texto: 'Uno.' }, { titulo: 'B', para: 'Eli', texto: 'Dos.' }, { titulo: 'C', para: 'Ana', texto: 'Tres.' }] };
+    const c = await load(d);
+    A.deep(c.T.protectNames(c.M).slice().sort(), ['Dora', 'Eli']);
+    A.deep(all(c.doc, '#ads .ad strong').map(e => e.textContent), ['A', 'C'], 'Eli shares Dora\'s slot, so B is hidden');
+    c.T.facts(c.M).forEach(f => lint(f.texto, f.rule));
+    const sot = c.T.facts(c.M).filter(f => f.rule === 'sotano');
+    A.ok(!sot.length || sot[0].sujetos.length === 2);
+  }],
+
+  ['last place: when the whole league is tied nobody is protected', async () => {
+    const c = await load(make({ week: 2, names: ['Ana', 'Beto'], weeks: { Ana: [50, 50], Beto: [50, 50] } }));
+    A.deep(c.T.protectNames(c.M), []);
+  }],
+
+  // ---- v3.1: names ------------------------------------------------------------
+
+  ['names: apodos, curly and straight apostrophes, longest match, boundaries', async () => {
+    const c = await load(W5);
+    const T = c.T, idx = c.M.idx;
+    const names = text => T.mentions(idx, text).map(m => m.name);
+    A.deep(names('Kinky se fue y KINKYKING volvió'), ['KinkyKing', 'KinkyKing'], 'apodo and call sign, any case');
+    A.deep(names('Los Osos de Grayslake son los Osos'), ['Osos de Grayslake', 'Osos de Grayslake']);
+    A.deep(names('Andrea\'s Picks y Andrea’s Picks'), ['Andrea’s Picks', 'Andrea’s Picks'], 'straight and curly apostrophes are equal');
+    A.deep(names('Kinkyness y Ososos'), [], 'whole words only');
+    A.deep(names('El Comish hizo 50'), ['Silverback'], 'el Comish is an apodo of the commissioner');
+    const i2 = T.nameIndex(['Manolito’s winning picks', 'Ana'], { Ana: ['Manolito'] });
+    A.deep(T.mentions(i2, 'Manolito’s winning picks y Manolito').map(m => m.name), ['Manolito’s winning picks', 'Ana'], 'longest match first');
+    A.deep(T.mentions(T.nameIndex(['Ana'], { Ana: ['Ana'] }), 'Ana').map(m => m.name), ['Ana']);
+    A.deep(T.mentions(T.nameIndex([], {}), 'nada'), []);
+  }],
+
+  ['names: sheet text is escaped, mentions are bold, the reader gets .tuyo and keeps it after the panel closes', async () => {
+    const d = clone(W5);
+    d.tribune.portada = { titulo: 'Kinky titular', texto: 'Bajada con Kinky y <i>Abogado</i>.', para: '' };
+    d.tribune.columna = [{ titulo: 'Sobre <b>Abogado</b>', para: '', texto: 'Kinky <script>alert(1)</script> y Silverback.' }];
+    d.tribune.clasificados = [{ titulo: 'SE BUSCA', para: 'Abogado', texto: 'Kinky busca a Osos.' }];
+    const c = await load(d);
+    A.deep(c.errors, []);
+    A.equal(all(c.doc, '#page script').length, 0, 'no markup from the sheet');
+    A.equal(c.doc.querySelector('#story i, #p-deck i'), null, 'no raw html from the sheet');
+    A.match(c.doc.querySelector('#p-deck').innerHTML, /&lt;i&gt;<b class="nombre" data-n="Abogado">Abogado<\/b>&lt;\/i&gt;/);
+    A.equal(c.doc.querySelector('#p-head').querySelector('b'), null, 'the headline is not wrapped');
+    A.deep(all(c.doc, '#story b.nombre').map(b => b.getAttribute('data-n')), ['Abogado', 'KinkyKing', 'Silverback'], 'crosshead and paragraph mentions');
+    A.deep(all(c.doc, '#ads b.nombre').map(b => b.getAttribute('data-n')), ['KinkyKing', 'Osos de Grayslake']);
+    A.equal(all(c.doc, 'b.nombre.tuyo').length, 0, 'nobody selected, nobody highlighted');
+    const c2 = await load(d, { url: '?yo=KinkyKing' });
+    const mine = all(c2.doc, 'b.nombre.tuyo');
+    A.ok(mine.length >= 3, 'every mention of the reader');
+    mine.forEach(b => A.equal(b.getAttribute('data-n'), 'KinkyKing'));
+    A.equal(all(c2.doc, 'b.nombre').filter(b => !b.classList.contains('tuyo') && b.getAttribute('data-n') === 'KinkyKing').length, 0);
+    c2.doc.querySelector('#close').click();
+    A.equal(c2.doc.querySelector('#sheet').hidden, true);
+    A.ok(all(c2.doc, 'b.nombre.tuyo').length >= 3, 'still highlighted with the panel closed');
+    const sel = c2.doc.querySelector('#pick'); sel.value = 'Abogado'; sel.dispatchEvent(new c2.win.Event('change'));
+    A.deep(all(c2.doc, 'b.nombre.tuyo').map(b => b.getAttribute('data-n')).filter((v, i, a) => a.indexOf(v) === i), ['Abogado'], 'picking another name moves the highlight');
+    A.match(HTML, /b\.nombre\.tuyo\{color:var\(--red\)/);
+  }],
+
+  // ---- v3.1: the Portada story ------------------------------------------------
+
+  ['portada story: headline, deck, byline, then the Columna rows, and no Columna section', async () => {
+    const d = clone(W5);
+    d.tribune.portada = { titulo: 'Titular', texto: 'Bajada.', para: '' };
+    d.tribune.columna = [
+      { titulo: '', para: '', texto: 'Primero.' },
+      { titulo: 'La cuenta', para: '', texto: 'Segundo.' },
+      { titulo: '', para: '', texto: 'Un verso\ncon dos líneas / y una tercera' },
+      { titulo: '', para: '', texto: 'Último.' }];
+    const c = await load(d);
+    const sec = c.doc.querySelector('#portada');
+    const order = ['.kicker', '#p-head', '#p-deck', '#p-by', '#story'].map(s => sec.querySelector(s));
+    order.forEach((e, i) => { A.ok(e, 'part ' + i); if (i) A.ok(order[i - 1].compareDocumentPosition(e) & 4, 'in order ' + i); });
+    A.equal(c.doc.querySelector('#columna'), null, 'no standalone Columna section');
+    A.equal(all(c.doc, '.sec').filter(e => /Columna/.test(e.textContent)).length, 0);
+    const ps = all(c.doc, '#story p');
+    A.equal(ps.length, 4);
+    A.equal(all(c.doc, '#story p.dc').length, 1, 'one drop cap');
+    A.ok(ps[0].classList.contains('dc'), 'on the first paragraph');
+    A.equal(c.doc.querySelector('#story .cross').textContent, 'La cuenta');
+    A.ok(c.doc.querySelector('#story .cross').nextElementSibling === ps[1], 'the crosshead sits above its paragraph');
+    A.ok(ps[2].classList.contains('verse'), 'a paragraph with breaks is verse');
+    A.equal(ps[2].querySelectorAll('br').length, 2, 'a newline and " / " both break the line');
+    A.equal(ps[2].classList.contains('dc'), false, 'no drop cap on verse');
+    A.match(ps[3].textContent, /Último\.■$/, 'end mark after the last paragraph');
+    A.equal(all(c.doc, '#story .end').length, 1);
+    A.match(HTML, /\.story p\.verse\{text-align:left/, 'verse is left aligned, the rest justified');
+    A.match(HTML, /\.story p\{[^}]*text-align:justify/);
+    A.match(HTML, /\.story \.cross\{[^}]*font-variant-caps:all-small-caps[^}]*color:var\(--accent\)/, 'crosshead in small caps with the accent color');
+    common(c, 'story');
+  }],
+
+  ['portada story: a verse first paragraph has no drop cap, and the fallbacks hold', async () => {
+    const d = clone(W5);
+    d.tribune.columna = [{ titulo: '', para: '', texto: 'Rosas son\nviolas son' }, { titulo: '', para: '', texto: 'Normal.' }];
+    const c = await load(d);
+    A.equal(all(c.doc, '#story p.dc').length, 0);
+    const noPortada = clone(W5);
+    noPortada.tribune.portada = null;
+    const c2 = await load(noPortada);
+    A.equal(text(c2.doc, '#p-head'), 'Del sótano a la azotea', 'automatic headline');
+    A.equal(all(c2.doc, '#story p').length, 3, 'the Columna rows still form the body');
+    const noColumna = clone(W5);
+    noColumna.tribune.portada = { titulo: 'Solo titular', texto: 'Y bajada.', para: '' };
+    noColumna.tribune.columna = [];
+    const c3 = await load(noColumna);
+    A.equal(text(c3.doc, '#p-head'), 'Solo titular');
+    A.equal(c3.doc.querySelector('#story').children.length, 0, 'headline and deck only');
+    common(c2, 'no portada'); common(c3, 'no columna');
+  }],
+
+  // ---- v3.1: esquelas ---------------------------------------------------------
+
+  ['esquelas: Q.E.P.D. in any spelling gets the frame, the cross and Para in Playfair', async () => {
+    const d = clone(W5);
+    d.tribune.clasificados = [
+      { titulo: 'Q.E.P.D.', para: 'Andrea’s Picks', texto: 'Sus picks de Survivor.' },
+      { titulo: 'qepd', para: 'KinkyKing', texto: 'Su racha.' },
+      { titulo: 'SE VENDE', para: 'Abogado', texto: 'Un lugar.' }];
+    const c = await load(d);
+    const esq = all(c.doc, '#ads .ad.esq');
+    A.equal(esq.length, 2);
+    esq.forEach(e => { A.equal(e.querySelector('.cruz').textContent, '✝'); A.ok(e.querySelector('.who'), 'Para is shown'); });
+    A.match(esq[0].querySelector('.who').textContent, /Andrea’s Picks/);
+    A.equal(c.doc.querySelectorAll('#ads .ad:not(.esq)').length, 1);
+    A.match(HTML, /\.ad\.esq\{border:2px solid var\(--ink\)[^}]*text-align:center/);
+    A.match(HTML, /\.ad\.esq \.who\{[^}]*var\(--head\)/);
+    ['Q.E.P.D.', 'QEPD', 'q.e.p.d', 'Q E P D'].forEach(t => A.equal(c.T.isEsquela(t), true, t));
+    A.equal(c.T.isEsquela('QEPDX'), false);
+  }],
+
+  // ---- v3.1: special editions -------------------------------------------------
+
+  ['edición: banner, tagline and the muertos theme', async () => {
+    const d = clone(W5);
+    d.tribune.edicion = { titulo: 'Edición de Día de Muertos', texto: 'Los que se fueron de Survivor, presentes.', tema: 'muertos' };
+    const c = await load(d);
+    A.equal(c.doc.querySelector('#edicion').hidden, false);
+    A.equal(text(c.doc, '#edicion'), 'Edición de Día de Muertos');
+    A.equal(text(c.doc, '#tag'), 'Los que se fueron de Survivor, presentes.');
+    A.equal(c.doc.documentElement.getAttribute('data-tema'), 'muertos');
+    A.equal(c.doc.querySelector('#papel').hidden, false, 'papel picado strip');
+    const mast = c.doc.querySelector('.mast'), papel = c.doc.querySelector('#papel'), ban = c.doc.querySelector('#edicion'), tag = c.doc.querySelector('#tag');
+    A.ok((mast.compareDocumentPosition(papel) & 4) && (papel.compareDocumentPosition(ban) & 4) && (ban.compareDocumentPosition(tag) & 4), 'masthead, strip, banner, tagline');
+    A.match(HTML, /html\[data-tema="muertos"\]\{--accent:var\(--marigold\)\}/, 'the theme overrides only the accent token');
+    A.match(HTML, /\.edicion\{[^}]*text-transform:uppercase[^}]*color:var\(--accent\)/);
+    A.noMatch(HTML, /\.bl\.sel[^}]*--accent|tok\("accent"\)/, 'the chart keeps its own colors');
+    const plain = await load(W5);
+    A.equal(plain.doc.documentElement.getAttribute('data-tema'), null, 'a normal edition stays plain');
+    A.equal(plain.doc.querySelector('#edicion').hidden, true);
+    A.equal(plain.doc.querySelector('#papel').hidden, true);
+    common(c, 'muertos');
+  }],
+
+  ['edición: an unknown tema is ignored, a banner without Texto keeps the tagline', async () => {
+    const d = clone(W5);
+    d.tribune.edicion = { titulo: 'Edición rara', texto: '', tema: 'navidad' };
+    const c = await load(d);
+    A.equal(c.doc.documentElement.getAttribute('data-tema'), null);
+    A.equal(c.doc.querySelector('#papel').hidden, true);
+    A.equal(text(c.doc, '#edicion'), 'Edición rara');
+    A.match(text(c.doc, '#tag'), /La quiniela más grande del mundo/);
+    A.deep(c.errors, []);
+  }],
+
+  ['edición: ?ed=N applies that edition\'s theme while the current edition stays plain', async () => {
+    const old = clone(W5); old.week = 4; old.pickem.forEach(p => { p.weeks = p.weeks.slice(0, 4); });
+    old.tribune.edicion = { titulo: 'Muertos', texto: '', tema: 'muertos' };
+    const cur = clone(W5);
+    const a = await load(cur, { url: '?ed=4', editions: { 4: old }, index: { weeks: [4, 5] } });
+    A.equal(a.doc.documentElement.getAttribute('data-tema'), 'muertos', 'the archived edition keeps its theme');
+    const b = await load(cur, { editions: { 4: old }, index: { weeks: [4, 5] } });
+    A.equal(b.doc.documentElement.getAttribute('data-tema'), null, 'the current edition is plain');
+  }],
+
+  ['old data.json without apodos, titulo or edicion still renders', async () => {
+    const d = clone(W5); delete d.apodos; delete d.tribune.edicion; d.tribune.columna.forEach(c => { delete c.titulo; });
+    const c = await load(d);
+    common(c, 'no new fields');
+    A.equal(all(c.doc, '#story p').length, 3);
+    A.equal(c.doc.querySelector('#edicion').hidden, true);
   }],
 
   ['the page has no Claude API call and no Google or GitHub access', async () => {

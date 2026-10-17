@@ -13,7 +13,8 @@ function pad(rows) {
 /** A sheet backed by a plain array of rows. Writes are kept, formatting calls are recorded on sheet.log. */
 function makeSheet(name, rows) {
   const data = rows.map(r => r.slice());
-  const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [], validations: [], cleared: [] };
+  const log = { bold: [], checkboxes: [], frozen: 0, widths: {}, wrap: [], validations: [], cleared: [], writes: 0 };
+  const bgs = {};
   function range(row, col, nr, nc) {
     const self = {
       setValues(vals) {
@@ -24,6 +25,10 @@ function makeSheet(name, rows) {
         }
         return self;
       },
+      getValue() { const line = data[row - 1]; return line && line[col - 1] != null ? line[col - 1] : ''; },
+      setValue(v) { log.writes++; return self.setValues([[v]]); },
+      setBackground(c) { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { const k = (row + i) + ',' + (col + j); if (c == null) delete bgs[k]; else bgs[k] = c; } return self; },
+      getBackgrounds() { const out = []; for (let i = 0; i < nr; i++) { const l = []; for (let j = 0; j < nc; j++) l.push(bgs[(row + i) + ',' + (col + j)] || '#ffffff'); out.push(l); } return out; },
       setFontWeight(w) { log.bold.push([row, col, nr, nc, w]); return self; },
       insertCheckboxes() { log.checkboxes.push('r' + row + 'c' + col); return self; },
       setWrap() { log.wrap.push('r' + row + 'c' + col); return self; },
@@ -49,6 +54,7 @@ function makeSheet(name, rows) {
     },
     setFrozenRows(n) { log.frozen = n; },
     setColumnWidth(c, w) { log.widths[c] = w; },
+    bg: (r, c) => bgs[r + ',' + (c || 1)] || null,
     rows: () => data,
   };
   return sheet;

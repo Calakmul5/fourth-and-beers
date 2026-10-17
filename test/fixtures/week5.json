@@ -96,18 +96,32 @@
    "nfl": "DAL"
   }
  },
+ "apodos": {
+  "KinkyKing": [
+   "Kinky"
+  ],
+  "Osos de Grayslake": [
+   "Osos"
+  ],
+  "Silverback": [
+   "el Comish"
+  ]
+ },
  "tribune": {
   "portada": null,
   "columna": [
    {
+    "titulo": "",
     "para": "",
     "texto": "12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16."
    },
    {
+    "titulo": "",
     "para": "Silverback",
     "texto": "El Comish hizo 50 y sigue líder. La peor semana se tira. Qué regla tan sabia."
    },
    {
+    "titulo": "",
     "para": "Abogado",
     "texto": "Del 12º al 2º en una semana. No fue trampa, fue trámite."
    }
@@ -129,7 +143,8 @@
     "texto": "Su mejor semana, 73. Esa misma semana Dallas la sacó de Survivor."
    }
   ],
-  "datos": []
+  "datos": [],
+  "edicion": null
  },
  "season": 2026,
  "week": 5,

@@ -41,8 +41,9 @@ A.run('Palette', [
       ['#F3EEE3', '#E9E2D3', '#161514', '#3B3834', '#6B655C', '#161514', '#B9B0A0', '#A3191F'], 'the approved tokens');
     A.equal(t.up, '#2E7D4F', 'climber green');
     A.equal(t.down, '#C2610C', 'drop burnt orange');
-    ['blush', 'stone'].forEach(k => A.ok(t[k], '--' + k));
-    ['bg', 'surface', 'accent', 'amber', 'on-accent'].forEach(k => A.ok(!new RegExp('--' + k + '\\b').test(HTML), 'old --' + k + ' is gone'));
+    ['blush', 'stone', 'marigold'].forEach(k => A.ok(t[k], '--' + k));
+    A.ok(/--accent:var\(--red\)/.test(ROOT), 'the accent starts as the red');
+    ['bg', 'surface', 'amber', 'on-accent'].forEach(k => A.ok(!new RegExp('--' + k + '\\b').test(HTML), 'old --' + k + ' is gone'));
   }],
   ['no hex color outside the :root block', () => {
     const hits = (REST.match(HEX) || []);
@@ -73,5 +74,14 @@ A.run('Palette', [
     ['paper', 'paper2'].forEach(bg => A.ok(contrast(t.red, t[bg]) >= 4.5, '--red on --' + bg + ' ' + contrast(t.red, t[bg]).toFixed(2)));
     ['paper', 'stone', 'blush'].forEach(fg => A.ok(contrast(t[fg], t.ink) >= 4.5, '--' + fg + ' on --ink (the cifra and the winner tiles) ' + contrast(t[fg], t.ink).toFixed(2)));
     ['up', 'down'].forEach(fg => A.ok(contrast(t[fg], t.paper) >= 3, '--' + fg + ' on --paper is ' + contrast(t[fg], t.paper).toFixed(2) + ':1, the 3:1 floor for lines and large text'));
+  }],
+  ['special editions: the marigold passes 4.5:1, and a theme only remaps tokens', () => {
+    const t = tokens();
+    // --paper2 only paints the empty bar track, no text sits on it, so the marigold is checked on the paper.
+    A.ok(contrast(t.marigold, t.paper) >= 4.5, '--marigold on --paper is ' + contrast(t.marigold, t.paper).toFixed(2) + ':1, needs 4.5');
+    const themes = HTML.match(/html\[data-tema="[a-z]+"\]\{[^}]*\}/g) || [];
+    A.ok(themes.length >= 1, 'a theme block exists');
+    themes.forEach(b => A.ok(/^html\[data-tema="[a-z]+"\]\{(--[a-z0-9-]+:var\(--[a-z0-9-]+\);?)+\}$/.test(b), 'theme block only remaps tokens: ' + b));
+    A.ok(!/data-tema="muertos"\]\{[^}]*--red/.test(HTML), 'the red (chart and prize color) is not overridden');
   }],
 ]);

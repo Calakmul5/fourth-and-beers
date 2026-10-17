@@ -156,7 +156,7 @@ A.run('Publish.js', [
     A.deep(grid.pickem[2].weeks, [78, 0, 50], 'a missed week stays a zero in the middle');
     A.equal(grid.pickem[2].dropped, 0, 'Yahoo dropped is canon');
     A.deep(Object.keys(grid).sort(),
-      ['fans', 'pickem', 'prizes', 'season', 'strikes', 'survivorOut', 'tribune', 'updated', 'week', 'weeks'], 'fields: no comments, awards, pays or weeklyPrize');
+      ['apodos', 'fans', 'pickem', 'prizes', 'season', 'strikes', 'survivorOut', 'tribune', 'updated', 'week', 'weeks'], 'fields: apodos added, no comments, awards, pays or weeklyPrize');
   }],
 
   ['display values with a header only (no scores) throw a clear error', () => {
@@ -221,13 +221,14 @@ A.run('Publish.js', [
 
   ['Tribune: only checked rows of the current week, grouped by Sección', () => {
     const t = build().d.tribune;
-    A.deep(Object.keys(t), ['portada', 'columna', 'clasificados', 'datos']);
+    A.deep(Object.keys(t), ['portada', 'columna', 'clasificados', 'datos', 'edicion']);
+    A.equal(t.edicion, null, 'no Edición row, no edición');
     A.deep(t.portada, { titulo: 'Del sótano a la azotea', texto: 'Sube nueve lugares.', para: 'Abogado' }, 'first Portada wins');
     A.deep(t.columna, [
-      { para: 'Silverback', texto: 'Se roasteó solo.' },
-      { para: '', texto: 'Buen domingo, mal pick.' },
-      { para: CURLY_1, texto: 'Para el de Chitown.' },
-      { para: 'Nadie Conocido', texto: 'Destinatario raro.' },
+      { titulo: '', para: 'Silverback', texto: 'Se roasteó solo.' },
+      { titulo: '', para: '', texto: 'Buen domingo, mal pick.' },
+      { titulo: '', para: CURLY_1, texto: 'Para el de Chitown.' },
+      { titulo: '', para: 'Nadie Conocido', texto: 'Destinatario raro.' },
     ], 'Columna, sheet order, Todos is blank, apostrophes normalized');
     A.deep(t.clasificados, [
       { titulo: 'SE VENDE', para: 'Silverback', texto: 'Semana de 101 puntos.' },
@@ -259,8 +260,8 @@ A.run('Publish.js', [
     A.deep(build({ tribune: rows }).d.tribune.columna.map(x => x.texto), ['a', 'b', 'c']);
     // Columns found by header name, so a reordered sheet still reads right.
     const swapped = [['Publicar', 'Texto', 'Semana', 'Sección', 'Título', 'Para'], ['TRUE', 'Hola.', '3', 'Columna', '', 'Silverback']];
-    A.deep(build({ tribune: swapped }).d.tribune.columna, [{ para: 'Silverback', texto: 'Hola.' }]);
-    A.deep(build({ tribune: null }).d.tribune, { portada: null, columna: [], clasificados: [], datos: [] }, 'no tab, empty tribune, no failure');
+    A.deep(build({ tribune: swapped }).d.tribune.columna, [{ titulo: '', para: 'Silverback', texto: 'Hola.' }]);
+    A.deep(build({ tribune: null }).d.tribune, { portada: null, columna: [], clasificados: [], datos: [], edicion: null }, 'no tab, empty tribune, no failure');
   }],
 
   ['survivorOut carries forward, adds new outs, drops corrected ones', () => {
@@ -369,7 +370,7 @@ A.run('Publish.js', [
   ['publish works without a Tribune tab', () => {
     const { ctx, github } = setup({ tribune: null });
     ctx.publishLeaderboard();
-    A.deep(JSON.parse(github.state.file.text).tribune, { portada: null, columna: [], clasificados: [], datos: [] });
+    A.deep(JSON.parse(github.state.file.text).tribune, { portada: null, columna: [], clasificados: [], datos: [], edicion: null });
   }],
 
   ['missing script properties fail loudly', () => {
@@ -420,13 +421,14 @@ A.run('Publish.js', [
     ctx.setupTribuneTab();
     const sh = tab(ws, 'Tribune');
     A.ok(sh, 'tab created');
-    A.deep(sh.rows()[0], TRIBUNE_HEAD, 'header');
+    A.deep(sh.rows()[0].slice(0, 6), TRIBUNE_HEAD, 'header');
+    A.equal(sh.rows()[0][6], 'Revisión', 'G1 labels the review cell');
     A.deep(sh.log.bold[0].slice(0, 4), [1, 1, 1, 6], 'bold header row');
     A.equal(sh.log.frozen, 1, 'frozen header');
     A.ok(sh.log.checkboxes.indexOf('r2c6') >= 0, 'checkboxes start at F2');
     const v = sh.log.validations[0];
     A.equal(v.at, 'r2c2', 'dropdown starts at B2');
-    A.deep(JSON.parse(JSON.stringify(v.rule.list)), ['Portada', 'Columna', 'Clasificado', 'Dato'], 'exactly these four');
+    A.deep(JSON.parse(JSON.stringify(v.rule.list)), ['Portada', 'Columna', 'Clasificado', 'Dato', 'Edición'], 'exactly these five');
     A.equal(v.rule.dropdown, true);
     A.equal(sh.rows().length, 1, 'no rows seeded');
   }],
@@ -434,11 +436,14 @@ A.run('Publish.js', [
   ['setupTribuneTab is idempotent and leaves rows alone', () => {
     const ws = participants();
     const { ctx } = setup({ participants: ws });
-    const before = JSON.stringify(tab(ws, 'Tribune').rows());
+    const body = () => JSON.stringify(tab(ws, 'Tribune').rows().slice(1));
+    const before = body();
     ctx.setupTribuneTab();
+    const once = JSON.stringify(ws.getSheets().map(t => t.rows()));
     ctx.setupTribuneTab();
     A.equal(tabNames(ws).filter(n => n === 'Tribune').length, 1, 'one Tribune tab');
-    A.equal(JSON.stringify(tab(ws, 'Tribune').rows()), before, 'rows untouched');
+    A.equal(body(), before, 'rows untouched');
+    A.equal(JSON.stringify(ws.getSheets().map(t => t.rows())), once, 'a second run changes nothing');
   }],
 
   ['migrateToTribune dry run: logs counts per source and per week, writes nothing', () => {
@@ -481,7 +486,7 @@ A.run('Publish.js', [
     ctx.migrateToTribune(false);
     const sh = tab(ws, 'Tribune');
     A.ok(sh, 'created');
-    A.deep(sh.rows()[0], TRIBUNE_HEAD);
+    A.deep(sh.rows()[0].slice(0, 6), TRIBUNE_HEAD);
     A.equal(sh.rows().length, 9);
   }],
 
@@ -517,7 +522,7 @@ A.run('Publish.js', [
     const { ctx } = setup({ participants: ws });
     ctx.migrateToTribune(false);
     const t = JSON.parse(JSON.stringify(ctx.buildData_(ws, ctx.SpreadsheetApp.openById('model'), null))).tribune;
-    A.deep(t.columna, [{ para: 'Silverback', texto: 'Se roasteó solo.' }, { para: '', texto: 'Buen domingo, mal pick.' }]);
+    A.deep(t.columna, [{ titulo: '', para: 'Silverback', texto: 'Se roasteó solo.' }, { titulo: '', para: '', texto: 'Buen domingo, mal pick.' }]);
     A.deep(t.clasificados.map(x => x.titulo), ['Premio uno', 'Premio dos'], 'only the checked week 3 rows');
     A.equal(t.portada, null);
   }],
@@ -527,6 +532,149 @@ A.run('Publish.js', [
     const onEdit = /function onBoardEdit[\s\S]*?\n}/.exec(src)[0];
     A.noMatch(onEdit, /Comentarios|Premios|commentsTab|awardsTab/, 'onEdit filter');
     A.noMatch(src, /readComments_|readAwards_|setupComentarios|setupPremios|PREMIOS_SEED|CFG\.pays|weeklyPrize/, 'old readers and setups');
+  }],
+
+  // ---- v2.1: Edición, Apodo, Revisión ---------------------------------------
+
+  ['Tribune: Edición is read once, Para is the theme key, line breaks stay', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],
+      ['3', 'Columna', '', 'La cuenta', 'Verso uno\nverso dos \n', 'TRUE'],
+      ['3', 'Edición', 'Muertos', 'Día de Muertos', 'Los de Survivor, presentes.', 'TRUE'],      // row 4
+      ['3', 'edición', 'muertos', 'Otra', 'No cuenta.', 'TRUE'],                                   // row 5
+      ['3', 'Edición', 'muertos', '', 'Sin banner.', 'TRUE'],                                      // row 6
+      ['2', 'Edición', 'muertos', 'Semana vieja', '', 'TRUE']];
+    const { d, ctx } = build({ tribune: rows });
+    A.deep(d.tribune.edicion, { titulo: 'Día de Muertos', texto: 'Los de Survivor, presentes.', tema: 'muertos' });
+    A.deep(d.tribune.columna, [{ titulo: 'La cuenta', para: '', texto: 'Verso uno\nverso dos' }], 'crosshead kept, newline kept, ends trimmed');
+    A.ok(ctx._logs.some(l => /row 5: only one Edición/.test(l)), 'second Edición');
+    A.ok(ctx._logs.some(l => /row 6 is a checked Edición without a Título/.test(l)), 'Edición without Título');
+    A.ok(!ctx._logs.some(l => /muertos.*not a Pick'em name/i.test(l)), 'the theme key is not read as a name');
+  }],
+
+  ['editions: the archive carries its own edicion', () => {
+    const rows = [TRIBUNE_HEAD, ['3', 'Edición', 'muertos', 'Día de Muertos', '', 'TRUE']];
+    const { ctx, github } = setup({ tribune: rows });
+    ctx.publishLeaderboard();
+    A.equal(JSON.parse(github.state.files['editions/semana-03.json'].text).tribune.edicion.tema, 'muertos');
+    A.equal(JSON.parse(github.state.file.text).tribune.edicion.titulo, 'Día de Muertos');
+  }],
+
+  ['Apodo: read per call sign, bad aliases dropped, emails never read, missing column is fine', () => {
+    const fans = [['Call Sign PickEm', 'Fan of', 'Email', 'Apodo'],
+      ['Silverback', 'PIT', 'a@example.test', 'el Comish, Silverback, el comish'],
+      ['KinkyKing', '', 'b@example.test', ' Kinky '],
+      ['Steel Man', '', 'c@example.test', 'Acero, Kinky'],
+      ['Jorge_B', '', 'd@example.test', ''],
+      ['Nobody On The Board', '', '', 'Fantasma']];
+    const { d, ctx } = build({ fans });
+    A.deep(d.apodos, { Silverback: ['el Comish', 'el comish'], KinkyKing: ['Kinky'], 'Steel Man': ['Acero'] });
+    A.ok(ctx._logs.some(l => /Apodo "Silverback" is a call sign/.test(l)), 'an alias equal to a call sign is dropped');
+    A.ok(ctx._logs.some(l => /Apodo "Kinky" belongs to two players/.test(l)), 'a shared alias is dropped for the second player');
+    A.noMatch(JSON.stringify(d), /@/, 'no emails');
+    A.deep(build().d.apodos, {}, 'no Apodo column');
+  }],
+
+  ['setupTribuneTab adds the Apodo header once, touching nothing else, and the Edición option to an old dropdown', () => {
+    const ws = participants();
+    const { ctx } = setup({ participants: ws });
+    const sheet1 = tab(ws, 'Sheet1');
+    const before = JSON.stringify(sheet1.rows());
+    ctx.setupTribuneTab();
+    ctx.setupTribuneTab();
+    const rows = sheet1.rows();
+    A.equal(rows[0].filter(c => c === 'Apodo').length, 1, 'one Apodo header');
+    A.equal(rows[0][3], 'Apodo', 'in the first free column');
+    A.deep(rows.map(r => r.slice(0, 3)), JSON.parse(before).map(r => r.slice(0, 3)), 'other columns untouched');
+    A.deep(rows.slice(1).map(r => r[3] || ''), rows.slice(1).map(() => ''), 'no values written');
+    const v = tab(ws, 'Tribune').log.validations;
+    A.deep(JSON.parse(JSON.stringify(v[v.length - 1].rule.list)).slice(-1), ['Edición'], 'the dropdown is refreshed on the existing tab');
+  }],
+
+  ['name resolver: Publish.js and index.html carry the identical block, and it matches apodos and apostrophes', () => {
+    const fs = require('fs'), path = require('path');
+    const block = t => t.slice(t.indexOf('// BEGIN NAMES'), t.indexOf('// END NAMES')).replace(/\r\n/g, '\n');
+    const pub = fs.readFileSync(path.join(__dirname, '..', 'gas', 'Publish.js'), 'utf8');
+    const page = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    A.ok(block(pub).length > 500, 'block found in Publish.js');
+    A.equal(block(page), block(pub), 'the shared resolver is the same code in both files');
+    const { ctx } = setup();
+    const idx = ctx.nameIndex(['KinkyKing', CURLY_2, 'Ana'], { KinkyKing: ['Kinky'], Ana: ['Manolito'] });
+    const names = t => ctx.mentions(idx, t).map(m => m.name);
+    A.deep(names("kinky y KINKYKING, Manolito's winning picks y Manolito"), ['KinkyKing', 'KinkyKing', CURLY_2, 'Ana']);
+    A.deep(names('Kinkyness'), [], 'whole words only');
+  }],
+
+  ['Revisión: last place named twice, in the Columna twice, and two weeks running', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['2', 'Columna', '', '', 'Steel Man ya andaba abajo.', 'TRUE'],                       // last week names him
+      ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],
+      ['3', 'Columna', '', '', 'Steel Man otra vez.', 'TRUE'],                              // row 4
+      ['3', 'Columna', '', '', 'Y Steel Man de nuevo.', 'TRUE'],                            // row 5
+      ['3', 'Columna', '', '', 'Abogado no está en esta.', 'TRUE'],                         // row 6
+      ['3', 'Clasificado', 'Steel Man', 'SE VENDE', 'Picks.', 'FALSE']];                    // unchecked, ignored
+    const ws = participants(null, { tribune: rows });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const sh = tab(ws, 'Tribune'), h1 = String(sh.getRange('H1').getValue());
+    A.match(h1, /Steel Man sale en 2 filas \(4, 5\)\. Mejor una sola\./);
+    A.match(h1, /Steel Man sale en 2 párrafos de la Columna \(filas 4, 5\)\./);
+    A.match(h1, /Steel Man ya salió en la Tribune de la semana 2\. Segunda semana seguida\./);
+    A.deep([2, 3, 4, 5, 6].map(r => sh.bg(r)), [null, null, '#f4cccc', '#f4cccc', null], 'only the offending rows are tinted');
+    A.ok(github.state.puts.length >= 3, 'a warning never blocks the publish');
+    A.match(JSON.stringify(JSON.parse(github.state.file.text).tribune.columna), /Steel Man otra vez/, 'and never edits the text');
+    A.equal(sh.rows()[3][4], 'Steel Man otra vez.', 'the sheet text is untouched');
+  }],
+
+  ['Revisión: a clean batch clears H1 and only the tint Publish set; reruns write nothing new', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],
+      ['3', 'Columna', '', '', 'Steel Man otra vez.', 'TRUE'],
+      ['3', 'Columna', '', '', 'Y Steel Man de nuevo.', 'TRUE']];
+    const ws = participants(null, { tribune: rows });
+    const { ctx } = setup({ participants: ws });
+    const sh = tab(ws, 'Tribune');
+    ctx.publishLeaderboard();
+    A.equal(sh.bg(3), '#f4cccc');
+    const writes = sh.log.writes;
+    ctx.publishLeaderboard();
+    A.equal(sh.log.writes, writes, 'same warnings, H1 not rewritten');
+    sh.getRange(2, 1, 1, 6).setBackground('#ffff00');                                  // the user's own highlight
+    sh.getRange(4, 5, 1, 1).setValues([['Abogado sube.']]);                            // fixes the second mention
+    sh.getRange(3, 5, 1, 1).setValues([['Abogado baja.']]);
+    ctx.publishLeaderboard();
+    A.equal(String(sh.getRange('H1').getValue()), '', 'clean, H1 cleared');
+    A.deep([3, 4].map(r => sh.bg(r)), [null, null], 'the tint is removed');
+    A.equal(sh.bg(2), '#ffff00', 'the user\'s own color is left alone');
+  }],
+
+  ['Revisión: apodos count, Columna needs a Portada, one Edición, known temas', () => {
+    const fans = FANS.map((r, i) => i === 0 ? r.concat(['Apodo']) : r[0] === 'Steel Man' ? r.concat(['Acero']) : r);
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Columna', '', '', 'El Acero no se mueve.', 'TRUE'],                              // row 2, names him by apodo
+      ['3', 'Clasificado', 'Steel Man', 'SE VENDE', 'Usado.', 'TRUE'],                       // row 3, by Para
+      ['3', 'Edición', 'navidad', 'Una', '', 'TRUE'],                                        // row 4, unknown tema
+      ['3', 'Edición', 'muertos', 'Dos', '', 'TRUE']];                                       // row 5, extra
+    const ws = participants(null, { tribune: rows, fans });
+    const { ctx } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const sh = tab(ws, 'Tribune'), h1 = String(sh.getRange('H1').getValue());
+    A.match(h1, /Steel Man sale en 2 filas \(2, 3\)/, 'an apodo and a Para both count');
+    A.match(h1, /Hay Columna sin fila de Portada \(filas 2\)\./);
+    A.match(h1, /Hay 2 filas de Edición\. Solo cuenta la primera \(fila 4\)\./);
+    A.match(h1, /Tema desconocido "navidad" en la fila 4\. Temas: muertos\./);
+    A.deep([2, 3, 4, 5].map(r => sh.bg(r) === '#f4cccc'), [true, true, true, true]);
+    A.equal(ctx.THEMES_KNOWN.join(), 'muertos');
+  }],
+
+  ['Revisión: the golf rule protects every player tied for last, and a missing Tribune tab is fine', () => {
+    const { ctx } = setup();
+    A.deep(Array.from(ctx.lastPlace_([{ name: 'A', total: 5 }, { name: 'B', total: 5 }, { name: 'C', total: 9 }])), ['A', 'B']);
+    A.deep(Array.from(ctx.lastPlace_([{ name: 'A', weeks: [10, 20], total: null }, { name: 'B', weeks: [40], total: null }])), ['A']);
+    const ws = participants(null, { tribune: null });
+    const { ctx: c2, github } = setup({ participants: ws });
+    c2.publishLeaderboard();
+    A.ok(github.state.puts.length >= 1, 'publishes without a Tribune tab');
   }],
 
   ['published data carries no email addresses or tokens', () => {

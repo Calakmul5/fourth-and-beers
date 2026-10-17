@@ -14,14 +14,18 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 
 ## How it runs
 
-- Inputs, participants workbook: `PickEm_Board` (Yahoo weekly performance table pasted at A1), `Tribune` (Semana, Sección, Para, Título, Texto, Publicar checkbox) and `Sheet1` (only the columns Call Sign PickEm and Fan of). `Sección` is a dropdown: Portada, Columna, Clasificado, Dato. `Comentarios` and `Premios` are retired: `migrateToTribune(dryRun)` moves them into Tribune and deletes them only when the counts match. Nothing else reads them.
+- Inputs, participants workbook: `PickEm_Board` (Yahoo weekly performance table pasted at A1), `Tribune` (Semana, Sección, Para, Título, Texto, Publicar checkbox, plus G1 `Revisión` and the status cell H1) and `Sheet1` (only the columns Call Sign PickEm, Fan of and the optional Apodo). `Sección` is a dropdown: Portada, Columna, Clasificado, Dato, Edición. Row meaning: Portada is the headline (Título) and deck (Texto), Para optional. Columna is one paragraph of the Portada story in sheet order, Título an optional crosshead. Clasificado is an ad (Título is the ad type, `Q.E.P.D.` or `QEPD` in any case makes it an esquela). Dato is a labeled fact. Edición is at most one per week: Título is a banner under the masthead, Texto replaces the tagline, Para is the theme key (only `muertos` exists). `Apodo` holds comma separated nicknames per participant (Kinky for KinkyKing, Osos for Osos de Grayslake, el Comish for Silverback) so the page can bold them. Emails are never published. `Comentarios` and `Premios` are retired: `migrateToTribune(dryRun)` moves them into Tribune and deletes them only when the counts match. Nothing else reads them.
 - Input, model workbook: `Field` (Entrant, Strikes). Read only.
 - Script properties: `GITHUB_TOKEN`, `GITHUB_REPO`, `SHEET_ID` (participants), `MODEL_SHEET_ID` (model).
+- Revisión: every publish checks the current week's checked Tribune rows and writes Spanish warnings to H1, tinting the rows involved light red. It warns when the last place is named in more than one row or Columna paragraph, was also named last week, when Columna has no Portada, when there is more than one Edición or an unknown tema. It never blocks a publish and never edits text. A clean batch clears H1 and only the tint it set.
 - Triggers: installable onEdit on the participants workbook (PickEm_Board and Tribune) and a daily 7am `publishLeaderboard`. Runs are serialized with a script lock.
 - `publishLeaderboard` reads the live data.json first (for `survivorOut` and the sha), builds a new one, then writes the week's edition, the edition index and data.json, in that order. Each file is committed only when something other than `updated` changed. A missing Tribune tab publishes an empty `tribune`.
-- data.json fields: `season`, `week`, `weeks`, `updated`, `prizes {regular[], survivor[], playoffs[], weekly, weeks}`, `pickem[] {name, weeks[], total, dropped}`, `strikes {name: n}`, `survivorOut[] {name, week}`, `fans {name: {nfl, ncaa} | {random, other}}`, `tribune {portada: {titulo, texto, para} | null, columna[] {para, texto}, clasificados[] {titulo, para, texto}, datos[] {titulo, para, texto}}`. Yahoo's Total and Dropped are canon. The prize amounts live in one `PRIZES` constant in Publish.js.
+- data.json fields: `season`, `week`, `weeks`, `updated`, `prizes {regular[], survivor[], playoffs[], weekly, weeks}`, `pickem[] {name, weeks[], total, dropped}`, `strikes {name: n}`, `survivorOut[] {name, week}`, `fans {name: {nfl, ncaa} | {random, other}}`, `apodos {name: [alias]}`, `tribune {portada: {titulo, texto, para} | null, columna[] {titulo, para, texto}, clasificados[] {titulo, para, texto}, datos[] {titulo, para, texto}, edicion: {titulo, texto, tema} | null}`. Yahoo's Total and Dropped are canon. The prize amounts live in one `PRIZES` constant in Publish.js.
 - `SURVIVOR_TO_PICKEM` in Publish.js maps Survivor call signs to Pick'em call signs. Apostrophes are normalized (Yahoo uses curly ones).
-- The page still reads the old schema (pays, weeklyPrize, comments, awards) until the first publish after the 3.0 deploy, then ignores those fields.
+- The page still reads the old schema (pays, weeklyPrize, comments, awards) until the first publish after the 3.0 deploy, then ignores those fields. A data.json without apodos, edicion or Columna titulo renders as is.
+- Names: one resolver, the same code block in `index.html` and `Publish.js` between `// BEGIN NAMES` and `// END NAMES` (a test fails if they differ). Call signs plus apodos, case-insensitive, curly and straight apostrophes equal, whole words, longest match first. The page bolds mentions with `<b class="nombre">` and gives the selected reader `.tuyo`. Sheet text is always escaped first.
+- Last-place rule: the last place (every player tied for last, golf rule) is roasted at most once per edition. Priority: the Portada story (never cut), the first Clasificado, Datos, then the automatic facts, which carry `sujetos`. Items over budget are not rendered. Pizzas, prize tiles and the name panel are exempt.
+- Themes: `THEMES` in index.html and `THEMES_KNOWN` in Publish.js, plus an `html[data-tema]` CSS block that only remaps tokens. `muertos` swaps the accent for a marigold. Chart and prize colors never change.
 
 ## Rules
 
@@ -34,13 +38,13 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 - Penalties, per the reglamento: last place in the regular-season Pick'em pays the Super Bowl party pizzas for everyone, families included. The first Survivor elimination organizes the carne asada for all participants. Ties split the bill. Prize ties follow the golf rule.
 - Privacy: this repo is public. Only call signs, points, strikes, fan teams, the reglamento's prize amounts and published Tribune rows belong here. Never put emails, real names, payment details, workbook IDs or tokens in code, tests, docs or commit messages.
 - Yahoo is behind the commissioner's login. No scraping, no stored Yahoo credentials.
-- Weekly Tribune batch, when asked: read the current data.json and draft 1 Portada, 6 to 8 Columna, 4 to 6 Clasificado and optional Dato rows as a CSV file (Semana, Sección, Para, Título, Texto) ready to import. Para is an exact Pick'em call sign, a comma separated list of them, or Todos. Portada: Título is the headline, Texto the deck. Columna: Texto only, the Comish's jokes, with at least one self-roast of the commissioner (Silverback). Clasificado: Título is the ad type (SE VENDE, SE RENTA, SE BUSCA, SE REGALA), Texto the ad. Dato: Título is the label, Texto the fact. Same voice rules as above. Do not repeat what the fact engine already prints.
+- Weekly Tribune batch, when asked: read the current data.json and the last four editions, then draft 1 Portada (headline and deck), 5 to 6 Columna paragraphs that form one story, 4 to 6 Clasificado rows and optional Dato and Edición rows, as a CSV file (Semana, Sección, Para, Título, Texto) ready to import. Last place is named in one row at most. Para is an exact Pick'em call sign, a comma separated list of them, or Todos. Same voice rules as above. Do not repeat what the fact engine already prints.
 
 ## Current versions
 
-- index.html v3.0.0 c2.0.0
-- Publish.js v2.0.0 c1.2.0
-- docs/LEADERBOARD_ARCHITECTURE.html v3.0.0 c3.0.0
+- index.html v3.1.0 c2.1.0
+- Publish.js v2.1.0 c1.3.0
+- docs/LEADERBOARD_ARCHITECTURE.html v3.1.0 c3.1.0
 
 ## Roadmap
 
