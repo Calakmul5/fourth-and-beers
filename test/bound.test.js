@@ -36,7 +36,8 @@ function load(opts) {
     createMenu: name => { const m = { name, items: [], addItem(l, f) { m.items.push([l, f]); return m; }, addToUi() { menus.push(m); } }; return m; },
   };
   const ctx = {
-    SpreadsheetApp: { getActive: () => ss, getUi: () => ui },
+    Logger: { log: () => {} },
+    SpreadsheetApp: { getActive: () => ss, getUi: () => { if (opts.noUi) throw new Error("Cannot call SpreadsheetApp.getUi() from this context."); return ui; } },
     Utilities: { formatDate: (d, tz, f) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d) },
     setWarningWidths_: sh => events.push('widths'),
     publishManual: () => { events.push('publish'); if (opts.throws) throw new Error(opts.throws); return opts.result; },
@@ -83,6 +84,12 @@ A.run('Publicar button (bound project)', [
   ['an unknown or empty status is an error popup, never a blank one', () => {
     A.match(popup({ status: 'weird' })[2], /^alert:No se publicó: estado desconocido weird/);
     A.match(popup(undefined)[2], /^alert:No se publicó: sin respuesta/);
+  }],
+
+  ['no UI in this run (editor, workbook closed): the answer goes to a long toast and the log, nothing throws', () => {
+    const ctx = load({ result: PUBLISHED, noUi: true, logs: true });
+    ctx.publishNow();
+    A.deep(ctx._events, ['toast:Publicando...', 'publish', 'toast:Publicado. Semana 6, commit abc1234, 13:42']);
   }],
 
   ['the Tribune menu offers Publicar and runs publishNow', () => {

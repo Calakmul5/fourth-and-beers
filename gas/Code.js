@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - Publicar button, same project as Publish.js (bound to the participants workbook)
-// v1.1.0 c1.0.0
+// v1.1.1 c1.0.0
 //
 // A drawing or image button in Sheets can only run a function of a script bound to that workbook, which is why the
 // whole project is bound. publishNow() shows a toast, calls publishManual() from Publish.js and shows its status
@@ -33,7 +33,15 @@ function publishNow() {
   } catch (e) {
     result = { status: 'error', message: String(e && e.message ? e.message : e) };
   }
-  SpreadsheetApp.getUi().alert('Fourth and Beers', publishMessage_(result, ss.getSpreadsheetTimeZone()), SpreadsheetApp.getUi().ButtonSet.OK);
+  var text = publishMessage_(result, ss.getSpreadsheetTimeZone());
+  Logger.log(text);
+  try {
+    var ui = SpreadsheetApp.getUi();
+    ui.alert('Fourth and Beers', text, ui.ButtonSet.OK);
+  } catch (e) {
+    // No UI in this run (started from the editor, or the workbook is not open): the toast and the log still carry the answer.
+    ss.toast(text, 'Fourth and Beers', 30);
+  }
 }
 
 /** The popup text for a publish status {status, week, commitSha, updatedAt, message}. */
