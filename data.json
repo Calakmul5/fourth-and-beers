@@ -96,46 +96,60 @@
    "nfl": "DAL"
   }
  },
- "comments": [
-  {
-   "para": "",
-   "texto": "12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16."
-  },
-  {
-   "para": "Silverback",
-   "texto": "El Comish hizo 50 y sigue líder. La peor semana se tira. Qué regla tan sabia."
-  },
-  {
-   "para": "Abogado",
-   "texto": "Del 12º al 2º en una semana. No fue trampa, fue trámite."
-  }
- ],
- "awards": [
-  {
-   "titulo": "Fotocopia",
-   "para": "Osos de Grayslake, Mean Machine, Jorge_B",
-   "texto": "281, 281 y 281. Tres listas distintas y el mismo total."
-  },
-  {
-   "titulo": "Disco rayado",
-   "para": "This is our year",
-   "texto": "65, 65 y 65. Dice que este es su año. Parece la misma semana."
-  },
-  {
-   "titulo": "Lo que da, quita",
-   "para": "Andrea’s Picks",
-   "texto": "Su mejor semana, 73. Esa misma semana Dallas la sacó de Survivor."
-  }
- ],
+ "tribune": {
+  "portada": null,
+  "columna": [
+   {
+    "para": "",
+    "texto": "12 de 21 con Dallas contra unos Bucs 0-4. Ganaron los Bucs. Quedan 16."
+   },
+   {
+    "para": "Silverback",
+    "texto": "El Comish hizo 50 y sigue líder. La peor semana se tira. Qué regla tan sabia."
+   },
+   {
+    "para": "Abogado",
+    "texto": "Del 12º al 2º en una semana. No fue trampa, fue trámite."
+   }
+  ],
+  "clasificados": [
+   {
+    "titulo": "Fotocopia",
+    "para": "Osos de Grayslake, Mean Machine, Jorge_B",
+    "texto": "281, 281 y 281. Tres listas distintas y el mismo total."
+   },
+   {
+    "titulo": "Disco rayado",
+    "para": "This is our year",
+    "texto": "65, 65 y 65. Dice que este es su año. Parece la misma semana."
+   },
+   {
+    "titulo": "Lo que da, quita",
+    "para": "Andrea’s Picks",
+    "texto": "Su mejor semana, 73. Esa misma semana Dallas la sacó de Survivor."
+   }
+  ],
+  "datos": []
+ },
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-15T12:48:41.715Z",
- "pays": [
-  1050,
-  350
- ],
- "weeklyPrize": 50,
+ "updated": "2026-10-17T00:10:18.751Z",
+ "prizes": {
+  "regular": [
+   1050,
+   350
+  ],
+  "survivor": [
+   1050,
+   350
+  ],
+  "playoffs": [
+   700
+  ],
+  "weekly": 50,
+  "weeks": 18
+ },
  "pickem": [
   {
    "name": "Silverback",
