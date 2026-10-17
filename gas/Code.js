@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - Publicar button, same project as Publish.js (bound to the participants workbook)
-// v1.0.2 c1.0.0
+// v1.1.0 c1.0.0
 //
 // A drawing or image button in Sheets can only run a function of a script bound to that workbook, which is why the
 // whole project is bound. publishNow() shows a toast, calls publishManual() from Publish.js and shows its status
@@ -53,6 +53,7 @@ function publishMessage_(r, tz) {
 function setupPublishButton() {
   var sh = SpreadsheetApp.getActive().getSheetByName(BUTTON_TAB);
   if (!sh) throw new Error('No hay pestaña ' + BUTTON_TAB + '. Corre setupTribuneTab en el proyecto del publicador primero.');
+  setWarningWidths_(sh);   // narrower Warnings columns (Publish.js), so K1 is closer to the screen
   sh.getImages().forEach(function (img) { if (img.getAltTextTitle() === BUTTON_ALT) img.remove(); });
   var img = sh.insertImage(BUTTON_URL, BUTTON_COL, BUTTON_ROW, 12, 4);
   img.setAltTextTitle(BUTTON_ALT);

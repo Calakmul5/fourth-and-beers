@@ -507,6 +507,7 @@ A.run('Publish.js', [
     A.deep(sh.rows()[0].slice(0, 6), TRIBUNE_HEAD, 'header');
     A.deep(sh.rows()[0].slice(6, 10), ['', 'Color', 'Warnings', 'Warning week'], 'G is a blank separator, H1:J1 head the warnings table');
     A.equal(sh.log.widths[7], 20, 'the separator is narrow');
+    A.deep([sh.log.widths[8], sh.log.widths[9], sh.log.widths[10]], [50, 300, 90], 'the Warnings columns are narrow so the Publicar button is closer');
     A.deep(sh.log.bold[0].slice(0, 4), [1, 1, 1, 6], 'bold header row');
     A.equal(sh.log.frozen, 1, 'frozen header');
     A.ok(sh.log.checkboxes.indexOf('r2c6') >= 0, 'checkboxes start at F2');

@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v3.1.1 c1.9.0
+// v3.1.2 c1.9.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -84,6 +84,7 @@ var TRIBUNE_HEADER = ['Semana', 'Sección', 'Para', 'Título', 'Texto', 'Publica
 var WARN_HEADER = ['Color', 'Warnings', 'Warning week'];
 var WARN_COL = 8;               // first column of the Warnings table (H), 1-based
 var SEP_AFTER = 6;              // the separator column G is inserted after the Publicar column
+var WARN_WIDTHS = [50, 300, 90];   // pixel widths of H, I, J: narrow, so the Publicar button at K1 sits closer to the screen
 var WARN_KEEP_WEEKS = 3;     // warnings from the 3 weeks before the current one stay listed, older ones roll off
 // One light color per warning, cycled. The warning's swatch (G) and the Tribune rows it points at (A:F) share it.
 var WARN_COLORS = ['#f4cccc', '#fff2cc', '#d9ead3', '#cfe2f3', '#d9d2e9', '#fce5cd'];
@@ -224,10 +225,15 @@ function setupTribune_(ss) {
   sh.setColumnWidth(1, 70); sh.setColumnWidth(2, 110); sh.setColumnWidth(3, 170);
   sh.setColumnWidth(4, 190); sh.setColumnWidth(5, 520); sh.setColumnWidth(6, 80);
   sh.getRange('E2:E1000').setWrap(true);
-  sh.setColumnWidth(SEP_AFTER + 1, 20); sh.setColumnWidth(WARN_COL, 70); sh.setColumnWidth(WARN_COL + 1, 520); sh.setColumnWidth(WARN_COL + 2, 100);
+  sh.setColumnWidth(SEP_AFTER + 1, 20); setWarningWidths_(sh);
   sh.getRange(2, WARN_COL + 1, 199, 1).setWrap(true);
   addApodoHeader_(ss);
   return sh;
+}
+
+/** Widths of the Warnings table columns. Formatting only, no cell moves. Also used by setupPublishButton in Code.js. */
+function setWarningWidths_(sh) {
+  WARN_WIDTHS.forEach(function (w, i) { sh.setColumnWidth(WARN_COL + i, w); });
 }
 
 /**

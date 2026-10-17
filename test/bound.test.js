@@ -38,6 +38,7 @@ function load(opts) {
   const ctx = {
     SpreadsheetApp: { getActive: () => ss, getUi: () => ui },
     Utilities: { formatDate: (d, tz, f) => new Intl.DateTimeFormat('en-GB', { timeZone: tz, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(d) },
+    setWarningWidths_: sh => events.push('widths'),
     publishManual: () => { events.push('publish'); if (opts.throws) throw new Error(opts.throws); return opts.result; },
   };
   vm.createContext(ctx);
@@ -95,6 +96,7 @@ A.run('Publicar button (bound project)', [
   ['setupPublishButton puts the image at K1 on Tribune and assigns publishNow', () => {
     const ctx = load({});
     ctx.setupPublishButton();
+    A.ok(ctx._events.includes('widths'), 'Warnings columns narrowed');
     A.equal(ctx._images.length, 1);
     const img = ctx._images[0];
     A.equal(img.col, 11, 'column K');
@@ -166,6 +168,20 @@ A.run('Publicar button (bound project)', [
       const text = fs.readFileSync(path.join(BOUND, f), 'utf8');
       A.ok(!/[A-Za-z0-9_-]{40,}/.test(text), f + ' holds no id or token');
     });
+  }],
+
+  ['workflows: tests on every code push, clasp push only for gas/, credentials only from secrets and always removed', () => {
+    const wf = f => fs.readFileSync(path.join(ROOT, '.github', 'workflows', f), 'utf8');
+    const t = wf('tests.yml'), c = wf('clasp-push.yml');
+    A.match(t, /node test\/run_all\.js/);
+    A.ok(!/data\.json|editions/.test(t.replace(/#.*$/gm, '')), 'a publish (data.json, editions/) does not start the tests');
+    A.match(c, /paths: \['gas\/\*\*'\]/);
+    A.ok(c.indexOf('node test/run_all.js') < c.indexOf('clasp push -f'), 'tests before the push');
+    A.match(c, /secrets\.CLASP_JSON/);
+    A.match(c, /secrets\.CLASPRC_JSON/);
+    A.match(c, /if: always\(\)\s+run: rm -f gas\/\.clasp\.json/);
+    A.match(c, /@google\/clasp@\d+\.\d+\.\d+/, 'clasp version pinned');
+    [t, c].forEach(x => A.ok(!/[A-Za-z0-9_-]{40,}/.test(x), 'no id or token in a workflow'));
   }],
 
   ['the button image is a real 200x48 PNG that Pages serves from assets/', () => {

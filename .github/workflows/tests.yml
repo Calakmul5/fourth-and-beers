@@ -1,0 +1,21 @@
+# Runs the whole suite (same as test.bat). Skips pushes that only touch data.json or editions/,
+# which is every publish the Apps Script makes.
+name: tests
+on:
+  push:
+    branches: [main]
+    paths: ['gas/**', 'test/**', 'index.html', 'assets/**', 'docs/**', 'package*.json', 'CLAUDE.md', '.github/**']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: node test/run_all.js
