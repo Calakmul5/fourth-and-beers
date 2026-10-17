@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.3.0 c1.3.0
+// v2.4.0 c1.3.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -12,7 +12,7 @@
 //   6. Builds data.json and commits it to the GitHub repo. GitHub Pages republishes the page by itself.
 //   7. Archives the week: editions/semana-NN.json is a full copy of that week's data.json and
 //      editions/index.json lists the weeks. A week that has moved on is never touched again.
-//   8. Lists warnings in the Tribune tab (G:I, one per row: color, text, week) and tints the rows involved when the last place
+//   8. Lists warnings in the Tribune tab (H:J, one per row: color, text, week, with a blank separator column G) and tints the rows involved when the last place
 //      is named more than once, or in two weeks in a row, and so on. It never blocks a publish or edits your text.
 //   It only commits when something other than "updated" changed, so running it often is harmless.
 //
@@ -31,7 +31,7 @@
 var CFG = {
   boardTab: 'PickEm_Board',   // paste Yahoo's weekly performance table here, header row included
   participantsTab: 'Participantes',  // the participants list; setup renames an old Sheet1 to this
-  tribuneTab: 'Tribune',     // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | Color | Warnings | Warning week, in the participants workbook
+  tribuneTab: 'Tribune',     // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | (blank separator) | Color | Warnings | Warning week, in the participants workbook
   fieldTab: 'Field',          // model tab with Entrant / Strikes columns
   path: 'data.json',
   editionsDir: 'editions',
@@ -53,8 +53,11 @@ var PRIZES = {
 // Values of the Sección dropdown in the Tribune tab.
 var SECTIONS = ['Portada', 'Columna', 'Clasificado', 'Dato', 'Edición'];
 var TRIBUNE_HEADER = ['Semana', 'Sección', 'Para', 'Título', 'Texto', 'Publicar'];
-// Warnings: G = color legend, H = warning text, I = the week it was raised. Row 1 holds the headers.
+// Warnings: H = color legend, I = warning text, J = the week it was raised. Row 1 holds the headers.
+// G is a narrow blank separator between the Tribune rows (A:F) and the Warnings table.
 var WARN_HEADER = ['Color', 'Warnings', 'Warning week'];
+var WARN_COL = 8;               // first column of the Warnings table (H), 1-based
+var SEP_AFTER = 6;              // the separator column G is inserted after the Publicar column
 var WARN_KEEP_WEEKS = 3;     // warnings from the 3 weeks before the current one stay listed, older ones roll off
 // One light color per warning, cycled. The warning's swatch (G) and the Tribune rows it points at (A:F) share it.
 var WARN_COLORS = ['#f4cccc', '#fff2cc', '#d9ead3', '#cfe2f3', '#d9d2e9', '#fce5cd'];
@@ -127,7 +130,8 @@ function setupTribuneTab() {
 function setupTribune_(ss) {
   var sh = findTab_(ss, CFG.tribuneTab) || ss.insertSheet(CFG.tribuneTab);
   sh.getRange(1, 1, 1, 6).setValues([TRIBUNE_HEADER]).setFontWeight('bold');
-  sh.getRange(1, 7, 1, 3).setValues([WARN_HEADER]).setFontWeight('bold');
+  ensureSeparator_(sh);
+  sh.getRange(1, WARN_COL, 1, 3).setValues([WARN_HEADER]).setFontWeight('bold');
   sh.setFrozenRows(1);
   var rule = SpreadsheetApp.newDataValidation().requireValueInList(SECTIONS, true).setAllowInvalid(false).build();
   sh.getRange('B2:B1000').setDataValidation(rule);
@@ -135,8 +139,8 @@ function setupTribune_(ss) {
   sh.setColumnWidth(1, 70); sh.setColumnWidth(2, 110); sh.setColumnWidth(3, 170);
   sh.setColumnWidth(4, 190); sh.setColumnWidth(5, 520); sh.setColumnWidth(6, 80);
   sh.getRange('E2:E1000').setWrap(true);
-  sh.setColumnWidth(7, 70); sh.setColumnWidth(8, 520); sh.setColumnWidth(9, 100);
-  sh.getRange('H2:H200').setWrap(true);
+  sh.setColumnWidth(SEP_AFTER + 1, 20); sh.setColumnWidth(WARN_COL, 70); sh.setColumnWidth(WARN_COL + 1, 520); sh.setColumnWidth(WARN_COL + 2, 100);
+  sh.getRange(2, WARN_COL + 1, 199, 1).setWrap(true);
   addApodoHeader_(ss);
   return sh;
 }
@@ -611,39 +615,48 @@ function reviewTribune_(ss, data) {
 }
 
 /**
- * Writes the Warnings table (G:I from row 2) and tints the Tribune rows. This week's warnings are recomputed every
+ * Moves a Warnings table that still starts in G (the first layout) one column right, by inserting the separator column
+ * after F. A no-op once G1 is not the Color header. Everything right of F shifts, nothing is rewritten.
+ */
+function ensureSeparator_(sh) {
+  if (String(sh.getRange(1, SEP_AFTER + 1, 1, 1).getValue() || '').trim() === WARN_HEADER[0]) sh.insertColumnAfter(SEP_AFTER);
+}
+
+/**
+ * Writes the Warnings table (H:J from row 2) and tints the Tribune rows. This week's warnings are recomputed every
  * publish, the ones from the previous WARN_KEEP_WEEKS weeks stay below as a log, older ones roll off.
  * Each current warning gets a color from WARN_COLORS, shown in G and on its rows (A:F). A row that several warnings
  * point at is striped with their colors. Only palette colors are ever cleared. Writes only when something changed.
  */
 function writeWarnings_(sh, warn, week) {
+  ensureSeparator_(sh);
   var vals = sh.getDataRange().getValues();
   var head = vals[0] || [];
-  if (WARN_HEADER.some(function (h, i) { return String(head[6 + i] || '') !== h; })) {
-    sh.getRange(1, 7, 1, 3).setValues([WARN_HEADER]).setFontWeight('bold');
+  if (WARN_HEADER.some(function (h, i) { return String(head[WARN_COL - 1 + i] || '') !== h; })) {
+    sh.getRange(1, WARN_COL, 1, 3).setValues([WARN_HEADER]).setFontWeight('bold');
   }
   var oldEnd = 1;                                                  // last row with anything in G:I
   var kept = [];
   for (var r = 1; r < vals.length; r++) {
-    var text = String(vals[r][7] || '').trim(), w = toNum_(vals[r][8]);
-    if (text || String(vals[r][8] || '').trim()) oldEnd = r + 1;
+    var text = String(vals[r][WARN_COL] || '').trim(), w = toNum_(vals[r][WARN_COL + 1]);
+    if (text || String(vals[r][WARN_COL + 1] || '').trim()) oldEnd = r + 1;
     if (text && w > 0 && w !== week && w > week - 1 - WARN_KEEP_WEEKS) kept.push([w, text]);
   }
   var table = warn.map(function (x) { return [x.text, week]; }).concat(kept.map(function (k) { return [k[1], k[0]]; }));
   var total = Math.max(table.length, oldEnd - 1);
   var out = [];
   for (var i = 0; i < total; i++) out.push(i < table.length ? [table[i][0], table[i][1]] : ['', '']);
-  var same = out.every(function (o, i) { return String((vals[i + 1] || [])[7] || '') === String(o[0]) && String((vals[i + 1] || [])[8] || '') === String(o[1]); });
-  if (!same && total) sh.getRange(2, 8, total, 2).setValues(out);
+  var same = out.every(function (o, i) { return String((vals[i + 1] || [])[WARN_COL] || '') === String(o[0]) && String((vals[i + 1] || [])[WARN_COL + 1] || '') === String(o[1]); });
+  if (!same && total) sh.getRange(2, WARN_COL + 1, total, 2).setValues(out);
 
   // swatches in G for this week's warnings
   var colorOf = function (i) { return WARN_COLORS[i % WARN_COLORS.length]; };
   if (total) {
-    var gbg = sh.getRange(2, 7, total, 1).getBackgrounds();
+    var gbg = sh.getRange(2, WARN_COL, total, 1).getBackgrounds();
     for (var g = 0; g < total; g++) {
       var want = g < warn.length ? colorOf(g) : null, cur = String(gbg[g][0] || '').toLowerCase();
-      if (want && cur !== want) sh.getRange(g + 2, 7, 1, 1).setBackground(want);
-      else if (!want && WARN_COLORS.indexOf(cur) >= 0) sh.getRange(g + 2, 7, 1, 1).setBackground(null);
+      if (want && cur !== want) sh.getRange(g + 2, WARN_COL, 1, 1).setBackground(want);
+      else if (!want && WARN_COLORS.indexOf(cur) >= 0) sh.getRange(g + 2, WARN_COL, 1, 1).setBackground(null);
     }
   }
 

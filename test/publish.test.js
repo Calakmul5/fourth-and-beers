@@ -141,7 +141,7 @@ function build(o) {
 
 function without(d, key) { const c = JSON.parse(JSON.stringify(d)); delete c[key]; return c; }
 /** The Warnings table of a Tribune tab: [{text, week, color}] for the rows that have a warning. */
-const warnTable = sh => sh.rows().slice(1).map((r, i) => ({ text: String(r[7] || ''), week: r[8] === '' || r[8] == null ? null : Number(r[8]), color: sh.bg(i + 2, 7) })).filter(x => x.text);
+const warnTable = sh => sh.rows().slice(1).map((r, i) => ({ text: String(r[8] || ''), week: r[9] === '' || r[9] == null ? null : Number(r[9]), color: sh.bg(i + 2, 8) })).filter(x => x.text);
 const tab = (ws, name) => ws.getSheets().find(t => t.getName() === name);
 const tabNames = ws => ws.getSheets().map(t => t.getName());
 
@@ -424,7 +424,8 @@ A.run('Publish.js', [
     const sh = tab(ws, 'Tribune');
     A.ok(sh, 'tab created');
     A.deep(sh.rows()[0].slice(0, 6), TRIBUNE_HEAD, 'header');
-    A.deep(sh.rows()[0].slice(6, 9), ['Color', 'Warnings', 'Warning week'], 'G1:I1 head the warnings table');
+    A.deep(sh.rows()[0].slice(6, 10), ['', 'Color', 'Warnings', 'Warning week'], 'G is a blank separator, H1:J1 head the warnings table');
+    A.equal(sh.log.widths[7], 20, 'the separator is narrow');
     A.deep(sh.log.bold[0].slice(0, 4), [1, 1, 1, 6], 'bold header row');
     A.equal(sh.log.frozen, 1, 'frozen header');
     A.ok(sh.log.checkboxes.indexOf('r2c6') >= 0, 'checkboxes start at F2');
@@ -655,7 +656,7 @@ A.run('Publish.js', [
     const { ctx, github } = setup({ participants: ws });
     ctx.publishLeaderboard();
     const sh = tab(ws, 'Tribune'), t = warnTable(sh);
-    A.deep(sh.rows()[0].slice(6, 9), ['Color', 'Warnings', 'Warning week'], 'headers are written by the publish too');
+    A.deep(sh.rows()[0].slice(6, 10), ['', 'Color', 'Warnings', 'Warning week'], 'headers are written by the publish too');
     A.equal(t.length, 3, 'three warnings, three rows');
     A.match(t[0].text, /^Steel Man sale en 2 filas \(4, 5\)\. Mejor una sola\./);
     A.match(t[1].text, /^Steel Man sale en 2 párrafos de la Columna \(filas 4, 5\)\./);
@@ -702,7 +703,7 @@ A.run('Publish.js', [
     A.deep(warnTable(sh), [], 'clean, the table is empty');
     A.deep([3, 4].map(r => sh.bg(r, 1)), [null, null], 'the tint is removed');
     A.deep([sh.bg(2, 1), sh.bg(2, 6)], ['#ffff00', '#ffff00'], 'the user own color is left alone');
-    A.equal(sh.bg(2, 7), null, 'no swatch left');
+    A.equal(sh.bg(2, 8), null, 'no swatch left');
   }],
 
   ['Warnings: rolling. Last weeks stay as a log for three weeks, older ones roll off, this week is recomputed', () => {
@@ -711,11 +712,11 @@ A.run('Publish.js', [
     const ws = participants(null, { tribune: rows });
     const { ctx } = setup({ participants: ws });
     const sh = tab(ws, 'Tribune');
-    sh.getRange(1, 7, 1, 3).setValues([['Color', 'Warnings', 'Warning week']]);
-    sh.getRange(3, 8, 1, 2).setValues([['Aviso de la semana 2.', 2]]);
-    sh.getRange(4, 8, 1, 2).setValues([['Aviso de la semana 1.', 1]]);
-    sh.getRange(5, 8, 1, 2).setValues([['Aviso viejo de la semana 3.', 3]]);               // stale, this week is recomputed
-    sh.getRange(5, 7, 1, 1).setBackground('#d9ead3');
+    sh.getRange(1, 8, 1, 3).setValues([['Color', 'Warnings', 'Warning week']]);
+    sh.getRange(3, 9, 1, 2).setValues([['Aviso de la semana 2.', 2]]);
+    sh.getRange(4, 9, 1, 2).setValues([['Aviso de la semana 1.', 1]]);
+    sh.getRange(5, 9, 1, 2).setValues([['Aviso viejo de la semana 3.', 3]]);               // stale, this week is recomputed
+    sh.getRange(5, 8, 1, 1).setBackground('#d9ead3');
     ctx.publishLeaderboard();
     const t = warnTable(sh);
     A.deep(t.map(x => x.week), [3, 2, 1], 'this week first, then the log');
@@ -726,13 +727,27 @@ A.run('Publish.js', [
     A.equal(sh.log.writes, writes, 'a second run changes nothing');
   }],
 
+  ['Warnings: a table still in G:I moves one column right when the separator is inserted, once', () => {
+    const rows = [TRIBUNE_HEAD.concat(['Color', 'Warnings', 'Warning week']),
+      ['3', 'Columna', '', '', 'Sin portada.', 'TRUE', '', 'Aviso viejo.', 2]];
+    const ws = participants(null, { tribune: rows });
+    const { ctx } = setup({ participants: ws });
+    const sh = tab(ws, 'Tribune');
+    ctx.setupTribuneTab();
+    ctx.setupTribuneTab();
+    ctx.publishLeaderboard();
+    A.deep(sh.log.inserted, [6], 'one column inserted after F, once');
+    A.deep(sh.rows()[0].slice(5, 10), ['Publicar', '', 'Color', 'Warnings', 'Warning week']);
+    A.deep(warnTable(sh).map(x => x.week), [3, 2], 'the old log survived the move');
+  }],
+
   ['Warnings: a log entry more than three weeks old rolls off', () => {
     const ws = participants();
     const { ctx } = setup({ participants: ws });
     const sh = tab(ws, 'Tribune');
-    sh.getRange(3, 8, 1, 2).setValues([['De la semana 5.', 5]]);
-    sh.getRange(4, 8, 1, 2).setValues([['De la semana 3.', 3]]);
-    sh.getRange(5, 8, 1, 2).setValues([['De la semana 2.', 2]]);
+    sh.getRange(3, 9, 1, 2).setValues([['De la semana 5.', 5]]);
+    sh.getRange(4, 9, 1, 2).setValues([['De la semana 3.', 3]]);
+    sh.getRange(5, 9, 1, 2).setValues([['De la semana 2.', 2]]);
     ctx.writeWarnings_(sh, [{ text: 'Nueva.', rows: [] }], 6);
     A.deep(warnTable(sh).map(x => x.week), [6, 5, 3], 'weeks 5 and 3 stay, week 2 is gone');
   }],
