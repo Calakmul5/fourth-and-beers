@@ -210,7 +210,7 @@
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-17T19:04:37.130Z",
+ "updated": "2026-10-17T19:43:05.542Z",
  "prizes": {
   "regular": [
    1050,
@@ -237,7 +237,8 @@
     50
    ],
    "total": 304,
-   "dropped": 50
+   "dropped": 50,
+   "droppedWeek": 5
   },
   {
    "name": "Abogado",
@@ -249,7 +250,8 @@
     94
    ],
    "total": 289,
-   "dropped": 52
+   "dropped": 52,
+   "droppedWeek": 2
   },
   {
    "name": "King of The North",
@@ -261,7 +263,8 @@
     63
    ],
    "total": 287,
-   "dropped": 49
+   "dropped": 49,
+   "droppedWeek": 3
   },
   {
    "name": "Cyber70",
@@ -273,7 +276,8 @@
     77
    ],
    "total": 286,
-   "dropped": 56
+   "dropped": 56,
+   "droppedWeek": 2
   },
   {
    "name": "Osos de Grayslake",
@@ -285,7 +289,8 @@
     82
    ],
    "total": 281,
-   "dropped": 48
+   "dropped": 48,
+   "droppedWeek": 3
   },
   {
    "name": "Mean Machine",
@@ -297,7 +302,8 @@
     67
    ],
    "total": 281,
-   "dropped": 40
+   "dropped": 40,
+   "droppedWeek": 2
   },
   {
    "name": "Jorge_B",
@@ -309,7 +315,8 @@
     63
    ],
    "total": 281,
-   "dropped": 39
+   "dropped": 39,
+   "droppedWeek": 2
   },
   {
    "name": "Niners",
@@ -321,7 +328,8 @@
     74
    ],
    "total": 274,
-   "dropped": 51
+   "dropped": 51,
+   "droppedWeek": 3
   },
   {
    "name": "Billy Beaner",
@@ -333,7 +341,8 @@
     63
    ],
    "total": 265,
-   "dropped": 50
+   "dropped": 50,
+   "droppedWeek": 4
   },
   {
    "name": "Chitown’DemBoyz",
@@ -345,7 +354,8 @@
     56
    ],
    "total": 260,
-   "dropped": 56
+   "dropped": 56,
+   "droppedWeek": 5
   },
   {
    "name": "Conquistador",
@@ -357,7 +367,8 @@
     82
    ],
    "total": 252,
-   "dropped": 41
+   "dropped": 41,
+   "droppedWeek": 4
   },
   {
    "name": "This is our year",
@@ -369,7 +380,8 @@
     56
    ],
    "total": 252,
-   "dropped": 56
+   "dropped": 56,
+   "droppedWeek": 5
   },
   {
    "name": "Rastaman",
@@ -381,7 +393,8 @@
     71
    ],
    "total": 249,
-   "dropped": 54
+   "dropped": 54,
+   "droppedWeek": 3
   },
   {
    "name": "KinkyKing",
@@ -393,7 +406,8 @@
     83
    ],
    "total": 245,
-   "dropped": 23
+   "dropped": 23,
+   "droppedWeek": 4
   },
   {
    "name": "MVP21",
@@ -405,7 +419,8 @@
     71
    ],
    "total": 245,
-   "dropped": 35
+   "dropped": 35,
+   "droppedWeek": 2
   },
   {
    "name": "Juan1768",
@@ -417,7 +432,8 @@
     40
    ],
    "total": 236,
-   "dropped": 34
+   "dropped": 34,
+   "droppedWeek": 4
   },
   {
    "name": "SinCasco",
@@ -429,7 +445,8 @@
     44
    ],
    "total": 232,
-   "dropped": 36
+   "dropped": 36,
+   "droppedWeek": 4
   },
   {
    "name": "Puto el que lo lea",
@@ -441,7 +458,8 @@
     66
    ],
    "total": 230,
-   "dropped": 32
+   "dropped": 32,
+   "droppedWeek": 3
   },
   {
    "name": "Manolito’s winning picks",
@@ -453,7 +471,8 @@
     52
    ],
    "total": 229,
-   "dropped": 49
+   "dropped": 49,
+   "droppedWeek": 2
   },
   {
    "name": "Andrea’s Picks",
@@ -465,7 +484,8 @@
     73
    ],
    "total": 227,
-   "dropped": 30
+   "dropped": 30,
+   "droppedWeek": 4
   },
   {
    "name": "X-Men Let’s go Boys",
@@ -477,7 +497,8 @@
     43
    ],
    "total": 211,
-   "dropped": 41
+   "dropped": 41,
+   "droppedWeek": 2
   },
   {
    "name": "Steel Man",
@@ -489,8 +510,26 @@
     40
    ],
    "total": 179,
-   "dropped": 40
+   "dropped": 40,
+   "droppedWeek": 5
   }
+ ],
+ "winners": [
+  [
+   "Jorge_B"
+  ],
+  [
+   "Silverback"
+  ],
+  [
+   "Silverback"
+  ],
+  [
+   "King of The North"
+  ],
+  [
+   "Abogado"
+  ]
  ],
  "strikes": {
   "Silverback": 2,
