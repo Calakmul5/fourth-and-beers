@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v2.2.0 c1.3.0
+// v2.3.0 c1.3.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -12,7 +12,7 @@
 //   6. Builds data.json and commits it to the GitHub repo. GitHub Pages republishes the page by itself.
 //   7. Archives the week: editions/semana-NN.json is a full copy of that week's data.json and
 //      editions/index.json lists the weeks. A week that has moved on is never touched again.
-//   8. Writes a Revisión note to cell H1 of the Tribune tab (and tints the rows involved) when the last place
+//   8. Lists warnings in the Tribune tab (G:I, one per row: color, text, week) and tints the rows involved when the last place
 //      is named more than once, or in two weeks in a row, and so on. It never blocks a publish or edits your text.
 //   It only commits when something other than "updated" changed, so running it often is harmless.
 //
@@ -31,7 +31,7 @@
 var CFG = {
   boardTab: 'PickEm_Board',   // paste Yahoo's weekly performance table here, header row included
   participantsTab: 'Participantes',  // the participants list; setup renames an old Sheet1 to this
-  tribuneTab: 'Tribune',     // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | Revisión, in the participants workbook
+  tribuneTab: 'Tribune',     // Semana | Sección | Para | Título | Texto | Publicar (checkbox) | Color | Warnings | Warning week, in the participants workbook
   fieldTab: 'Field',          // model tab with Entrant / Strikes columns
   path: 'data.json',
   editionsDir: 'editions',
@@ -53,11 +53,12 @@ var PRIZES = {
 // Values of the Sección dropdown in the Tribune tab.
 var SECTIONS = ['Portada', 'Columna', 'Clasificado', 'Dato', 'Edición'];
 var TRIBUNE_HEADER = ['Semana', 'Sección', 'Para', 'Título', 'Texto', 'Publicar'];
-// Revisión: the label sits in G1, the warnings in H1.
-var REVISION_LABEL = 'Revisión';
-var REVISION_CELL = 'H1';
+// Warnings: G = color legend, H = warning text, I = the week it was raised. Row 1 holds the headers.
+var WARN_HEADER = ['Color', 'Warnings', 'Warning week'];
+var WARN_KEEP_WEEKS = 3;     // warnings from the 3 weeks before the current one stay listed, older ones roll off
+// One light color per warning, cycled. The warning's swatch (G) and the Tribune rows it points at (A:F) share it.
+var WARN_COLORS = ['#f4cccc', '#fff2cc', '#d9ead3', '#cfe2f3', '#d9d2e9', '#fce5cd'];
 var APODO_AFTER = 7;          // the Apodo column is inserted after column G of the participants list
-var REVISION_RED = '#f4cccc';
 // Themes the page knows. Add one here and in index.html (THEMES and its CSS block).
 var THEMES_KNOWN = ['muertos'];
 
@@ -101,7 +102,7 @@ function publishLeaderboard_() {
   var model = modelId ? SpreadsheetApp.openById(String(modelId).trim()) : ss;
   var cur = readFile_(repo, token, CFG.path);
   var data = buildData_(ss, model, cur ? cur.data : null);
-  try { reviewTribune_(ss, data); } catch (e) { Logger.log('Revisión skipped: ' + e); }
+  try { reviewTribune_(ss, data); } catch (e) { Logger.log('Warnings skipped: ' + e); }
   var result = commitAll_(repo, token, data, cur);
   Logger.log(result);
   return result;
@@ -126,7 +127,7 @@ function setupTribuneTab() {
 function setupTribune_(ss) {
   var sh = findTab_(ss, CFG.tribuneTab) || ss.insertSheet(CFG.tribuneTab);
   sh.getRange(1, 1, 1, 6).setValues([TRIBUNE_HEADER]).setFontWeight('bold');
-  sh.getRange(1, 7, 1, 1).setValues([[REVISION_LABEL]]).setFontWeight('bold');
+  sh.getRange(1, 7, 1, 3).setValues([WARN_HEADER]).setFontWeight('bold');
   sh.setFrozenRows(1);
   var rule = SpreadsheetApp.newDataValidation().requireValueInList(SECTIONS, true).setAllowInvalid(false).build();
   sh.getRange('B2:B1000').setDataValidation(rule);
@@ -134,8 +135,8 @@ function setupTribune_(ss) {
   sh.setColumnWidth(1, 70); sh.setColumnWidth(2, 110); sh.setColumnWidth(3, 170);
   sh.setColumnWidth(4, 190); sh.setColumnWidth(5, 520); sh.setColumnWidth(6, 80);
   sh.getRange('E2:E1000').setWrap(true);
-  sh.setColumnWidth(7, 80); sh.setColumnWidth(8, 420);
-  sh.getRange(REVISION_CELL).setWrap(true);
+  sh.setColumnWidth(7, 70); sh.setColumnWidth(8, 520); sh.setColumnWidth(9, 100);
+  sh.getRange('H2:H200').setWrap(true);
   addApodoHeader_(ss);
   return sh;
 }
@@ -458,7 +459,7 @@ function readApodos_(ss, pickemNames) {
 }
 
 /**
- * Checked rows in Tribune for a week, in sheet order, with their sheet row number. Used by the publisher and by Revisión.
+ * Checked rows in Tribune for a week, in sheet order, with their sheet row number. Used by the publisher and by the warnings check.
  * Each row is {row, sec, secRaw, para, titulo, texto}, sec lowercased and without accents.
  */
 function tribuneRows_(sh, week) {
@@ -555,7 +556,7 @@ function mentions(idx, text) {
 // END NAMES
 
 // ---------------------------------------------------------------------------
-// Revisión: a note in the Tribune tab, never a block
+// Warnings: a table in the Tribune tab, never a block
 // ---------------------------------------------------------------------------
 
 /** Every player tied for last on the Yahoo total (golf rule). */
@@ -566,9 +567,9 @@ function lastPlace_(rows) {
 }
 
 /**
- * Checks this week's checked Tribune rows and writes the warnings (Spanish) to H1, tinting the rows involved.
+ * Checks this week's checked Tribune rows and lists the warnings (Spanish) in the Warnings table, tinting the rows involved.
  * Warns when the last place is named in more than one row or Columna paragraph, was also named last week, when there is
- * Columna without a Portada, more than one Edición, or an unknown tema. Returns the list of warnings.
+ * Columna without a Portada, more than one Edición, or an unknown tema. Returns the list of warning texts.
  */
 function reviewTribune_(ss, data) {
   var sh = findTab_(ss, CFG.tribuneTab);
@@ -583,44 +584,82 @@ function reviewTribune_(ss, data) {
     return mentions(idx, text).some(function (m) { return lastSet[m.name]; });
   };
   var rows = tribuneRows_(sh, data.week);
-  var warn = [], bad = {};
-  var flag = function (list) { list.forEach(function (x) { bad[x.row] = true; }); };
+  var warn = [];
+  var add = function (text, list) { warn.push({ text: text, rows: list.map(function (x) { return x.row; }) }); };
   var rn = function (list) { return list.map(function (x) { return x.row; }).join(', '); };
 
   var hits = rows.filter(namesLast);
-  if (hits.length > 1) { warn.push(label + ' sale en ' + hits.length + ' filas (' + rn(hits) + '). Mejor una sola.'); flag(hits); }
+  if (hits.length > 1) add(label + ' sale en ' + hits.length + ' filas (' + rn(hits) + '). Mejor una sola.', hits);
   var colHits = hits.filter(function (x) { return x.sec === 'columna'; });
-  if (colHits.length > 1) { warn.push(label + ' sale en ' + colHits.length + ' párrafos de la Columna (filas ' + rn(colHits) + ').'); flag(colHits); }
+  if (colHits.length > 1) add(label + ' sale en ' + colHits.length + ' párrafos de la Columna (filas ' + rn(colHits) + ').', colHits);
   if (hits.length && data.week > 1) {
     var before = tribuneRows_(sh, data.week - 1).filter(namesLast);
-    if (before.length) { warn.push(label + ' ya salió en la Tribune de la semana ' + (data.week - 1) + '. Segunda semana seguida.'); flag(hits); }
+    if (before.length) add(label + ' ya salió en la Tribune de la semana ' + (data.week - 1) + '. Segunda semana seguida. (filas ' + rn(hits) + ')', hits);
   }
   var columna = rows.filter(function (x) { return x.sec === 'columna'; });
   if (columna.length && !rows.some(function (x) { return x.sec === 'portada'; })) {
-    warn.push('Hay Columna sin fila de Portada (filas ' + rn(columna) + ').'); flag(columna);
+    add('Hay Columna sin fila de Portada (filas ' + rn(columna) + ').', columna);
   }
   var ediciones = rows.filter(function (x) { return x.sec === 'edicion'; });
-  if (ediciones.length > 1) { warn.push('Hay ' + ediciones.length + ' filas de Edición. Solo cuenta la primera (fila ' + ediciones[0].row + ').'); flag(ediciones.slice(1)); }
+  if (ediciones.length > 1) add('Hay ' + ediciones.length + ' filas de Edición. Solo cuenta la primera (fila ' + ediciones[0].row + ').', ediciones.slice(1));
   ediciones.forEach(function (x) {
-    if (THEMES_KNOWN.indexOf(plain_(x.para)) < 0) { warn.push('Tema desconocido "' + x.para + '" en la fila ' + x.row + '. Temas: ' + THEMES_KNOWN.join(', ') + '.'); flag([x]); }
+    if (THEMES_KNOWN.indexOf(plain_(x.para)) < 0) add('Tema desconocido "' + x.para + '" en la fila ' + x.row + '. Temas: ' + THEMES_KNOWN.join(', ') + '.', [x]);
   });
 
-  writeRevision_(sh, warn, bad);
-  return warn;
+  writeWarnings_(sh, warn, data.week);
+  return warn.map(function (w) { return w.text; });
 }
 
-/** Writes H1 and tints the flagged rows. Clears only the tint this function sets. */
-function writeRevision_(sh, warn, bad) {
-  var cell = sh.getRange(REVISION_CELL);
-  var text = warn.join('\n');
-  if (String(cell.getValue() || '') !== text) cell.setValue(text);
-  var n = sh.getDataRange().getDisplayValues().length;
+/**
+ * Writes the Warnings table (G:I from row 2) and tints the Tribune rows. This week's warnings are recomputed every
+ * publish, the ones from the previous WARN_KEEP_WEEKS weeks stay below as a log, older ones roll off.
+ * Each current warning gets a color from WARN_COLORS, shown in G and on its rows (A:F). A row that several warnings
+ * point at is striped with their colors. Only palette colors are ever cleared. Writes only when something changed.
+ */
+function writeWarnings_(sh, warn, week) {
+  var vals = sh.getDataRange().getValues();
+  var head = vals[0] || [];
+  if (WARN_HEADER.some(function (h, i) { return String(head[6 + i] || '') !== h; })) {
+    sh.getRange(1, 7, 1, 3).setValues([WARN_HEADER]).setFontWeight('bold');
+  }
+  var oldEnd = 1;                                                  // last row with anything in G:I
+  var kept = [];
+  for (var r = 1; r < vals.length; r++) {
+    var text = String(vals[r][7] || '').trim(), w = toNum_(vals[r][8]);
+    if (text || String(vals[r][8] || '').trim()) oldEnd = r + 1;
+    if (text && w > 0 && w !== week && w > week - 1 - WARN_KEEP_WEEKS) kept.push([w, text]);
+  }
+  var table = warn.map(function (x) { return [x.text, week]; }).concat(kept.map(function (k) { return [k[1], k[0]]; }));
+  var total = Math.max(table.length, oldEnd - 1);
+  var out = [];
+  for (var i = 0; i < total; i++) out.push(i < table.length ? [table[i][0], table[i][1]] : ['', '']);
+  var same = out.every(function (o, i) { return String((vals[i + 1] || [])[7] || '') === String(o[0]) && String((vals[i + 1] || [])[8] || '') === String(o[1]); });
+  if (!same && total) sh.getRange(2, 8, total, 2).setValues(out);
+
+  // swatches in G for this week's warnings
+  var colorOf = function (i) { return WARN_COLORS[i % WARN_COLORS.length]; };
+  if (total) {
+    var gbg = sh.getRange(2, 7, total, 1).getBackgrounds();
+    for (var g = 0; g < total; g++) {
+      var want = g < warn.length ? colorOf(g) : null, cur = String(gbg[g][0] || '').toLowerCase();
+      if (want && cur !== want) sh.getRange(g + 2, 7, 1, 1).setBackground(want);
+      else if (!want && WARN_COLORS.indexOf(cur) >= 0) sh.getRange(g + 2, 7, 1, 1).setBackground(null);
+    }
+  }
+
+  // the rows the warnings point at
+  var byRow = {};
+  warn.forEach(function (x, wi) { x.rows.forEach(function (rw) { (byRow[rw] = byRow[rw] || []).push(wi); }); });
+  var n = vals.length;
   if (n < 2) return;
   var bg = sh.getRange(2, 1, n - 1, 6).getBackgrounds();
-  for (var i = 0; i < bg.length; i++) {
-    var row = i + 2, tinted = String(bg[i][0] || '').toLowerCase() === REVISION_RED;
-    if (bad[row] && !tinted) sh.getRange(row, 1, 1, 6).setBackground(REVISION_RED);
-    else if (!bad[row] && tinted) sh.getRange(row, 1, 1, 6).setBackground(null);
+  for (var j = 0; j < bg.length; j++) {
+    var row = j + 2, ws = byRow[row] || [];
+    for (var k = 0; k < 6; k++) {
+      var wantC = ws.length ? colorOf(ws[k % ws.length]) : null, have = String(bg[j][k] || '').toLowerCase();
+      if (wantC && have !== wantC) sh.getRange(row, k + 1, 1, 1).setBackground(wantC);
+      else if (!wantC && WARN_COLORS.indexOf(have) >= 0) sh.getRange(row, k + 1, 1, 1).setBackground(null);
+    }
   }
 }
 

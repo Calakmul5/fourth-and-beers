@@ -19,6 +19,7 @@ function makeSheet(name, rows) {
   function range(row, col, nr, nc) {
     const self = {
       setValues(vals) {
+        log.writes++;
         for (let i = 0; i < vals.length; i++) {
           while (data.length < row + i) data.push([]);
           const line = data[row + i - 1];
@@ -27,7 +28,7 @@ function makeSheet(name, rows) {
         return self;
       },
       getValue() { const line = data[row - 1]; return line && line[col - 1] != null ? line[col - 1] : ''; },
-      setValue(v) { log.writes++; return self.setValues([[v]]); },
+      setValue(v) { return self.setValues([[v]]); },
       setBackground(c) { for (let i = 0; i < nr; i++) for (let j = 0; j < nc; j++) { const k = (row + i) + ',' + (col + j); if (c == null) delete bgs[k]; else bgs[k] = c; } return self; },
       getBackgrounds() { const out = []; for (let i = 0; i < nr; i++) { const l = []; for (let j = 0; j < nc; j++) l.push(bgs[(row + i) + ',' + (col + j)] || '#ffffff'); out.push(l); } return out; },
       setFontWeight(w) { log.bold.push([row, col, nr, nc, w]); return self; },

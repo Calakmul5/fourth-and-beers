@@ -140,6 +140,8 @@ function build(o) {
 }
 
 function without(d, key) { const c = JSON.parse(JSON.stringify(d)); delete c[key]; return c; }
+/** The Warnings table of a Tribune tab: [{text, week, color}] for the rows that have a warning. */
+const warnTable = sh => sh.rows().slice(1).map((r, i) => ({ text: String(r[7] || ''), week: r[8] === '' || r[8] == null ? null : Number(r[8]), color: sh.bg(i + 2, 7) })).filter(x => x.text);
 const tab = (ws, name) => ws.getSheets().find(t => t.getName() === name);
 const tabNames = ws => ws.getSheets().map(t => t.getName());
 
@@ -422,7 +424,7 @@ A.run('Publish.js', [
     const sh = tab(ws, 'Tribune');
     A.ok(sh, 'tab created');
     A.deep(sh.rows()[0].slice(0, 6), TRIBUNE_HEAD, 'header');
-    A.equal(sh.rows()[0][6], 'Revisión', 'G1 labels the review cell');
+    A.deep(sh.rows()[0].slice(6, 9), ['Color', 'Warnings', 'Warning week'], 'G1:I1 head the warnings table');
     A.deep(sh.log.bold[0].slice(0, 4), [1, 1, 1, 6], 'bold header row');
     A.equal(sh.log.frozen, 1, 'frozen header');
     A.ok(sh.log.checkboxes.indexOf('r2c6') >= 0, 'checkboxes start at F2');
@@ -641,7 +643,7 @@ A.run('Publish.js', [
     A.deep(names('Kinkyness'), [], 'whole words only');
   }],
 
-  ['Revisión: last place named twice, in the Columna twice, and two weeks running', () => {
+  ['Warnings: one per row in H with its color in G and its week in I, the same color on the rows it points at', () => {
     const rows = [TRIBUNE_HEAD,
       ['2', 'Columna', '', '', 'Steel Man ya andaba abajo.', 'TRUE'],                       // last week names him
       ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],
@@ -652,17 +654,35 @@ A.run('Publish.js', [
     const ws = participants(null, { tribune: rows });
     const { ctx, github } = setup({ participants: ws });
     ctx.publishLeaderboard();
-    const sh = tab(ws, 'Tribune'), h1 = String(sh.getRange('H1').getValue());
-    A.match(h1, /Steel Man sale en 2 filas \(4, 5\)\. Mejor una sola\./);
-    A.match(h1, /Steel Man sale en 2 párrafos de la Columna \(filas 4, 5\)\./);
-    A.match(h1, /Steel Man ya salió en la Tribune de la semana 2\. Segunda semana seguida\./);
-    A.deep([2, 3, 4, 5, 6].map(r => sh.bg(r)), [null, null, '#f4cccc', '#f4cccc', null], 'only the offending rows are tinted');
+    const sh = tab(ws, 'Tribune'), t = warnTable(sh);
+    A.deep(sh.rows()[0].slice(6, 9), ['Color', 'Warnings', 'Warning week'], 'headers are written by the publish too');
+    A.equal(t.length, 3, 'three warnings, three rows');
+    A.match(t[0].text, /^Steel Man sale en 2 filas \(4, 5\)\. Mejor una sola\./);
+    A.match(t[1].text, /^Steel Man sale en 2 párrafos de la Columna \(filas 4, 5\)\./);
+    A.match(t[2].text, /^Steel Man ya salió en la Tribune de la semana 2\. Segunda semana seguida\./);
+    A.deep(t.map(x => x.week), [3, 3, 3], 'each carries its week');
+    A.deep(t.map(x => x.color), ['#f4cccc', '#fff2cc', '#d9ead3'], 'a color legend, one color per warning');
+    A.deep([2, 3, 6].map(r => sh.bg(r, 1)), [null, null, null], 'rows no warning points at are untouched');
+    A.deep([1, 2, 3, 4, 5, 6].map(c => sh.bg(4, c)), ['#f4cccc', '#fff2cc', '#d9ead3', '#f4cccc', '#fff2cc', '#d9ead3'], 'a row in three warnings is striped with their colors');
     A.ok(github.state.puts.length >= 3, 'a warning never blocks the publish');
     A.match(JSON.stringify(JSON.parse(github.state.file.text).tribune.columna), /Steel Man otra vez/, 'and never edits the text');
     A.equal(sh.rows()[3][4], 'Steel Man otra vez.', 'the sheet text is untouched');
   }],
 
-  ['Revisión: a clean batch clears H1 and only the tint Publish set; reruns write nothing new', () => {
+  ['Warnings: a row only one warning points at takes that warning color', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Columna', '', '', 'Sin portada.', 'TRUE'],                                      // row 2
+      ['3', 'Edición', 'navidad', 'Una', '', 'TRUE']];                                       // row 3
+    const ws = participants(null, { tribune: rows });
+    const { ctx } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const sh = tab(ws, 'Tribune'), t = warnTable(sh);
+    A.deep(t.map(x => x.color), ['#f4cccc', '#fff2cc']);
+    A.deep([1, 2, 3, 4, 5, 6].map(c => sh.bg(2, c)), Array(6).fill('#f4cccc'), 'whole row, first warning');
+    A.deep([1, 6].map(c => sh.bg(3, c)), ['#fff2cc', '#fff2cc'], 'whole row, second warning');
+  }],
+
+  ['Warnings: a clean batch clears the table and only the palette tints, reruns write nothing new', () => {
     const rows = [TRIBUNE_HEAD,
       ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],
       ['3', 'Columna', '', '', 'Steel Man otra vez.', 'TRUE'],
@@ -671,20 +691,53 @@ A.run('Publish.js', [
     const { ctx } = setup({ participants: ws });
     const sh = tab(ws, 'Tribune');
     ctx.publishLeaderboard();
-    A.equal(sh.bg(3), '#f4cccc');
+    A.equal(sh.bg(3, 1), '#f4cccc');
     const writes = sh.log.writes;
     ctx.publishLeaderboard();
-    A.equal(sh.log.writes, writes, 'same warnings, H1 not rewritten');
+    A.equal(sh.log.writes, writes, 'same warnings, nothing rewritten');
     sh.getRange(2, 1, 1, 6).setBackground('#ffff00');                                  // the user's own highlight
     sh.getRange(4, 5, 1, 1).setValues([['Abogado sube.']]);                            // fixes the second mention
     sh.getRange(3, 5, 1, 1).setValues([['Abogado baja.']]);
     ctx.publishLeaderboard();
-    A.equal(String(sh.getRange('H1').getValue()), '', 'clean, H1 cleared');
-    A.deep([3, 4].map(r => sh.bg(r)), [null, null], 'the tint is removed');
-    A.equal(sh.bg(2), '#ffff00', 'the user\'s own color is left alone');
+    A.deep(warnTable(sh), [], 'clean, the table is empty');
+    A.deep([3, 4].map(r => sh.bg(r, 1)), [null, null], 'the tint is removed');
+    A.deep([sh.bg(2, 1), sh.bg(2, 6)], ['#ffff00', '#ffff00'], 'the user own color is left alone');
+    A.equal(sh.bg(2, 7), null, 'no swatch left');
   }],
 
-  ['Revisión: apodos count, Columna needs a Portada, one Edición, known temas', () => {
+  ['Warnings: rolling. Last weeks stay as a log for three weeks, older ones roll off, this week is recomputed', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Columna', '', '', 'Sin portada.', 'TRUE']];                                    // row 2: a week 3 warning
+    const ws = participants(null, { tribune: rows });
+    const { ctx } = setup({ participants: ws });
+    const sh = tab(ws, 'Tribune');
+    sh.getRange(1, 7, 1, 3).setValues([['Color', 'Warnings', 'Warning week']]);
+    sh.getRange(3, 8, 1, 2).setValues([['Aviso de la semana 2.', 2]]);
+    sh.getRange(4, 8, 1, 2).setValues([['Aviso de la semana 1.', 1]]);
+    sh.getRange(5, 8, 1, 2).setValues([['Aviso viejo de la semana 3.', 3]]);               // stale, this week is recomputed
+    sh.getRange(5, 7, 1, 1).setBackground('#d9ead3');
+    ctx.publishLeaderboard();
+    const t = warnTable(sh);
+    A.deep(t.map(x => x.week), [3, 2, 1], 'this week first, then the log');
+    A.match(t[0].text, /Hay Columna sin fila de Portada/);
+    A.deep(t.map(x => x.color), ['#f4cccc', null, null], 'only this week has a color');
+    const writes = sh.log.writes;
+    ctx.publishLeaderboard();
+    A.equal(sh.log.writes, writes, 'a second run changes nothing');
+  }],
+
+  ['Warnings: a log entry more than three weeks old rolls off', () => {
+    const ws = participants();
+    const { ctx } = setup({ participants: ws });
+    const sh = tab(ws, 'Tribune');
+    sh.getRange(3, 8, 1, 2).setValues([['De la semana 5.', 5]]);
+    sh.getRange(4, 8, 1, 2).setValues([['De la semana 3.', 3]]);
+    sh.getRange(5, 8, 1, 2).setValues([['De la semana 2.', 2]]);
+    ctx.writeWarnings_(sh, [{ text: 'Nueva.', rows: [] }], 6);
+    A.deep(warnTable(sh).map(x => x.week), [6, 5, 3], 'weeks 5 and 3 stay, week 2 is gone');
+  }],
+
+  ['Warnings: apodos count, Columna needs a Portada, one Edición, known temas', () => {
     const fans = FANS.map((r, i) => i === 0 ? r.concat(['Apodo']) : r[0] === 'Steel Man' ? r.concat(['Acero']) : r);
     const rows = [TRIBUNE_HEAD,
       ['3', 'Columna', '', '', 'El Acero no se mueve.', 'TRUE'],                              // row 2, names him by apodo
@@ -694,12 +747,12 @@ A.run('Publish.js', [
     const ws = participants(null, { tribune: rows, fans });
     const { ctx } = setup({ participants: ws });
     ctx.publishLeaderboard();
-    const sh = tab(ws, 'Tribune'), h1 = String(sh.getRange('H1').getValue());
-    A.match(h1, /Steel Man sale en 2 filas \(2, 3\)/, 'an apodo and a Para both count');
-    A.match(h1, /Hay Columna sin fila de Portada \(filas 2\)\./);
-    A.match(h1, /Hay 2 filas de Edición\. Solo cuenta la primera \(fila 4\)\./);
-    A.match(h1, /Tema desconocido "navidad" en la fila 4\. Temas: muertos\./);
-    A.deep([2, 3, 4, 5].map(r => sh.bg(r) === '#f4cccc'), [true, true, true, true]);
+    const sh = tab(ws, 'Tribune'), all = warnTable(sh).map(x => x.text).join('\n');
+    A.match(all, /Steel Man sale en 2 filas \(2, 3\)/, 'an apodo and a Para both count');
+    A.match(all, /Hay Columna sin fila de Portada \(filas 2\)\./);
+    A.match(all, /Hay 2 filas de Edición\. Solo cuenta la primera \(fila 4\)\./);
+    A.match(all, /Tema desconocido "navidad" en la fila 4\. Temas: muertos\./);
+    A.ok([2, 3, 4, 5].every(r => sh.bg(r, 1)), 'every row involved is tinted');
     A.equal(ctx.THEMES_KNOWN.join(), 'muertos');
   }],
 
