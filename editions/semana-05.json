@@ -97,11 +97,20 @@
   }
  },
  "apodos": {
+  "This is our year": [
+   "Beer Master"
+  ],
   "KinkyKing": [
    "Kinky"
   ],
+  "Steel Man": [
+   "Tocayo"
+  ],
   "Silverback": [
    "Comish"
+  ],
+  "Puto el que lo lea": [
+   "Fisherman"
   ]
  },
  "tribune": {
@@ -210,7 +219,7 @@
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-17T19:43:05.542Z",
+ "updated": "2026-10-18T12:45:28.568Z",
  "prizes": {
   "regular": [
    1050,
