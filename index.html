@@ -179,7 +179,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.1.0 c2.4.0
+      v4.1.1 c2.4.0
     </div>
   </div>
 </div>
@@ -364,34 +364,6 @@ T.normalize = function(D){
   d.strikes = d.strikes || {};
   d.fans = d.fans || {};
   d.survivorOut = d.survivorOut || [];
-  return d;
-};
-
-// The same league as it stood after week k. Strikes after k are approximated: whoever went out later has 2.
-T.truncate = function(D,k){
-  var WK = D.weeks || 18, kr = Math.min(k, WK), d = {};
-  Object.keys(D).forEach(function(x){ d[x] = D[x]; });
-  d.week = k;
-  if (k>WK){ d.regularWeek = WK; } else { delete d.regularWeek; delete d.playoffs; }
-  d.pickem = D.pickem.map(function(p){
-    var w = p.weeks.slice(0,kr), s = sum(w), drop = kr>1 ? min(w) : 0;
-    return {name:p.name, weeks:w, total:s-drop, dropped:drop};
-  });
-  if (k>WK && D.playoffs){
-    var rr = k-WK;
-    d.playoffs = {week:k, rounds:rr, winners:(D.playoffs.winners||[]).slice(0,rr), pickem:(D.playoffs.pickem||[]).map(function(p){
-      var w = (p.weeks||[]).slice(0,rr);
-      return {name:p.name, weeks:w, total: p.weeks ? sum(w) : p.total};
-    })};
-  }
-  d.winners = (D.winners||[]).slice(0,kr);
-  d.picks = {};
-  Object.keys(D.picks||{}).forEach(function(w){ if (Number(w)<=k) d.picks[w] = D.picks[w]; });
-  d.survivorOut = (D.survivorOut||[]).filter(function(o){ return o.week==null || o.week<=k; });
-  var later = {};
-  (D.survivorOut||[]).forEach(function(o){ if (o.week!=null && o.week>k) later[normName(o.name)] = 1; });
-  d.strikes = {};
-  Object.keys(D.strikes||{}).forEach(function(n){ d.strikes[n] = later[normName(n)] ? 2 : D.strikes[n]; });
   return d;
 };
 
@@ -1710,6 +1682,15 @@ T.tusPicks = function(M, name){
 var PICK_RULES_LIST = [fLealtad,fMismoEquipo,fCostalazo,fLlanero,fBorregada,fEmpate,fOlvido,fRachaPicks,fPerros,fCorriente,fNunca,fOrden,fPolos,fCuervos,fAcomodador];
 // Aficiones and the sótano gap live in the prize cards now (the fan-base note and the pizza box), not in Datos.
 var RULES = [fRebote,fArriba,fFotocopia,fDisco,fRacha,fRecord,fRemontada,fSiempre,fPeor,fSurvivor].concat(PICK_RULES_LIST);
+// The first edition week each rule was live. The Tribune went live during week 5, so every rule starts there.
+// A rule added later gets the week it ships. A rule missing from this table is never held out.
+var DESDE = {
+  rebote:5, arriba:5, fotocopia:5, disco:5, racha:5, record:5, remontada:5, siempre:5, peor:5, survivor:5,
+  lealtad:5, mismoequipo:5, costalazo:5, llanero:5, borregada:5, empate:5, olvido:5, rachapicks:5, perros:5, corriente:5,
+  nunca:5, orden:5, polos:5, cuervos:5, acomodador:5,
+  playoffs:5, poronda:5, posube:5
+};
+T.DESDE = DESDE;
 T.facts = function(M){
   var out = [];
   // The playoffs replace the regular-season facts, which would only repeat week 18. Survivor and the pick rules carry on.
@@ -1848,11 +1829,16 @@ T.pickFacts = function(M, prevRules, spent, rows){
   return {picks:picks, cifra:cifra, list:picks.filter(function(f){return f!==cifra}), all:all, dropped:dropped};
 };
 
-// What last week's edition ran, found by running the same engine on last week's league.
+// What last week's edition ran, found by running today's engine on last week's archived edition (M.prevD, its own
+// Tribune rows and picks). The archive is a copy of data.json, not of what the page printed, so a rule whose logic
+// changed since may differ slightly from what printed. No archive means nothing is held out. A rule that did not
+// exist last week (DESDE) cannot have run.
 T.prevRules = function(M){
-  if (M.EW<2) return [];
-  var P = T.model(T.truncate(M.D, M.EW-1));
-  return T.pickFacts(P, [], false).picks.map(function(f){return f.rule});
+  if (M.EW<2 || !M.prevD) return [];
+  var P = T.model(M.prevD), pr = T.printed(P);
+  return T.pickFacts(P, [], pr.used, pr.rows).picks.map(function(f){return f.rule}).filter(function(r){
+    return DESDE[r]!=null && DESDE[r]<=M.EW-1;
+  });
 };
 
 // ---------------------------------------------------------------------------
@@ -1888,7 +1874,7 @@ T.portada = function(M){
 // What the edition prints and what the last-place budget leaves out.
 // Order of priority: the Portada story, the first Clasificado that names the last place, then Datos, then the automatic facts.
 // Para counts as naming someone. Pizzas, prizes and the name panel are exempt (they are not part of this plan).
-T.plan = function(M){
+T.printed = function(M){
   var tr = M.D.tribune, prot = {};
   T.protectNames(M).forEach(function(n){ prot[n] = 1; });
   function hits(parts){ return mentions(M.idx, parts.join("\n")).some(function(m){return prot[m.name]}); }
@@ -1909,8 +1895,12 @@ T.plan = function(M){
   tr.columna.forEach(function(c){ rows.push({kind:"Columna", titulo:c.titulo||"", texto:c.texto, para:c.para||""}); });
   ads.forEach(function(a){ rows.push({kind:"Clasificado", titulo:a.titulo, texto:a.texto, para:a.para||""}); });
   datos.forEach(function(d){ rows.push({kind:"Dato", titulo:d.titulo, texto:d.texto, para:d.para||""}); });
-  var pk = T.pickFacts(M, T.prevRules(M), used, rows);
-  return {pt:pt, ads:ads, datos:datos, pk:pk, used:used || pk.picks.some(function(f){return (f.sujetos||[]).some(function(n){return prot[n]})}), protect:Object.keys(prot)};
+  return {pt:pt, ads:ads, datos:datos, rows:rows, used:used, prot:prot};
+};
+T.plan = function(M){
+  var p = T.printed(M), prot = p.prot;
+  var pk = T.pickFacts(M, T.prevRules(M), p.used, p.rows);
+  return {pt:p.pt, ads:p.ads, datos:p.datos, pk:pk, used:p.used || pk.picks.some(function(f){return (f.sujetos||[]).some(function(n){return prot[n]})}), protect:Object.keys(prot)};
 };
 
 T.byline = function(M){
@@ -1991,6 +1981,7 @@ function logoHtml(key, big){
 function render(D, opts){
   opts = opts || {};
   var M = T.model(D);
+  M.prevD = opts.prevD || null;
   D = M.D;
   var N = M.N, WK = M.WK, PR = M.PR;
   var $ = function(id){ return document.getElementById(id); };
@@ -2331,8 +2322,15 @@ function weeksIndex(){
 window.__tribune = T;
 T.render = render;
 T.TZ = TZ;
-Promise.all([load(), weeksIndex()]).then(function(r){
-  try { window.__model = render(r[0].D, {ed:r[0].ed, weeks:r[1]}); }
+// Last week's archived edition, for the no-repeat check. A 404 or bad JSON means there is none.
+function prevEdition(D){
+  var w = D && Number(D.week);
+  if (!window.fetch || !(w>=2)) return Promise.resolve(null);
+  return getJSON("editions/semana-"+pad2(w-1)+".json?t="+Date.now()).then(function(d){ return d && typeof d === "object" && Array.isArray(d.pickem) ? d : null; }).catch(function(){ return null; });
+}
+// Render waits for the previous edition, which can only be asked for once the loaded week is known.
+Promise.all([load().then(function(l){ return prevEdition(l.D).then(function(p){ return {D:l.D, ed:l.ed, prevD:p}; }); }), weeksIndex()]).then(function(r){
+  try { window.__model = render(r[0].D, {ed:r[0].ed, weeks:r[1], prevD:r[0].prevD}); }
   catch(e){ document.getElementById("p-head").textContent = "No se pudo leer la edición"; document.getElementById("p-deck").textContent = "Recarga la página."; throw e; }
 });
 })();

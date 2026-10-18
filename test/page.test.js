@@ -16,12 +16,57 @@ const clone = x => JSON.parse(JSON.stringify(x));
 const PF = require('./picks_fixture');
 const PICK_RULES = ['lealtad', 'mismoequipo', 'costalazo', 'llanero', 'borregada', 'empate', 'olvido', 'rachapicks', 'perros', 'corriente'];
 /** Week 5 data.json with the picks the publisher builds from the real Group Picks paste. */
+const sum = a => a.reduce((x, y) => x + y, 0);
+const min = a => Math.min.apply(null, a);
+const normName = n => String(n).replace(/[\u2018\u2019\u0060\u00b4]/g, "'").trim().toLowerCase();
+/**
+ * The league as it stood after week k. Strikes after k are approximated: whoever went out later has 2.
+ * (This was T.truncate in the page, before the no-repeat check read the real previous edition.)
+ */
+function truncate(D, k) {
+  var WK = D.weeks || 18, kr = Math.min(k, WK), d = {};
+  Object.keys(D).forEach(function(x){ d[x] = D[x]; });
+  d.week = k;
+  if (k>WK){ d.regularWeek = WK; } else { delete d.regularWeek; delete d.playoffs; }
+  d.pickem = D.pickem.map(function(p){
+    var w = p.weeks.slice(0,kr), s = sum(w), drop = kr>1 ? min(w) : 0;
+    return {name:p.name, weeks:w, total:s-drop, dropped:drop};
+  });
+  if (k>WK && D.playoffs){
+    var rr = k-WK;
+    d.playoffs = {week:k, rounds:rr, winners:(D.playoffs.winners||[]).slice(0,rr), pickem:(D.playoffs.pickem||[]).map(function(p){
+      var w = (p.weeks||[]).slice(0,rr);
+      return {name:p.name, weeks:w, total: p.weeks ? sum(w) : p.total};
+    })};
+  }
+  d.winners = (D.winners||[]).slice(0,kr);
+  d.picks = {};
+  Object.keys(D.picks||{}).forEach(function(w){ if (Number(w)<=k) d.picks[w] = D.picks[w]; });
+  d.survivorOut = (D.survivorOut||[]).filter(function(o){ return o.week==null || o.week<=k; });
+  var later = {};
+  (D.survivorOut||[]).forEach(function(o){ if (o.week!=null && o.week>k) later[normName(o.name)] = 1; });
+  d.strikes = {};
+  Object.keys(D.strikes||{}).forEach(function(n){ d.strikes[n] = later[normName(n)] ? 2 : D.strikes[n]; });
+  return d;
+}
 /** The league as it stood after week k (picks, winners, strikes), with no hand-written rows. */
-let TRUNC = null;
 async function weekAt(k) {
-  if (!TRUNC) TRUNC = (await load(clone(FULL))).T.truncate;
-  const d = TRUNC(clone(FULL), k);
+  const d = truncate(clone(FULL), k);
   if (k < 5) d.tribune = { portada: null, columna: [], clasificados: [], datos: [], edicion: null };
+  return d;
+}
+/** Week 5 plus a synthetic week 6, for the no-repeat check. */
+function week6() {
+  const d = clone(FULL);
+  d.week = 6;
+  d.pickem.forEach((p, i) => {
+    p.weeks.push(40 + (i * 7) % 50);
+    const drop = Math.min.apply(null, p.weeks);
+    p.dropped = drop; p.droppedWeek = p.weeks.indexOf(drop) + 1;
+    p.total = p.weeks.reduce((x, y) => x + y, 0) - drop;
+  });
+  d.winners.push([d.pickem[0].name]);
+  d.picks['6'] = clone(d.picks['5']);
   return d;
 }
 const P5 = () => { const d = clone(W5); d.picks = PF.picks5().picks; return d; };
@@ -30,14 +75,16 @@ const P5 = () => { const d = clone(W5); d.picks = PF.picks5().picks; return d; }
 
 /**
  * o.url: query and hash, e.g. '?ed=4'. o.data: what data.json returns (null = 404).
- * o.editions: {N: data}. o.index: edition index, or null for 404. o.failFetch: every fetch rejects.
+ * o.editions: {N: data, or 'bad' for broken JSON}. o.index: edition index, or null for 404. o.failFetch: every fetch rejects.
+ * o.gate: {N: promise} holds that edition's reply until it resolves. o.probe(window, fetched) runs 150 ms in, before the page has rendered.
  */
 async function load(data, o) {
   o = o || {};
   const errors = [], fetched = [];
   const vc = new VirtualConsole();
   vc.on('jsdomError', e => errors.push(String(e && e.stack || e).split('\n')[0]));
-  const reply = body => Promise.resolve({ ok: body != null, status: body != null ? 200 : 404, json: () => Promise.resolve(clone(body)) });
+  const reply = body => Promise.resolve({ ok: body != null, status: body != null ? 200 : 404,
+    json: () => body === 'bad' ? Promise.reject(new SyntaxError('Unexpected token')) : Promise.resolve(clone(body)) });
   const dom = new JSDOM(HTML, {
     runScripts: 'dangerously', url: 'https://example.test/' + (o.url || ''), pretendToBeVisual: true, virtualConsole: vc,
     beforeParse(window) {
@@ -49,13 +96,17 @@ async function load(data, o) {
         if (u === 'data.json') return reply(data);
         if (u === 'editions/index.json') return reply(o.index || null);
         const m = /^editions\/semana-(\d\d)\.json$/.exec(u);
-        if (m) return reply((o.editions || {})[Number(m[1])] || null);
+        if (m) {
+          const body = (o.editions || {})[Number(m[1])] || null, gate = (o.gate || {})[Number(m[1])];
+          return gate ? gate.then(() => reply(body)) : reply(body);
+        }
         return reply(null);
       };
       if (o.storage) Object.keys(o.storage).forEach(k => window.localStorage.setItem(k, o.storage[k]));
     },
   });
   const doc = dom.window.document;
+  if (o.probe) { await new Promise(r => setTimeout(r, 150)); o.probe(dom.window, fetched); }
   for (let i = 0; i < 100 && !dom.window.__model && !errors.length; i++) await new Promise(r => setTimeout(r, 20));
   await new Promise(r => setTimeout(r, 20));
   return { dom, doc, win: dom.window, errors, fetched, M: dom.window.__model, T: dom.window.__tribune };
@@ -182,7 +233,7 @@ A.run('index.html', [
 
   ['facts: a rule that ran last week goes to the back when another candidate exists', async () => {
     const c = await load(W5);
-    A.ok(c.T.prevRules(c.M).indexOf('survivor') >= 0, 'week 4 would have run the Survivor fact');
+    A.deep(c.T.prevRules(c.M), [], 'no archive of last week, so nothing is held out');
     const prev = ['racha', 'remontada', 'rebote', 'survivor', 'arriba'];
     const r = c.T.pickFacts(c.M, prev);
     A.equal(r.picks.length, 6);
@@ -197,7 +248,7 @@ A.run('index.html', [
   ['facts: nothing mentions the model or the random picker, and every text stays short', async () => {
     const c = await load(W5);
     for (const k of [2, 3, 4, 5]) {
-      const M = c.T.model(c.T.truncate(c.M.D, k));
+      const M = c.T.model(truncate(c.M.D, k));
       c.T.facts(M).forEach(f => {
         lint(f.texto + ' ' + f.titulo + ' ' + f.valor, 'week ' + k + ' ' + f.rule);
         A.noMatch(f.texto, /modelo|random|al azar|dado|moneda/i, f.rule + ' does not mention the model or random picks');
@@ -534,7 +585,7 @@ A.run('index.html', [
 
   ['archive: ?ed=4 loads the frozen edition with a banner and a way back', async () => {
     const base = await load(W5);
-    const ed4 = base.T.truncate(W5, 4); ed4.updated = '2026-10-08T12:00:00Z';
+    const ed4 = truncate(W5, 4); ed4.updated = '2026-10-08T12:00:00Z';
     const c = await load(W5, { url: '?ed=4', editions: { 4: ed4 }, index: { weeks: [3, 4, 5] } });
     A.deep(c.errors, []);
     A.ok(c.fetched.indexOf('editions/semana-04.json') >= 0, 'asked for the edition file');
@@ -562,7 +613,7 @@ A.run('index.html', [
     A.deep(m.errors, []);
     const bad = await load(W5, { url: '?ed=abc' });
     A.equal(bad.M.D.week, 5);
-    A.ok(!bad.fetched.some(u => /editions\/semana/.test(u)), 'a bad value never asks for a file');
+    A.deep(bad.fetched.filter(u => /editions\/semana/.test(u)), ['editions/semana-04.json'], "a bad value never asks for an edition, only for last week's archive");
   }],
 
   ['footer: earlier editions come from the index, and Yahoo is linked', async () => {
@@ -1000,7 +1051,7 @@ A.run('index.html', [
     A.deep([dog.data.name, dog.data.gap], ['Niners', 6], 'Niners 51% of underdogs against 46%, named with the gap and never the share');
     A.noMatch(dog.texto, /%|51|28/, 'no share or hits printed');
     A.ok(c.M.pk.all.filter(x => x.rule === 'corriente')[0], 'against the grain');
-    const t = c.T.truncate(d, 4);
+    const t = truncate(d, 4);
     A.deep(Object.keys(t.picks), ['4'], 'the league as it stood in week 4 has no week 5 picks');
   }],
 
@@ -1081,7 +1132,7 @@ A.run('index.html', [
     A.deep(one.M.weekly[4].winners, ['Cyber70'], 'Yahoo broke the tie');
     A.equal(one.doc.querySelectorAll('#prizes .g.tie').length, 0);
     A.equal(one.M.paid['Cyber70'] - split.M.paid['Cyber70'], 25, 'the $50 is no longer split');
-    A.equal(one.T.truncate(d, 4).winners.length, 4, 'the league as it stood in week 4');
+    A.equal(truncate(d, 4).winners.length, 4, 'the league as it stood in week 4');
     d.winners = [[], [], [], [], ['Nadie']];
     const bad = await load(d);
     A.deep(bad.M.weekly[4].winners.slice().sort(), ['Abogado', 'Cyber70'], 'an unknown name is ignored');
@@ -1148,7 +1199,7 @@ A.run('index.html', [
     A.equal(m2.paid['Cyber70'] - c.T.model(Object.assign({}, d, { playoffs: undefined, week: 5 })).paid['Cyber70'], 350, 'a tie splits it');
   }],
 
-  ['playoffs: the old hook (playoffs.pickem with only totals) still shows the leader, truncate rebuilds earlier editions', async () => {
+  ['playoffs: the old hook (playoffs.pickem with only totals) still shows the leader, the truncate helper rebuilds earlier editions', async () => {
     const d = clone(W5);
     d.playoffs = { pickem: [{ name: 'Abogado', total: 55 }, { name: 'Silverback', total: 40 }] };
     const c = await load(d);
@@ -1157,14 +1208,16 @@ A.run('index.html', [
     const p = P5();
     p.week = 21; p.regularWeek = 5;
     p.playoffs = { week: 21, rounds: 3, winners: [[], [], []], pickem: p.pickem.map(q => ({ name: q.name, weeks: [10, 20, 30], total: 60 })) };
-    const t19 = c.T.truncate(p, 19);
+    const t19 = truncate(p, 19);
     A.equal(t19.playoffs.rounds, 1);
     A.deep(t19.playoffs.pickem[0].weeks, [10]);
     A.equal(t19.playoffs.pickem[0].total, 10);
-    A.equal(c.T.truncate(p, 18).playoffs, undefined, 'at week 18 the playoffs have not started');
-    A.equal('regularWeek' in c.T.truncate(p, 17), false);
+    A.equal(truncate(p, 18).playoffs, undefined, 'at week 18 the playoffs have not started');
+    A.equal('regularWeek' in truncate(p, 17), false);
     const m = c.T.model(p);
-    A.equal(c.T.prevRules(m).length >= 0, true, 'the no-repeat rule runs on the previous round');
+    A.deep(c.T.prevRules(m), [], 'no archive, nothing held out');
+    m.prevD = truncate(p, 20);
+    A.ok(Array.isArray(c.T.prevRules(m)), 'the no-repeat rule runs on the archived previous round');
   }],
 
   // ---- v4.1: Datos que nadie pidió ---------------------------------------------------------------------
@@ -1173,15 +1226,20 @@ A.run('index.html', [
     const c = await load(FULL);
     A.ok(c.M.pk.picks.every(f => f.rule !== 'fotocopia'), 'Fotocopia is not printed');
     A.ok(c.M.pk.cifra && c.M.pk.cifra.rule !== 'fotocopia', 'and it is not La cifra');
-    const dr = c.M.plan.pk.dropped.filter(x => x.rule === 'fotocopia')[0];
-    A.ok(dr, 'T.plan lists the dropped fact');
+    // With no archive of week 4 nothing is held out and Fotocopia never reaches the front of the line,
+    // so the drop is checked with the six rules of the week 5 page sent to the back, as in week 6.
+    const ran = ['rebote', 'polos', 'cuervos', 'acomodador', 'nunca', 'racha'];
+    const pr = c.T.printed(c.M);
+    const dr = c.T.pickFacts(c.M, ran, pr.used, pr.rows).dropped.filter(x => x.rule === 'fotocopia')[0];
+    A.ok(dr, 'T.pickFacts lists the dropped fact');
     A.match(dr.por, /Clasificado "Fotocopia": nombra a Osos de Grayslake, Mean Machine y Jorge_B y trae 281/);
     const d = clone(FULL);
     d.tribune.clasificados = d.tribune.clasificados.filter(x => x.titulo !== 'Fotocopia');
     const c2 = await load(d);
     A.ok(c2.M.pk.all.some(f => f.rule === 'fotocopia'), 'it is a candidate again');
-    A.ok(!c2.M.plan.pk.dropped.some(x => x.rule === 'fotocopia'), 'and nothing drops it');
-    A.ok(c2.M.pk.picks.some(f => f.rule === 'fotocopia') || c2.T.prevRules(c2.M).indexOf('fotocopia') >= 0, 'it prints unless last week already ran it');
+    const pr2 = c2.T.printed(c2.M), r2 = c2.T.pickFacts(c2.M, ran, pr2.used, pr2.rows);
+    A.ok(!r2.dropped.some(x => x.rule === 'fotocopia'), 'and nothing drops it');
+    A.ok(r2.picks.some(f => f.rule === 'fotocopia'), 'it prints once the six that ran go to the back');
   }],
 
   ['datos: aficiones and sótano never print, and nobody prints a number their own Tus picks lines show', async () => {
@@ -1290,6 +1348,74 @@ A.run('index.html', [
       A.equal(c.doc.documentElement.getAttribute('data-tema'), 'muertos');
     }
     A.ok(seen >= 1, 'the muertos edition prints calaveritas when names fit (' + seen + ')');
+  }],
+
+  // ---- v4.1.1: the no-repeat check reads last week's real edition ---------------------------------------
+
+  ['no-repeat: week 5 live, no semana-04.json, nothing is held out and the page prints its 6 facts', async () => {
+    const c = await load(FULL, { index: { weeks: [5] } });
+    A.deep(c.errors, []);
+    A.ok(c.fetched.indexOf('editions/semana-04.json') >= 0, "asked for last week's edition");
+    A.equal(c.M.prevD, null);
+    A.deep(c.T.prevRules(c.M), []);
+    A.deep(c.M.pk.picks.map(f => f.rule).sort(), ['acomodador', 'cuervos', 'nunca', 'polos', 'racha', 'rebote']);
+    A.equal(c.M.pk.cifra.rule, 'rebote', 'La cifra');
+  }],
+
+  ['no-repeat: week 6 holds out exactly the 6 rules the week 5 page printed', async () => {
+    const c = await load(week6(), { editions: { 5: FULL }, index: { weeks: [5, 6] } });
+    A.deep(c.errors, []);
+    A.equal(c.M.D.week, 6);
+    A.ok(c.M.prevD && c.M.prevD.week === 5, 'the model carries the previous edition');
+    A.deep(c.T.prevRules(c.M).sort(), ['acomodador', 'cuervos', 'nunca', 'polos', 'racha', 'rebote']);
+  }],
+
+  ['no-repeat: a rule whose desde is this week was not live last week and is never held out', async () => {
+    const c = await load(week6(), { editions: { 5: FULL }, index: { weeks: [5, 6] } });
+    const was = c.T.DESDE.polos;
+    try {
+      c.T.DESDE.polos = 6;
+      const r = c.T.prevRules(c.M);
+      A.ok(r.indexOf('polos') < 0, 'polos is new in week 6');
+      A.equal(r.length, 5, 'the other five stay');
+    } finally { c.T.DESDE.polos = was; }
+    A.deep(Object.keys(c.T.DESDE).filter(k => c.T.DESDE[k] !== 5), [], 'every current rule is desde 5');
+  }],
+
+  ['no-repeat: semana-05.json missing or broken means no previous edition and no errors', async () => {
+    for (const ed of [{}, { 5: 'bad' }]) {
+      const c = await load(week6(), { editions: ed, index: { weeks: [5, 6] } });
+      A.deep(c.errors, []);
+      A.equal(c.M.prevD, null);
+      A.deep(c.T.prevRules(c.M), []);
+      A.equal(c.M.pk.picks.length, 6);
+    }
+  }],
+
+  ['no-repeat: ?ed=5 loads semana-05.json and asks for semana-04.json, a 404 is handled the same way', async () => {
+    const c = await load(FULL, { url: '?ed=5', editions: { 5: FULL }, index: { weeks: [5] } });
+    A.deep(c.errors, []);
+    A.equal(c.M.D.week, 5);
+    A.ok(c.fetched.indexOf('editions/semana-05.json') >= 0 && c.fetched.indexOf('editions/semana-04.json') >= 0);
+    A.equal(c.M.prevD, null);
+    A.deep(c.T.prevRules(c.M), []);
+    const c6 = await load(week6(), { url: '?ed=6', editions: { 5: FULL, 6: week6() }, index: { weeks: [5, 6] } });
+    A.equal(c6.M.D.week, 6);
+    A.ok(c6.fetched.indexOf('editions/semana-05.json') >= 0);
+    A.equal(c6.T.prevRules(c6.M).length, 6, 'the archive of week 5 is read from ?ed=6');
+  }],
+
+  ['no-repeat: render waits for the previous edition request', async () => {
+    let release; const gate = new Promise(r => { release = r; });
+    let early = 'unset', asked = false;
+    const c = await load(week6(), {
+      editions: { 5: FULL }, index: { weeks: [5, 6] }, gate: { 5: gate },
+      probe(win, fetched) { early = win.__model; asked = fetched.indexOf('editions/semana-05.json') >= 0; release(); },
+    });
+    A.ok(asked, 'the previous edition was requested');
+    A.equal(early, undefined, 'nothing rendered while it was pending');
+    A.ok(c.M && c.M.prevD, 'then it rendered with it');
+    A.deep(c.errors, []);
   }],
 
   ['every template, filled with the week 5 data, stays at 120 characters and passes the copy lint', async () => {
