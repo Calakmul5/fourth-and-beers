@@ -23,6 +23,42 @@
   {
    "name": "X-Men Let’s go Boys",
    "week": 5
+  },
+  {
+   "name": "Silverback",
+   "week": 5
+  },
+  {
+   "name": "Conquistador",
+   "week": 5
+  },
+  {
+   "name": "MVP21",
+   "week": 5
+  },
+  {
+   "name": "Abogado",
+   "week": 5
+  },
+  {
+   "name": "Steel Man",
+   "week": 5
+  },
+  {
+   "name": "Chitown’DemBoyz",
+   "week": 5
+  },
+  {
+   "name": "Puto el que lo lea",
+   "week": 5
+  },
+  {
+   "name": "SinCasco",
+   "week": 5
+  },
+  {
+   "name": "Mean Machine",
+   "week": 5
   }
  ],
  "fans": {
@@ -219,7 +255,7 @@
  "season": 2026,
  "week": 5,
  "weeks": 18,
- "updated": "2026-10-18T12:45:28.568Z",
+ "updated": "2026-10-20T03:28:51.710Z",
  "prizes": {
   "regular": [
    1050,
@@ -541,28 +577,28 @@
   ]
  ],
  "strikes": {
-  "Silverback": 2,
+  "Silverback": 3,
   "Rastaman": 3,
-  "Conquistador": 2,
-  "MVP21": 2,
-  "This is our year": 1,
+  "Conquistador": 3,
+  "MVP21": 3,
+  "This is our year": 2,
   "King of The North": 2,
   "Niners": 2,
-  "Abogado": 2,
+  "Abogado": 3,
   "KinkyKing": 3,
-  "Steel Man": 2,
+  "Steel Man": 3,
   "Osos de Grayslake": 1,
-  "Chitown’DemBoyz": 2,
-  "Puto el que lo lea": 2,
+  "Chitown’DemBoyz": 3,
+  "Puto el que lo lea": 3,
   "Cyber70": 1,
   "Billy Beaner": 3,
   "Andrea’s Picks": 3,
   "X-Men Let’s go Boys": 3,
-  "Jorge_B": 1,
+  "Jorge_B": 2,
   "Manolito’s winning picks": 3,
-  "Juan1768": 0,
-  "SinCasco": 2,
-  "Mean Machine": 2
+  "Juan1768": 1,
+  "SinCasco": 3,
+  "Mean Machine": 3
  },
  "picks": {
   "1": {
