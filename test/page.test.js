@@ -1446,6 +1446,21 @@ A.run('index.html', [
     A.deep(c.errors, []);
   }],
 
+  ['huella: the digits inside a call sign (MVP21) are not numbers in the repeat check', async () => {
+    const c = await load(FULL);
+    A.deep(c.T.numTokens('MVP21: 35, 38, 53 y 71. Juan1768 hizo 9.', c.M), ['35', '38', '53', '71', '9'], 'names are blanked, real numbers stay');
+    A.deep(c.T.numTokens('MVP21 sigue de moda.', c.M), []);
+    // A hand row that names MVP21 and prints no number must not drop a fact about MVP21 because of the 21 in the name
+    const mvp = c.T.facts(c.M).filter(f => f.sujetos.indexOf('MVP21') >= 0);
+    A.ok(mvp.length, 'there is a fact about MVP21 (' + mvp.map(f => f.rule) + ')');
+    const rows = [{ kind: 'Clasificado', titulo: 'Aviso', texto: 'MVP21 sigue de moda.', para: 'Todos' }];
+    mvp.forEach(f => A.ok(c.T.huella(c.M, f).numeros.indexOf('21') < 0, f.rule + ' does not carry the 21 of the call sign'));
+    const r = c.T.pickFacts(c.M, [], false, rows);
+    A.deep(r.dropped.filter(x => /MVP21/.test(x.por)), [], 'nothing is dropped for a number that is only part of a call sign');
+    // A real 21 in a row still counts when the fact prints a real 21
+    A.ok(c.T.numTokens('Quedó en el lugar 21.', c.M).indexOf('21') >= 0);
+  }],
+
   ['every template, filled with the week 5 data, stays at 120 characters and passes the copy lint', async () => {
     const c = await load(FULL);
     const cases = [];

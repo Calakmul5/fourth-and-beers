@@ -110,6 +110,7 @@ function setup(o) {
     github,
     props: o.props,
     lockBusy: o.lockBusy,
+    now: o.now,
   });
   return { ctx, github };
 }
@@ -261,6 +262,51 @@ A.run('Publish.js', [
     ]);
     const fresh = build().d;
     A.deep(fresh.survivorOut, [{ name: 'KinkyKing', week: 3 }], 'no previous file: first seen this week');
+  }],
+
+  ['survivorOut: new outs are stamped with the NFL week of the calendar, Tuesday to Monday in Chicago, capped at 18', () => {
+    const { ctx } = setup();
+    const wk = iso => ctx.nflWeek_(new Date(iso));
+    A.equal(wk('2026-09-08T05:00:00Z'), 1, 'Tuesday 8 Sep opens week 1');
+    A.equal(wk('2026-09-15T04:59:59Z'), 1, 'Monday night 14 Sep, 23:59 in Chicago, is still week 1');
+    A.equal(wk('2026-09-15T05:00:00Z'), 2, 'Tuesday 15 Sep, 00:00 in Chicago, opens week 2');
+    A.equal(wk('2026-10-19T17:00:00Z'), 6, 'Monday 19 Oct is still week 6');
+    A.equal(wk('2026-10-20T04:59:59Z'), 6);
+    A.equal(wk('2026-10-20T05:00:00Z'), 7);
+    A.equal(wk('2026-09-01T12:00:00Z'), 1, 'before the season');
+    A.equal(wk('2027-01-20T12:00:00Z'), 18, 'capped at 18');
+    const strikes = { Nuevo: 3 };
+    A.deep(ctx.survivorOut_(null, strikes, 3, new Date('2026-10-14T17:00:00Z')), [{ name: 'Nuevo', week: 6 }], 'the board week (3) is not used');
+    A.deep(ctx.survivorOut_(null, strikes, 20, new Date('2026-10-14T17:00:00Z')), [{ name: 'Nuevo', week: 20 }], 'playoff weeks keep the edition week');
+    A.deep(ctx.survivorOut_(null, strikes, 18, new Date('2027-03-01T12:00:00Z')), [{ name: 'Nuevo', week: 18 }]);
+    // Through a publish: the board says week 3 and the clock says week 7
+    const { ctx: c7, github } = setup({ now: '2026-10-14T17:00:00Z' });
+    c7.publishLeaderboard();
+    A.deep(JSON.parse(github.state.file.text).survivorOut, [{ name: 'KinkyKing', week: 6 }]);
+  }],
+
+  ['survivorOut: the one-time correction shifts weeks 4 and 5 once, never KinkyKing, and only on the first publish', () => {
+    const prev = [{ name: 'Old Timer', week: 4 }, { name: 'KinkyKing', week: 3 }, { name: 'Late One', week: 5 }, { name: 'Early', week: 2 }, { name: 'Later', week: 6 }];
+    const strikes = { KinkyKing: 3 };
+    const { ctx } = setup();
+    A.deep(ctx.survivorOut_({ survivorOut: prev }, strikes, 7, new Date('2026-10-14T17:00:00Z'), true), [
+      { name: 'Old Timer', week: 5 }, { name: 'KinkyKing', week: 3 }, { name: 'Late One', week: 6 }, { name: 'Early', week: 2 }, { name: 'Later', week: 6 },
+    ], 'weeks 4 and 5 move forward by one, week 3 stays');
+    A.deep(ctx.survivorOut_({ survivorOut: prev }, strikes, 7, new Date('2026-10-14T17:00:00Z')), prev, 'without the correction nothing moves');
+    A.equal(prev[0].week, 4, 'the previous file is not mutated');
+    // KinkyKing is exempt even if his week were 4
+    A.deep(ctx.survivorOut_({ survivorOut: [{ name: 'KinkyKing', week: 4 }] }, strikes, 7, new Date('2026-10-14T17:00:00Z'), true), [{ name: 'KinkyKing', week: 4 }]);
+    // Through publishes: the correction runs before stamping, then the flag stops it
+    const live = JSON.stringify({ week: 3, survivorOut: [{ name: 'Old Timer', week: 4 }, { name: 'Late One', week: 5 }, { name: 'KinkyKing', week: 3 }] });
+    const github = makeGithub(live);
+    const { ctx: c1 } = setup({ github, now: '2026-10-14T17:00:00Z' });
+    A.equal(c1._props.SURVIVOR_WEEK_FIX_V3_2_0, undefined, 'no flag before the first publish');
+    c1.publishLeaderboard();
+    A.deep(JSON.parse(github.state.file.text).survivorOut, [{ name: 'Old Timer', week: 5 }, { name: 'Late One', week: 6 }, { name: 'KinkyKing', week: 3 }]);
+    A.equal(c1._props.SURVIVOR_WEEK_FIX_V3_2_0, '1', 'the flag is set once the commit goes through');
+    const c2 = loadPublisher({ participants: participants(), model: model(), github, props: { SURVIVOR_WEEK_FIX_V3_2_0: '1' }, now: '2026-10-21T17:00:00Z' });
+    c2.publishLeaderboard();
+    A.deep(JSON.parse(github.state.file.text).survivorOut, [{ name: 'Old Timer', week: 5 }, { name: 'Late One', week: 6 }, { name: 'KinkyKing', week: 3 }], 'a second publish does not shift again');
   }],
 
   ['publishLeaderboard: edition, index, then data.json; no-change skip; change commits again', () => {

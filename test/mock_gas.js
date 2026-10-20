@@ -135,7 +135,7 @@ function makeGithub(initialText, extra) {
 
 /**
  * Builds a vm context with Publish.js loaded.
- * opts: participants and model (workbooks), github (makeGithub result), props (extra script properties)
+ * opts: participants and model (workbooks), github (makeGithub result), props (extra script properties), now (ISO time, default week 3)
  */
 function loadPublisher(opts) {
   const logs = [];
@@ -144,7 +144,7 @@ function loadPublisher(opts) {
   const books = { participants: opts.participants, model: opts.model };
   const context = {
     Logger: { log: m => logs.push(String(m)) },
-    PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null) }) },
+    PropertiesService: { getScriptProperties: () => ({ getProperty: k => (k in props ? props[k] : null), setProperty: (k, v) => { props[k] = String(v); } }) },
     LockService: {
       getScriptLock: () => ({
         waitLock() { lock.waits++; lock.held = true; },
@@ -167,13 +167,21 @@ function loadPublisher(opts) {
       base64Decode: s => Buffer.from(s, 'base64'),
       newBlob: bytes => ({ getDataAsString: () => Buffer.from(bytes).toString('utf8') }),
       sleep() {},
-      formatDate: (d, tz, f) => d.toISOString().slice(0, 16).replace('T', ' '),
+      formatDate: (d, tz, f) => {
+        const p = {};
+        new Intl.DateTimeFormat('en-CA', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+          .formatToParts(d).forEach(x => { p[x.type] = x.value; });
+        return f.replace('yyyy', p.year).replace('MM', p.month).replace('dd', p.day).replace('HH', p.hour).replace('mm', p.minute);
+      },
     },
     ScriptApp: {},
   };
   vm.createContext(context);
   const file = path.join(__dirname, '..', 'gas', 'Publish.js');
   vm.runInContext(fs.readFileSync(file, 'utf8'), context, { filename: 'Publish.js' });
+  // The publisher reads the clock through now_(). Tests run on a Thursday of NFL week 3 unless they say otherwise.
+  context.now_ = () => new Date(opts.now || '2026-09-24T17:00:00Z');
+  context._props = props;
   context._logs = logs;
   context._lock = lock;
   return context;

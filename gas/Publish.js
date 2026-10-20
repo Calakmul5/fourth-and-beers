@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v3.1.2 c1.9.0
+// v3.2.0 c1.9.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -62,6 +62,7 @@ var CFG = {
   editionsDir: 'editions',
   branch: 'main',
   season: 2026,
+  nflWeek1: '2026-09-08',        // the Tuesday that opens NFL week 1. Weeks run Tuesday to Monday, America/Chicago
   weeks: 18,
   rounds: 4                    // playoff rounds, played as weeks 19 to 22
 };
@@ -144,14 +145,16 @@ function publishLeaderboard_() {
     throw new Error('Missing Script properties. Set GITHUB_TOKEN, GITHUB_REPO and SHEET_ID in Project Settings.');
   }
   var ss = SpreadsheetApp.openById(String(sheetId).trim());
-  var picksWarn = [], warnTexts = [], data, result;
+  var picksWarn = [], warnTexts = [], data, result, fixPending = false;
   try {
     var modelId = props.getProperty('MODEL_SHEET_ID');
     var model = modelId ? SpreadsheetApp.openById(String(modelId).trim()) : ss;
     var cur = readFile_(repo, token, CFG.path);
-    data = buildData_(ss, model, cur ? cur.data : null, picksWarn);
+    fixPending = !props.getProperty(SURVIVOR_FIX_FLAG);
+    data = buildData_(ss, model, cur ? cur.data : null, picksWarn, fixPending);
     try { warnTexts = reviewTribune_(ss, data, picksWarn); } catch (e) { Logger.log('Warnings skipped: ' + e); warnTexts = picksWarn.slice(); }
     result = commitAll_(repo, token, data, cur);   // {text, sha}
+    if (fixPending) props.setProperty(SURVIVOR_FIX_FLAG, '1');   // the one-time correction ran and is committed
   } catch (e) {
     reportStatus_(ss, 'ERROR ' + stamp_() + '. La publicación falló, revisa Executions en Apps Script.', [String(e && e.message ? e.message : e).slice(0, 220)]);
     throw e;
@@ -166,7 +169,10 @@ function publishLeaderboard_() {
   return publishStatus_(result.sha ? 'published' : 'no_changes', data.week, result.sha, data.updated, result.text);
 }
 
-function stamp_() { return Utilities.formatDate(new Date(), 'America/Chicago', 'yyyy-MM-dd HH:mm'); }
+/** The clock. One place, so tests can pin it. */
+function now_() { return new Date(); }
+
+function stamp_() { return Utilities.formatDate(now_(), 'America/Chicago', 'yyyy-MM-dd HH:mm'); }
 
 /**
  * The end-of-process message: a log line, a toast for whoever has the workbook open, and rows 8 to 10 of Picks_Board
@@ -268,7 +274,7 @@ function installTriggers() {
 // Build data.json
 // ---------------------------------------------------------------------------
 
-function buildData_(ss, model, prev, picksWarn) {
+function buildData_(ss, model, prev, picksWarn, fixSurvivorWeeks) {
   picksWarn = picksWarn || [];
   var board = readBoard_(ss);
   var po = readPlayoffs_(ss, picksWarn);
@@ -278,14 +284,14 @@ function buildData_(ss, model, prev, picksWarn) {
   var week = po ? CFG.weeks + po.week : board.week;           // the edition: a regular week, or 19 to 22 once the playoffs have scores
   var strikes = readStrikes_(model || ss, board.names);
   var out = {
-    survivorOut: survivorOut_(prev, strikes, week),
+    survivorOut: survivorOut_(prev, strikes, week, now_(), fixSurvivorWeeks),
     fans: readFans_(ss, board.names),
     apodos: readApodos_(ss, board.names),
     tribune: readTribune_(ss, week, board.names),
     season: CFG.season,
     week: week,
     weeks: CFG.weeks,
-    updated: new Date().toISOString(),
+    updated: now_().toISOString(),
     prizes: JSON.parse(JSON.stringify(PRIZES)),
     pickem: board.rows,
     winners: winners,
@@ -1182,12 +1188,40 @@ function plain_(s) {
   return String(s || '').trim().toLowerCase().replace(/[áàä]/g, 'a').replace(/[éèë]/g, 'e').replace(/[íìï]/g, 'i').replace(/[óòö]/g, 'o').replace(/[úùü]/g, 'u');
 }
 
-/** Elimination order. Keeps earlier entries, drops anyone whose strikes were corrected below 3, adds new outs with this week. */
-function survivorOut_(prev, strikes, week) {
+/**
+ * The NFL week of a date: week 1 opens on CFG.nflWeek1 (a Tuesday), every week runs Tuesday to Monday in America/Chicago.
+ * Capped at the 18 regular-season weeks, and 1 before the season.
+ */
+function nflWeek_(date) {
+  var p = Utilities.formatDate(date, 'America/Chicago', 'yyyy-MM-dd').split('-');
+  var s = CFG.nflWeek1.split('-');
+  var days = Math.round((Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2])) - Date.UTC(Number(s[0]), Number(s[1]) - 1, Number(s[2]))) / 86400000);
+  return Math.max(1, Math.min(CFG.weeks, Math.floor(days / 7) + 1));
+}
+
+// ONE-TIME CORRECTION (v3.2.0). Eliminations were stamped with the PickEm_Board week, which lags a week when the strikes
+// update before the paste. Entries stamped 4 or 5 move forward by one, KinkyKing (week 3) was right. It runs on the first
+// publish only: publishLeaderboard_ sets this Script property once the commit goes through. REMOVE this block, the flag
+// and the fix argument after that publish.
+var SURVIVOR_FIX_FLAG = 'SURVIVOR_WEEK_FIX_V3_2_0';
+
+/**
+ * Elimination order. Keeps earlier entries, drops anyone whose strikes were corrected below 3, adds new outs.
+ * A new out is stamped with the NFL week of the calendar (nflWeek_(now), capped at 18), not with the board week.
+ * In the playoffs (week above 18) the edition week is stamped, as before.
+ * fix: apply the one-time correction above before anything else.
+ */
+function survivorOut_(prev, strikes, week, now, fix) {
   var list = (prev && prev.survivorOut) ? prev.survivorOut.slice() : [];
+  if (fix) {
+    list = list.map(function (o) {
+      return (o.week === 4 || o.week === 5) && norm_(o.name) !== 'kinkyking' ? { name: o.name, week: o.week + 1 } : o;
+    });
+  }
+  var stampWeek = week > CFG.weeks ? week : nflWeek_(now || now_());
   list = list.filter(function (o) { return !(o.name in strikes) || strikes[o.name] >= 3; });
   Object.keys(strikes).forEach(function (n) {
-    if (strikes[n] >= 3 && !list.some(function (o) { return o.name === n; })) list.push({ name: n, week: week });
+    if (strikes[n] >= 3 && !list.some(function (o) { return o.name === n; })) list.push({ name: n, week: stampWeek });
   });
   return list;
 }

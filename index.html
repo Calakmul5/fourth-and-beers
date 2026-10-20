@@ -179,7 +179,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.1.1 c2.5.0
+      v4.1.2 c2.5.0
     </div>
   </div>
 </div>
@@ -1714,8 +1714,14 @@ function teamsIn(text){
   return TEAM_RE.filter(function(t){ return t.abbr.test(text) || t.re.test(text); }).map(function(t){return t.code});
 }
 // Numbers as printed, whole tokens. "semana 4" and the edition number are context, not data.
+// The digits inside a call sign (MVP21, Juan1768) are part of a name, so mentions are blanked first.
+function noNames(M, text){
+  var s = String(text).replace(/[‘’`´]/g,"'"), at = 0, out = "";
+  mentions(M.idx, s).forEach(function(m){ out += s.slice(at, m.start)+" "; at = m.end; });
+  return out+s.slice(at);
+}
 function numTokens(text, M){
-  var s = String(text).replace(/\b(?:semanas?|ronda|rondas)\s+\d+/gi," ");
+  var s = noNames(M, text).replace(/\b(?:semanas?|ronda|rondas)\s+\d+/gi," ");
   return (s.match(/\d+(?:[.,]\d+)*/g) || []).filter(function(x){ return x!==String(M.EW); });
 }
 // The union over every template the fact could print, so a later style swap cannot bring a duplicate in.
@@ -1738,12 +1744,13 @@ function dupReason(M, f, rows){
     var rn = mentions(M.idx, txt).map(function(m){return m.name}), rt = teamsIn(txt);
     var who2 = h.nombres.filter(function(n){return rn.indexOf(n)>=0}).concat(h.equipos.filter(function(c){return rt.indexOf(c)>=0}).map(function(c){ return tm(c); }));
     if (!who2.length) continue;
-    var rnum = numTokens(txt, M).concat((String(txt).match(/\d+(?:[.,]\d+)*/g) || []));
+    var rnum = numTokens(txt, M).concat((noNames(M, txt).match(/\d+(?:[.,]\d+)*/g) || []));
     var shared = h.numeros.filter(function(x){return rnum.indexOf(x)>=0});
     if (shared.length) return r.kind+(r.titulo ? ' "'+r.titulo+'"' : "")+": nombra a "+J(who2)+" y trae "+J(shared);
   }
   return null;
 }
+T.numTokens = numTokens; T.huella = huella;
 // A fact about one player may not print a number that player's Tus picks lines show.
 function tusReason(M, f){
   var h = huella(M, f);
