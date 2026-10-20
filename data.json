@@ -158,16 +158,71 @@
   ]
  },
  "tribune": {
-  "portada": null,
-  "columna": [],
-  "clasificados": [],
+  "portada": {
+   "titulo": "Los Rams llenan el panteón",
+   "texto": "Eran favoritos por 12.5, perdieron y en Survivor solo quedan cinco vivos.",
+   "para": ""
+  },
+  "columna": [
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Esta semana la Flaca se puso la camiseta de los Rams. Eran favoritos por 12.5 y perdieron. Nueve de la liga los traían en Survivor y se fueron con ellos."
+   },
+   {
+    "titulo": "",
+    "para": "Niners, King of The North",
+    "texto": "Niners y King of The North ni al velorio llegaron. No mandaron pick y Survivor los enterró igual. Ni modo, el que no la mete tampoco se salva."
+   },
+   {
+    "titulo": "",
+    "para": "Silverback",
+    "texto": "En la lista de difuntos viene su servidor, el Comish. Le di la vida a los Rams y me la cobraron. Jugué como nunca y me enterraron como siempre."
+   },
+   {
+    "titulo": "",
+    "para": "Niners, Rastaman",
+    "texto": "Mientras, en Pick'em, Niners ganó la semana con 64 recién enterrado. Rastaman quedó segundo con 54 y fue el único con el 14 en Washington. El lunes le entró completito y ni se quejó."
+   },
+   {
+    "titulo": "",
+    "para": "Cyber70",
+    "texto": "Del otro lado del panteón quedan cinco vivos y dos premios. Cyber70 es segundo en Pick'em y trae un solo strike. Los otros cuatro aprendieron: más vale underdog en mano que Rams volando."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Con los Rams se fue la bola / de los nueve más confiados, / la Flaca no llegó sola / y hoy están bien enterrados."
+   }
+  ],
+  "clasificados": [
+   {
+    "titulo": "Q.E.P.D.",
+    "para": "SinCasco, Chitown’DemBoyz, Puto el que lo lea",
+    "texto": "A los Rams les metieron 14, 13 y 11 en Pick'em, y en Survivor la vida. Se la dieron toda y ni las gracias en la despedida."
+   },
+   {
+    "titulo": "Q.E.P.D.",
+    "para": "Abogado, Mean Machine",
+    "texto": "En Pick'em le fueron a Arizona y les dio la razón. En Survivor se fueron con los Rams y ahí se acabó la función."
+   },
+   {
+    "titulo": "Q.E.P.D.",
+    "para": "Steel Man",
+    "texto": "A los Rams les dio un 3 en Pick'em y en Survivor la vida que tenía. Hizo 13 puntos, su semana más fría."
+   }
+  ],
   "datos": [],
-  "edicion": null
+  "edicion": {
+   "titulo": "Rumbo al Día de Muertos",
+   "texto": "La quiniela más grande del mundo. Aquí nadie descansa en paz.",
+   "tema": "muertos"
+  }
  },
  "season": 2026,
  "week": 6,
  "weeks": 18,
- "updated": "2026-10-20T12:45:30.841Z",
+ "updated": "2026-10-20T13:04:12.012Z",
  "prizes": {
   "regular": [
    1050,
