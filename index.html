@@ -179,7 +179,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.1.1 c2.4.0
+      v4.1.1 c2.5.0
     </div>
   </div>
 </div>
@@ -524,8 +524,10 @@ T.TPL = TPL;
 
 // Humor styles. Every fact group has templates {s, t}: a style and a Spanish sentence. The first template of a group is
 // the plain carrilla that the page used before styles. Albur is adults-only doble sentido on the picks, the numbers and the
-// teams, never on anyone's real life. Calaverita (4 lines, joined with " / ", lines 2 and 4 rhyme) is only used in the
-// muertos edition. Apodo templates use {apodo}, the first nickname of a player the fact names.
+// teams, never on anyone's real life. Calaverita (4 lines, joined with " / ") is only used in the
+// muertos edition. Lines 2 and 4 must share a consonant rhyme on fixed words, never on a placeholder. Lines 1 and 3
+// rhyme too when they end in fixed words. No rhymes on two -ar infinitives. About 8 syllables a line, 34 characters at most
+// after fill. Apodo templates use {apodo}, the first nickname of a player the fact names.
 var STYLES = ["carrilla","albur","refran","nunca","nimodo","apodo","calaverita"];
 T.STYLES = STYLES;
 function st(s){ return function(t){ return {s:s, t:t}; }; }
@@ -555,7 +557,7 @@ var FT = {
     sn("{n} perdió como siempre: de {a} a {b} en una semana, y es récord de caída."),
     si("De {a} a {b}. Ni modo, {n}, también se vale tocar fondo."),
     sr("Al que mucho se encumbra, la semana lo baja: {n} pasó de {a} a {b}."),
-    sk("{n} cayó de {a} a {b} / directo hasta el panteón / La Catrina le dio el aviso / y le tocó la maldición")
+    sk("{n} llegó a la cima / con {a} de ilusión, / la Flaca se le echó encima: / {b} y al panteón")
   ],
   caida: [
     sc("{n} cayó de {a} a {b} en una semana. Los picks de la semana {c} no pasaron el filtro."),
@@ -565,7 +567,7 @@ var FT = {
     sn("{n} jugó como nunca y perdió como siempre: de {a} a {b}."),
     si("{n} hizo {b}. Ni modo, no todos los domingos se amanece parado."),
     sp("{apodo} bajó {d} puntos. Hasta el apodo se le quedó chico."),
-    sk("{n} cayó de {a} a {b} / directo hasta el panteón / La Catrina le dio el aviso / y le tocó la maldición")
+    sk("{n} llegó a la cima / con {a} de ilusión, / la Flaca se le echó encima: / {b} y al panteón")
   ],
   arriba1: [
     sc("{n} le ha ganado al promedio de la liga las {N} semanas. Los demás lo hacen por turnos."),
@@ -590,7 +592,7 @@ var FT = {
     sr("Dios los cría y ellos se juntan: {names}, {t} puntos cada uno."),
     sn("{names} jugaron como nunca y quedaron como siempre: {t} cada uno."),
     si("{names} suman {t} cada uno. Ni modo, coincidir también es un talento."),
-    sk("{tie} en {t} / la Flaca los quiso contar / Iguales como calaveras / no se supieron salvar")
+    sk("{tie} con {t}, / parejos hasta el final, / la Flaca no los distingue / y los entierra igual")
   ],
   disco: [
     sc("{n} sacó {s} puntos en {cw} semanas. Los picks cambian, el resultado no."),
@@ -686,7 +688,7 @@ var FT = {
     sr("Muchos son los llamados y pocos los vivos: la semana {m} sacó a {cw} de Survivor."),
     sn("Survivor jugó como nunca la semana {m} y eliminó a {cw} como siempre."),
     si("{cw} afuera en la semana {m}. Ni modo, Survivor no perdona."),
-    sk("La semana {m} se llevó a {cw} / de Survivor, qué mal sabor / La Flaca no perdona strikes / ni el pan de muerto da valor")
+    sk("La Flaca pasó lista, / semana {m}, sin perdón: / {cw} fuera de la pista / y derechito al panteón")
   ],
   survSemana1: [
     sc("{n} se despidió de Survivor esta semana. Quedan {alive} vivos."),
@@ -774,7 +776,7 @@ var FT = {
     sr("No todo lo que brilla es oro: {k} jugadores pusieron su {c} en {team} y se hundieron.{tail}"),
     sn("{k} jugadores apostaron como nunca su {c} a {team} y perdieron como siempre.{tail}"),
     si("{k} jugadores perdieron su {c} con {team}. Ni modo, alguien tenía que pagar.{tail}"),
-    sk("{k} le pusieron un {c} a {team} / y la Flaca los vino a buscar / No cubrió y se hizo el muerto / ahora les toca ir a velar")
+    sk("{k} con su {c} en {team} / le apostaron con pasión, / no cubrió y la Calaca / les cobró hasta el corazón")
   ],
   llanero1: [
     sc("{names} fue el único con {team} y cubrió. {c} puntos bien puestos."),
@@ -800,7 +802,7 @@ var FT = {
     sr("Donde va Vicente va la gente: {k} de {t} escogieron a {team} y no cubrieron."),
     sn("{k} de {t} jugaron como nunca con {team} y perdieron como siempre."),
     si("{k} de {t} fueron con {team}. Ni modo, la manada también se cae."),
-    sk("{k} de {t} fueron con {team} / y la Calaca los vino a llamar / No cubrieron, qué desgracia / ni el pan los pudo salvar")
+    sk("{k} de {t} con {team} / se fueron en procesión, / no cubrieron y la Calaca / los metió en un cajón")
   ],
   empate1: [
     sc("{game} cayó justo en el spread. {k} jugadores se quedaron sin {c} puntos de confianza."),
@@ -832,7 +834,7 @@ var FT = {
     sr("Al que no madruga: {names} dejaron picks en blanco y perdieron hasta {m} puntos."),
     sn("{names} jugaron como nunca y dejaron hasta {m} puntos sin llenar."),
     si("{names} dejaron picks en blanco. Ni modo, eran hasta {m} puntos."),
-    sk("Casillas vacías: {m} puntos / se los llevó la Flaca a bailar / Un pick sin dueño es de la Muerte / y ni el tequila los va a salvar")
+    sk("Casillas sin llenar, / {m} puntos en el olvido, / la Flaca se los fue a llevar / mientras todos se han dormido")
   ],
   rachaPicks: [
     sc("{n} acertó {cw} picks seguidos, de {a} a {b}. Tardó en ser genio, pero llegó."),
@@ -842,7 +844,7 @@ var FT = {
     sn("{n} acertó como nunca: {cw} seguidos, de {a} a {b}."),
     si("{n} acertó {cw} seguidos. Ni modo, a veces los picks se alinean."),
     sp("{apodo} acertó {cw} seguidos, de {a} a {b}. Con ritmo."),
-    sk("{n} acertó {cw} seguidos / la Muerte lo vio pasar / Pero un pick lo hizo tropezar / y ahora lo viene a visitar")
+    sk("{n}: {cw} seguidos, / la Muerte ni lo alcanzó, / pero un pick lo dejó tendido / y la Flaca lo cobró")
   ],
   perros: [
     sc("{n} es el que más se va con el underdog en la liga. Le saca {gap} puntos porcentuales al siguiente."),
@@ -883,7 +885,7 @@ var FT = {
     sr("Cada cabeza es un mundo: {n} coincidió con {k} jugadores en solo {agree} de {both} juegos."),
     sn("{n} coincidió en {agree} de {both} juegos con {k} jugadores. Opuestos como nunca, regulares como siempre."),
     sp("{apodo} coincidió en {agree} de {both} con {k} jugadores. Polos opuestos."),
-    sk("{n} coincidió en {agree} de {both} / con la Flaca se quiso pelear / Piensa distinto hasta de muerto / y hasta ella lo va a evitar")
+    sk("{n}, {agree} de {both}, / nunca le dice que sí, / y la Flaca, de coraje, / lo va a enterrar por ahí")
   ],
   polos2: [
     sc("{a} y {b} coincidieron en {agree} de {both} juegos. Polos opuestos."),
@@ -898,7 +900,7 @@ var FT = {
     sc("{Team} le han costado {x} puntos de confianza a la liga este año. Y siguen en la boleta."),
     sn("La liga apostó como nunca por {team} y perdió como siempre: {x} puntos de confianza."),
     si("{x} puntos de confianza se fueron con {team}. Ni modo, el cariño no siempre es correspondido."),
-    sk("{Team} se llevaron {x} puntos / de confianza para enterrar / Cría cuervos, dijo la Muerte / y la liga los fue a velar")
+    sk("Cría cuervos, dijo la Flaca, / y te sacarán la ración, / {Team} costaron {x} / y todos al panteón")
   ],
   acomodadorWorst: [
     sa("{n} acierta, pero los números gordos se los mete donde no le entran. {got} de {max} posibles."),
@@ -907,7 +909,7 @@ var FT = {
     sn("{n} cobró solo {got} de {max}. Acertó como siempre y acomodó como nunca."),
     si("{n} sumó {got} de {max} posibles. Ni modo, lo bueno no siempre queda en el lugar bueno."),
     sp("{apodo} cobró {got} de {max} posibles ({pct}%). Los números gordos no le caen donde deben."),
-    sk("{n}: {got} de {max} / No supo dónde acomodar / los números en el panteón / pero la Flaca los iba a cobrar")
+    sk("{n}: {got} de {max}, / la confianza al revés, / la Flaca vio el acomodo / y se rió de una vez")
   ],
   acomodadorBest: [
     sa("{n} sabe dónde meter los números gordos: {got} de {max} posibles ({pct}%)."),

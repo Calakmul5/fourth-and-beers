@@ -1330,6 +1330,34 @@ A.run('index.html', [
     A.ok(ac && ac.data.name === 'This is our year', 'with the slot spent the alternate prints: ' + (ac && ac.data.name));
   }],
 
+  ['calaveritas: every template has 4 lines, and lines 2 and 4 end in fixed words that rhyme', async () => {
+    const c = await load(W5);
+    // Consonant rhyme: from the stressed vowel to the end, ignoring accents and z/s. A written accent marks the stress,
+    // otherwise words ending in a vowel, n or s stress the next-to-last vowel and the rest the last one.
+    const rhyme = w => {
+      w = w.toLowerCase().replace(/[^a-z\u00e1\u00e9\u00ed\u00f3\u00fa\u00fc\u00f1]/g, '');
+      let i = w.search(/[\u00e1\u00e9\u00ed\u00f3\u00fa]/);
+      if (i < 0) {
+        const g = []; const re = /[aeiou\u00fc]+/g; let m;
+        while ((m = re.exec(w))) g.push(m.index + m[0].length - 1);
+        i = /[aeiouns]$/.test(w) && g.length > 1 ? g[g.length - 2] : g[g.length - 1];
+      }
+      return w.slice(i).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/z/g, 's');
+    };
+    const last = line => line.trim().replace(/[^\p{L}}{]+$/u, '').split(/\s+/).pop();
+    let n = 0;
+    Object.keys(c.T.FT).forEach(k => c.T.FT[k].filter(t => t.s === 'calaverita').forEach(t => {
+      n++;
+      const l = t.t.split(' / ');
+      A.equal(l.length, 4, k + ' calaverita has 4 lines: ' + t.t);
+      const a = last(l[1]), b = last(l[3]);
+      A.noMatch(a + b, /[{}]/, k + ' lines 2 and 4 end in fixed words, not placeholders: ' + t.t);
+      A.equal(rhyme(a), rhyme(b), k + ' lines 2 and 4 rhyme (' + a + ' / ' + b + ')');
+      A.ok(rhyme(a).length >= 2 || /[\u00e1\u00e9\u00ed\u00f3\u00fa]/.test(a), k + ' the rhyme is more than a bare vowel (' + a + ')');
+    }));
+    A.ok(n >= 11, 'the calaverita templates were found (' + n + ')');
+  }],
+
   ['muertos: at most 2 calaveritas, 4 lines each, every line up to 34 characters', async () => {
     let seen = 0;
     for (const k of [1, 2, 3, 4, 5]) {
