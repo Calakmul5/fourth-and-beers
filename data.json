@@ -208,11 +208,6 @@
    },
    {
     "titulo": "Q.E.P.D.",
-    "para": "Steel Man",
-    "texto": "A los Rams les dio un 3 en Pick'em y en Survivor la vida que tenía. Hizo 13 puntos, su semana más fría."
-   },
-   {
-    "titulo": "Q.E.P.D.",
     "para": "KinkyKing",
     "texto": "Kinky, cinco veces fiel / a los Eagles, y puro fracaso. / La vez que les puso el cuerno / cubrieron. ¡Lo cargó el payaso!"
    },
@@ -242,7 +237,7 @@
  "season": 2026,
  "week": 6,
  "weeks": 18,
- "updated": "2026-10-20T16:10:54.570Z",
+ "updated": "2026-10-20T16:11:17.075Z",
  "prizes": {
   "regular": [
    1050,
