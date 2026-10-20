@@ -264,49 +264,66 @@ A.run('Publish.js', [
     A.deep(fresh.survivorOut, [{ name: 'KinkyKing', week: 3 }], 'no previous file: first seen this week');
   }],
 
-  ['survivorOut: new outs are stamped with the NFL week of the calendar, Tuesday to Monday in Chicago, capped at 18', () => {
+  ['survivorOut: the NFL week runs Thursday to Wednesday in Chicago, week 1 opens Wednesday 9 Sep, capped at 18', () => {
     const { ctx } = setup();
     const wk = iso => ctx.nflWeek_(new Date(iso));
-    A.equal(wk('2026-09-08T05:00:00Z'), 1, 'Tuesday 8 Sep opens week 1');
-    A.equal(wk('2026-09-15T04:59:59Z'), 1, 'Monday night 14 Sep, 23:59 in Chicago, is still week 1');
-    A.equal(wk('2026-09-15T05:00:00Z'), 2, 'Tuesday 15 Sep, 00:00 in Chicago, opens week 2');
-    A.equal(wk('2026-10-19T17:00:00Z'), 6, 'Monday 19 Oct is still week 6');
-    A.equal(wk('2026-10-20T04:59:59Z'), 6);
-    A.equal(wk('2026-10-20T05:00:00Z'), 7);
+    A.equal(wk('2026-09-09T05:00:00Z'), 1, 'Wednesday 9 Sep, the opener, is week 1');
+    A.equal(wk('2026-09-09T23:00:00Z'), 1);
+    A.equal(wk('2026-09-10T17:00:00Z'), 1, 'Thursday 10 Sep is still week 1');
+    A.equal(wk('2026-09-17T04:59:59Z'), 1, 'Wednesday 16 Sep, 23:59 in Chicago, closes week 1');
+    A.equal(wk('2026-09-17T05:00:00Z'), 2, 'Thursday 17 Sep, 00:00 in Chicago, opens week 2');
     A.equal(wk('2026-09-01T12:00:00Z'), 1, 'before the season');
+    A.equal(wk('2026-10-15T04:59:59Z'), 5, 'Wednesday 14 Oct night is week 5');
+    A.equal(wk('2026-10-15T05:00:00Z'), 6, 'Thursday 15 Oct opens week 6');
+    A.equal(wk('2026-10-20T11:18:00Z'), 6, 'Tuesday 20 Oct morning, after Monday night, is still week 6');
+    A.equal(wk('2026-10-21T17:00:00Z'), 6, 'Wednesday 21 Oct is still week 6');
+    A.equal(wk('2026-10-22T04:59:59Z'), 6);
+    A.equal(wk('2026-10-22T05:00:00Z'), 7, 'Thursday 22 Oct opens week 7');
     A.equal(wk('2027-01-20T12:00:00Z'), 18, 'capped at 18');
     const strikes = { Nuevo: 3 };
-    A.deep(ctx.survivorOut_(null, strikes, 3, new Date('2026-10-14T17:00:00Z')), [{ name: 'Nuevo', week: 6 }], 'the board week (3) is not used');
+    const stamp = iso => ctx.survivorOut_(null, strikes, 3, new Date(iso))[0].week;
+    A.equal(stamp('2026-10-20T11:18:00Z'), 6, 'a Tuesday publish stamps the week just played');
+    A.equal(stamp('2026-10-21T17:00:00Z'), 6, 'a Wednesday publish stamps the week just played');
+    A.equal(stamp('2026-10-22T17:00:00Z'), 7, 'a Thursday publish stamps the new week');
+    A.equal(stamp('2026-09-09T17:00:00Z'), 1, 'week 1 covers Wednesday 9 Sep');
     A.deep(ctx.survivorOut_(null, strikes, 20, new Date('2026-10-14T17:00:00Z')), [{ name: 'Nuevo', week: 20 }], 'playoff weeks keep the edition week');
     A.deep(ctx.survivorOut_(null, strikes, 18, new Date('2027-03-01T12:00:00Z')), [{ name: 'Nuevo', week: 18 }]);
-    // Through a publish: the board says week 3 and the clock says week 7
-    const { ctx: c7, github } = setup({ now: '2026-10-14T17:00:00Z' });
-    c7.publishLeaderboard();
-    A.deep(JSON.parse(github.state.file.text).survivorOut, [{ name: 'KinkyKing', week: 6 }]);
+    // Through a publish: the board says week 3 and the clock says Tuesday of week 6, then Thursday of week 7
+    for (const [now, want] of [['2026-10-20T11:18:00Z', 6], ['2026-10-21T17:00:00Z', 6], ['2026-10-22T17:00:00Z', 7]]) {
+      const { ctx: c, github } = setup({ now });
+      c.publishLeaderboard();
+      A.deep(JSON.parse(github.state.file.text).survivorOut, [{ name: 'KinkyKing', week: want }], now);
+    }
   }],
 
-  ['survivorOut: the one-time correction shifts weeks 4 and 5 once, never KinkyKing, and only on the first publish', () => {
-    const prev = [{ name: 'Old Timer', week: 4 }, { name: 'KinkyKing', week: 3 }, { name: 'Late One', week: 5 }, { name: 'Early', week: 2 }, { name: 'Later', week: 6 }];
+  ['survivorOut: the one-time data fix sets three weeks once and only on the first publish', () => {
+    const prev = [
+      { name: 'KinkyKing', week: 3 }, { name: 'Other', week: 6 },
+      { name: 'X-Men Let\u2019s go Boys', week: 6 }, { name: 'King of The North', week: 7 }, { name: 'Niners', week: 7 },
+    ];
     const strikes = { KinkyKing: 3 };
     const { ctx } = setup();
-    A.deep(ctx.survivorOut_({ survivorOut: prev }, strikes, 7, new Date('2026-10-14T17:00:00Z'), true), [
-      { name: 'Old Timer', week: 5 }, { name: 'KinkyKing', week: 3 }, { name: 'Late One', week: 6 }, { name: 'Early', week: 2 }, { name: 'Later', week: 6 },
-    ], 'weeks 4 and 5 move forward by one, week 3 stays');
-    A.deep(ctx.survivorOut_({ survivorOut: prev }, strikes, 7, new Date('2026-10-14T17:00:00Z')), prev, 'without the correction nothing moves');
-    A.equal(prev[0].week, 4, 'the previous file is not mutated');
-    // KinkyKing is exempt even if his week were 4
-    A.deep(ctx.survivorOut_({ survivorOut: [{ name: 'KinkyKing', week: 4 }] }, strikes, 7, new Date('2026-10-14T17:00:00Z'), true), [{ name: 'KinkyKing', week: 4 }]);
-    // Through publishes: the correction runs before stamping, then the flag stops it
-    const live = JSON.stringify({ week: 3, survivorOut: [{ name: 'Old Timer', week: 4 }, { name: 'Late One', week: 5 }, { name: 'KinkyKing', week: 3 }] });
+    const now = new Date('2026-10-20T11:18:00Z');
+    A.deep(ctx.survivorOut_({ survivorOut: prev }, strikes, 6, now, true), [
+      { name: 'KinkyKing', week: 3 }, { name: 'Other', week: 6 },
+      { name: 'X-Men Let\u2019s go Boys', week: 5 }, { name: 'King of The North', week: 6 }, { name: 'Niners', week: 6 },
+    ], 'matched with norm_, so the curly apostrophe finds the straight one and the name keeps its spelling');
+    A.deep(ctx.survivorOut_({ survivorOut: [{ name: "x-men let's go boys", week: 6 }] }, strikes, 6, now, true).slice(0, 1), [{ name: "x-men let's go boys", week: 5 }], 'case does not matter either');
+    A.deep(ctx.survivorOut_({ survivorOut: prev }, strikes, 6, now), prev, 'without the fix nothing moves');
+    A.equal(prev[2].week, 6, 'the previous file is not mutated');
+    // Through publishes: the fix runs on the first one, the flag stops it on the next
+    const live = JSON.stringify({ week: 3, survivorOut: prev });
     const github = makeGithub(live);
-    const { ctx: c1 } = setup({ github, now: '2026-10-14T17:00:00Z' });
-    A.equal(c1._props.SURVIVOR_WEEK_FIX_V3_2_0, undefined, 'no flag before the first publish');
+    const { ctx: c1 } = setup({ github, now: '2026-10-20T11:18:00Z' });
+    A.equal(c1._props.SURVIVOR_WEEK_FIX_V3_2_1, undefined, 'no flag before the first publish');
     c1.publishLeaderboard();
-    A.deep(JSON.parse(github.state.file.text).survivorOut, [{ name: 'Old Timer', week: 5 }, { name: 'Late One', week: 6 }, { name: 'KinkyKing', week: 3 }]);
-    A.equal(c1._props.SURVIVOR_WEEK_FIX_V3_2_0, '1', 'the flag is set once the commit goes through');
-    const c2 = loadPublisher({ participants: participants(), model: model(), github, props: { SURVIVOR_WEEK_FIX_V3_2_0: '1' }, now: '2026-10-21T17:00:00Z' });
+    const weeks = () => JSON.parse(github.state.file.text).survivorOut.map(o => o.week);
+    A.deep(weeks(), [3, 6, 5, 6, 6]);
+    A.equal(c1._props.SURVIVOR_WEEK_FIX_V3_2_1, '1', 'the flag is set once the commit goes through');
+    const github2 = makeGithub(live);
+    const c2 = loadPublisher({ participants: participants(), model: model(), github: github2, props: { SURVIVOR_WEEK_FIX_V3_2_1: '1' }, now: '2026-10-21T17:00:00Z' });
     c2.publishLeaderboard();
-    A.deep(JSON.parse(github.state.file.text).survivorOut, [{ name: 'Old Timer', week: 5 }, { name: 'Late One', week: 6 }, { name: 'KinkyKing', week: 3 }], 'a second publish does not shift again');
+    A.deep(JSON.parse(github2.state.file.text).survivorOut.map(o => o.week), [3, 6, 6, 7, 7], 'with the flag set the fix does not run');
   }],
 
   ['publishLeaderboard: edition, index, then data.json; no-change skip; change commits again', () => {

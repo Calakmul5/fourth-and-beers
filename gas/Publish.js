@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v3.2.0 c1.9.0
+// v3.2.1 c1.9.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -62,7 +62,7 @@ var CFG = {
   editionsDir: 'editions',
   branch: 'main',
   season: 2026,
-  nflWeek1: '2026-09-08',        // the Tuesday that opens NFL week 1. Weeks run Tuesday to Monday, America/Chicago
+  nflOpener: '2026-09-09',       // the Wednesday opener, the first day of NFL week 1. Later weeks run Thursday to Wednesday, America/Chicago
   weeks: 18,
   rounds: 4                    // playoff rounds, played as weeks 19 to 22
 };
@@ -1189,33 +1189,35 @@ function plain_(s) {
 }
 
 /**
- * The NFL week of a date: week 1 opens on CFG.nflWeek1 (a Tuesday), every week runs Tuesday to Monday in America/Chicago.
- * Capped at the 18 regular-season weeks, and 1 before the season.
+ * The NFL week of a date, as Yahoo counts it. Week 1 opens on CFG.nflOpener (a Wednesday) and runs through the next
+ * Wednesday. Every later week opens on a Thursday at 00:00 America/Chicago and runs through Wednesday, so a Tuesday
+ * or Wednesday update still belongs to the week just played. Capped at the 18 regular-season weeks, 1 before the season.
  */
 function nflWeek_(date) {
   var p = Utilities.formatDate(date, 'America/Chicago', 'yyyy-MM-dd').split('-');
-  var s = CFG.nflWeek1.split('-');
+  var s = CFG.nflOpener.split('-');
   var days = Math.round((Date.UTC(Number(p[0]), Number(p[1]) - 1, Number(p[2])) - Date.UTC(Number(s[0]), Number(s[1]) - 1, Number(s[2]))) / 86400000);
-  return Math.max(1, Math.min(CFG.weeks, Math.floor(days / 7) + 1));
+  return Math.max(1, Math.min(CFG.weeks, Math.floor((days - 1) / 7) + 1));
 }
 
-// ONE-TIME CORRECTION (v3.2.0). Eliminations were stamped with the PickEm_Board week, which lags a week when the strikes
-// update before the paste. Entries stamped 4 or 5 move forward by one, KinkyKing (week 3) was right. It runs on the first
-// publish only: publishLeaderboard_ sets this Script property once the commit goes through. REMOVE this block, the flag
-// and the fix argument after that publish.
-var SURVIVOR_FIX_FLAG = 'SURVIVOR_WEEK_FIX_V3_2_0';
+// ONE-TIME DATA FIX (v3.2.1). Three eliminations were stamped one week late by the old Tuesday boundary. They are set to
+// the weeks Yahoo shows. It runs on the first publish only: publishLeaderboard_ sets the Script property below once the
+// commit goes through. REMOVE this block, the flag and the fix argument after that publish.
+var SURVIVOR_FIX_FLAG = 'SURVIVOR_WEEK_FIX_V3_2_1';
+var SURVIVOR_FIX = [["X-Men Let's go Boys", 5], ['King of The North', 6], ['Niners', 6]];
 
 /**
  * Elimination order. Keeps earlier entries, drops anyone whose strikes were corrected below 3, adds new outs.
  * A new out is stamped with the NFL week of the calendar (nflWeek_(now), capped at 18), not with the board week.
  * In the playoffs (week above 18) the edition week is stamped, as before.
- * fix: apply the one-time correction above before anything else.
+ * fix: apply the one-time data fix above before anything else.
  */
 function survivorOut_(prev, strikes, week, now, fix) {
   var list = (prev && prev.survivorOut) ? prev.survivorOut.slice() : [];
   if (fix) {
     list = list.map(function (o) {
-      return (o.week === 4 || o.week === 5) && norm_(o.name) !== 'kinkyking' ? { name: o.name, week: o.week + 1 } : o;
+      var f = SURVIVOR_FIX.filter(function (x) { return norm_(x[0]) === norm_(o.name); })[0];
+      return f ? { name: o.name, week: f[1] } : o;
     });
   }
   var stampWeek = week > CFG.weeks ? week : nflWeek_(now || now_());
