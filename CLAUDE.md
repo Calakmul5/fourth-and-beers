@@ -8,6 +8,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 - `data.json` and `editions/`: written ONLY by Publish.gs through the GitHub Contents API. Never edit, regenerate or commit them locally. Always take the remote version. `editions/semana-NN.json` is a full copy of that week's data.json, `editions/index.json` lists the weeks. A week that has moved on is never rewritten.
 - `gas/`: the one Apps Script project, bound to the participants workbook (a Sheets button can only call a bound script), managed with clasp. `Publish.js` is `Publish.gs` in the editor, `Code.js` holds the Publicar button (`publishNow`, the Tribune menu, `setupPublishButton`). The project holds only `Publish.js`, `Code.js` and `appsscript.json`. `gas/.clasp.json` carries the workbook id, so it is gitignored (`.clasp.json.example` is the template). `assets/publicar.png` is the button image, served by Pages, drawn by `tools/make_publicar_button.ps1`. The project used to be standalone: its old clasp binding is in git history, and the old project is to be archived. History: the old web app host was undeployed and deleted on 2026-10-01.
 - `.github/workflows/tests.yml`: runs the suite on GitHub on pull requests and on pushes that touch code, page, docs or tests, never on the publisher's own data.json and editions commits. It needs no secrets. There is no workflow that pushes to Apps Script: deploys go through `deploy.bat` from the PC (a clasp push from GitHub would need a Google refresh token stored there, which was rejected).
+- `assets/og-card.png` (1200x630), `assets/apple-touch-icon.png` (180x180), `assets/favicon-32.png` (32x32): the link preview card, iPhone icon and favicon, referenced by absolute Pages URLs in the static head tags of `index.html` (Open Graph, Twitter, canonical, icons; image URLs carry `?v=1`, bump it on a redraw). `tools/og-card.html` is the template (#card, #icon, #fav, fonts from @fontsource in node_modules) and `tools/make_og_card.js` (run with `make_og_card.bat` or `npm run og-card`, Playwright, needs `npx playwright install chromium` once) redraws the three images. Never run by test.bat or deploy.bat. `test/check_preview.js` checks the tags, URLs and PNG sizes.
 - `docs/LEADERBOARD_ARCHITECTURE.html`: architecture doc. Same layout and diagram conventions as the model's `ARCHITECTURE.html` in `..\Model`.
 - `docs/mockups/tribune-dia.html`: the approved mockup of the Tribune. Reference for layout, type, colors and copy tone.
 - `test/`: Node tests. No live Google or GitHub access. `test/fixtures/week5.json` is the real week 5 data.json in the current schema, `week5-old.json` is the same week in the old schema, `week5-grouppicks.txt` is the real week 5 Yahoo Group Picks table (pipe separated, with the expected Winner row and Yahoo's +/- marks, for assertions only) and `test/picks_fixture.js` turns it into both paste shapes.
@@ -49,10 +50,10 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 
 ## Current versions
 
-- index.html v4.1.2 c2.5.0
+- index.html v4.2.0 c2.5.0
 - Publish.js v3.2.1 c1.9.0
 - gas/Code.js v1.1.1 c1.0.0
-- docs/LEADERBOARD_ARCHITECTURE.html v4.4.6 c4.4.7
+- docs/LEADERBOARD_ARCHITECTURE.html v4.5.0 c4.5.0
 
 ## Roadmap
 

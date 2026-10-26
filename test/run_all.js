@@ -8,6 +8,7 @@ const path = require('path');
 const STATIC_CHECKS = [
   ['Version stamps', 'check_versions.js'],
   ['Palette tokens and contrast', 'check_palette.js'],
+  ['Link preview tags and art', 'check_preview.js'],
 ];
 
 const TEST_SCRIPTS = [

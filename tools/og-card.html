@@ -1,0 +1,69 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- og-card.html v1.0.0 c1.0.0. Template for assets/og-card.png (1200x630), assets/apple-touch-icon.png (180x180)
+     and assets/favicon-32.png. Rendered by tools/make_og_card.js: #card, #icon, #fav. Fonts come from @fontsource
+     in node_modules, no network. Colors mirror the :root tokens in index.html. -->
+<style>
+@font-face{font-family:"UnifrakturMaguntia";src:url(../node_modules/@fontsource/unifrakturmaguntia/files/unifrakturmaguntia-latin-400-normal.woff2)}
+@font-face{font-family:"Source Serif 4";font-style:italic;font-weight:400;src:url(../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-400-italic.woff2)}
+@font-face{font-family:"Libre Franklin";font-weight:800;src:url(../node_modules/@fontsource/libre-franklin/files/libre-franklin-latin-800-normal.woff2)}
+:root{--paper:#F3EEE3;--ink:#161514;--ink2:#3B3834;--red:#A3191F;
+--body:"Source Serif 4",Georgia,serif;--sans:"Libre Franklin",Arial,sans-serif;--black:"UnifrakturMaguntia",serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--paper);color:var(--ink);overflow:hidden}
+.v{display:none;position:relative;background:var(--paper);align-items:center;justify-content:center}
+.sans{font-family:var(--sans);text-transform:uppercase;letter-spacing:.12em}
+#card{width:1200px;height:630px}
+#card .frame{position:absolute;inset:26px;border:2px solid var(--ink)}
+#card .frame:after{content:"";position:absolute;inset:8px;border:1px solid var(--ink)}
+.ear{position:absolute;top:50%;transform:translateY(-50%);width:230px;border-top:6px solid var(--ink);border-bottom:2px solid var(--ink);padding:18px 0 20px;text-align:center}
+.ear.l{left:76px}.ear.r{right:76px}
+.ear .k{font-weight:800;font-size:19px;color:var(--red)}
+.ear .val{font:400 58px/1.05 var(--black);margin-top:10px}
+.ear .s{font:italic 400 24px/1.25 var(--body);color:var(--ink2);margin-top:10px}
+#icon{width:180px;height:180px}
+#fav{width:64px;height:64px;background:transparent}
+</style></head>
+<body>
+
+<div class="v" id="card">
+  <div class="frame"></div>
+  <div class="ear l"><div class="k sans">Temporada</div><div class="val">2026</div><div class="s">La quiniela más grande del mundo</div></div>
+  <div class="ear r"><div class="k sans">Precio</div><div class="val">una chela</div><div class="s">Información que nadie pidió</div></div>
+  <svg width="520" height="520"><use href="#seal"/></svg>
+</div>
+
+<div class="v" id="icon"><svg width="168" height="168"><use href="#seal"/></svg></div>
+
+<div class="v" id="fav">
+  <svg width="64" height="64" viewBox="0 0 64 64">
+    <circle cx="32" cy="32" r="32" fill="#161514"/><circle cx="32" cy="32" r="27" fill="#A3191F"/>
+    <text x="32" y="40" text-anchor="middle" font-family="UnifrakturMaguntia" font-size="23" fill="#F3EEE3">F&amp;B</text>
+  </svg>
+</div>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+  
+    <path id="top" d="M64,260 A196,196 0 0,1 456,260"/>
+    <path id="bot" d="M41,260 A219,219 0 0,0 479,260"/>
+  
+  <symbol id="seal" viewBox="0 0 520 520">
+  <circle cx="260" cy="260" r="254" fill="#161514"/>
+  <circle cx="260" cy="260" r="244" fill="none" stroke="#F3EEE3" stroke-width="2"/>
+  <circle cx="260" cy="260" r="160" fill="#A3191F"/>
+  <circle cx="260" cy="260" r="150" fill="none" stroke="#F3EEE3" stroke-width="2"/>
+  <circle cx="53" cy="260" r="6" fill="#A3191F"/><circle cx="467" cy="260" r="6" fill="#A3191F"/>
+  <text font-family="Libre Franklin" font-weight="800" font-size="31" letter-spacing="5" fill="#F3EEE3" text-anchor="middle"><textPath href="#top" startOffset="50%">FOURTH AND BEERS TRIBUNE</textPath></text>
+  <text font-family="Libre Franklin" font-weight="800" font-size="31" letter-spacing="6" fill="#F3EEE3" text-anchor="middle" dominant-baseline="hanging"><textPath href="#bot" startOffset="50%">EDICIÓN SEMANAL</textPath></text>
+  <text x="260" y="318" text-anchor="middle" font-family="UnifrakturMaguntia" font-size="170" fill="#F3EEE3">F&amp;B</text>
+
+  </symbol></defs>
+</svg>
+
+<script>
+var v = (location.hash || "#card").slice(1);
+document.getElementById(v).style.display = "flex";
+if (v === "fav") { document.documentElement.style.background = "transparent"; document.body.style.background = "transparent"; }
+</script>
+</body></html>
