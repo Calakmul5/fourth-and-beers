@@ -166,16 +166,81 @@
   ]
  },
  "tribune": {
-  "portada": null,
-  "columna": [],
-  "clasificados": [],
+  "portada": {
+   "titulo": "Beer Master se pasó al lado oscuro",
+   "texto": "Fan de Dallas, le fue a los Eagles en Survivor y en Pick'em. Ganó Dallas.",
+   "para": "This is our year"
+  },
+  "columna": [
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Llegó Día de Muertos y la Flaca vino con su boleta. Un fan de Dallas le prendió veladora a los Eagles contra su propio equipo. Ganó Dallas por más de 4.5 y la Flaca pasó lista."
+   },
+   {
+    "titulo": "A Steel Man",
+    "para": "Steel Man",
+    "texto": "La Flaca fue por Steel Man / tras su 13, muy confiada. / Él le dio el 14 a los Bears / y la Flaca se quedó sin nada."
+   },
+   {
+    "titulo": "A Silverback",
+    "para": "Silverback",
+    "texto": "La Flaca vino por mí, / un punto me faltó, ¡qué pena! / Le di el 12 a los Raiders / y adiós a los 50 de la cena."
+   },
+   {
+    "titulo": "A Mean Machine",
+    "para": "Mean Machine",
+    "texto": "Mean Machine metió sus cuatro / más grandes, con mucho afán. / Ni una entró, y dijo la Flaca: / “Tanto tamaño y nada de pan”."
+   },
+   {
+    "titulo": "A Cyber70",
+    "para": "Cyber70",
+    "texto": "Cyber70 le dio el 14 / a los Eagles. Se lo comieron. / La Flaca lo buscó en Survivor / y de milagro no lo vieron."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "La Flaca ya tiene el altar puesto. En Survivor quedan tres vivos y en Pick'em faltan once semanas. Y del lado oscuro, nos cuentan, nadie regresa."
+   }
+  ],
+  "clasificados": [
+   {
+    "titulo": "Q.E.P.D.",
+    "para": "This is our year",
+    "texto": "Beer Master, Beeeeeerman en Survivor, se fue con los Eagles contra su Dallas. Su equipo ganó y lo enterró con todo y jersey verde."
+   },
+   {
+    "titulo": "Q.E.P.D.",
+    "para": "Jorge_B",
+    "texto": "Se fue con Houston, favorito por 10, y ganaron los Giants. Tres strikes y lo velamos de cuerpo presente."
+   },
+   {
+    "titulo": "Q.E.P.D.",
+    "para": "MVP21",
+    "texto": "Le dio el 14 a los Ravens y el 12 a los Jets. Los dos se le murieron en las manos."
+   },
+   {
+    "titulo": "SE BUSCA",
+    "para": "King of The North",
+    "texto": "Segundo lugar. King of The North está a 8 y sus tres más grandes le entraron todas."
+   },
+   {
+    "titulo": "SE TRASPASA",
+    "para": "Osos de Grayslake",
+    "texto": "Lugar en Survivor con un solo strike. Quedan tres vivos y dos premios, alguien sobra."
+   }
+  ],
   "datos": [],
-  "edicion": null
+  "edicion": {
+   "titulo": "Edición especial de Día de Muertos",
+   "texto": "La quiniela más grande del mundo. Aquí nadie descansa en paz.",
+   "tema": "muertos"
+  }
  },
  "season": 2026,
  "week": 7,
  "weeks": 18,
- "updated": "2026-10-27T10:44:52.883Z",
+ "updated": "2026-10-27T11:17:51.702Z",
  "prizes": {
   "regular": [
    1050,
