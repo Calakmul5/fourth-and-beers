@@ -198,7 +198,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.2.0 c2.5.0
+      v4.2.1 c2.5.0
     </div>
   </div>
 </div>
@@ -1190,12 +1190,10 @@ function fSurvivor(M){
   if (!M.hasStrikes) return null;
   var byWeek = {};
   M.outs.forEach(function(o){ if (o.week!=null) (byWeek[o.week] = byWeek[o.week]||[]).push(o.name); });
-  var many = null;
-  Object.keys(byWeek).forEach(function(w){ var c = byWeek[w].length; if (c>=3 && (!many || c>=many.c)) many = {w:Number(w), c:c}; });
   var thisWk = byWeek[M.N] || [];
   var clean = M.players.filter(function(p){return M.strikeOf(p.name)===0});
   var alive = M.alive.length;
-  if (many) return fact(M, "survivor", String(many.c), "Survivor", FT.survMuchos, {m:many.w, cw:nw(many.c)}, 72, true, {sub:"many", week:many.w, count:many.c});
+  if (thisWk.length>=3) return fact(M, "survivor", String(thisWk.length), "Survivor", FT.survMuchos, {m:M.N, cw:nw(thisWk.length)}, 72, true, {sub:"many", week:M.N, count:thisWk.length});
   if (thisWk.length>=2) return fact(M, "survivor", String(thisWk.length), "Survivor", FT.survSemanaN, {cw:nw(thisWk.length).replace(/^./,function(c){return c.toUpperCase()}), alive:alive}, 70, true, {sub:"week", week:M.N, count:thisWk.length});
   if (thisWk.length===1) return fact(M, "survivor", "1", "Survivor", FT.survSemana1, {n:who(thisWk[0]), alive:alive}, 60, true, {sub:"week", week:M.N, count:1}, [thisWk[0]]);
   if (clean.length===1) return fact(M, "survivor", "0", "Survivor", FT.survSolo, {n:who(clean[0].name)}, 58, true, {sub:"clean", name:clean[0].name}, [clean[0].name]);

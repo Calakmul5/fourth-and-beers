@@ -211,9 +211,30 @@ A.run('index.html', [
     A.deep([f.siempre.data.name, f.siempre.data.kind, f.siempre.data.weeks], ['Steel Man', 'last', 5], 'Steel Man last all 5 weeks');
     A.deep([f.remontada.data.name, f.remontada.data.from, f.remontada.data.to, f.remontada.data.streak], ['Silverback', 17, 1, 3], '17th to first, led 3 weeks');
     A.equal(f.remontada.valor, '17º→1º');
-    A.deep([f.survivor.data.week, f.survivor.data.count], [4, 4], 'week 4 had 4 eliminations');
+    A.deep([f.survivor.data.sub, f.survivor.data.week, f.survivor.data.count], ['week', 5, 1], 'week 5 had one elimination, not the older week with four');
+    A.deep(f.survivor.sujetos, ['X-Men Let’s go Boys'], 'and it names the single out');
     A.equal(f.aficiones, undefined, 'aficiones lives in the fan-base note, not in Datos');
     A.equal(f.sotano, undefined, 'and the sótano gap in the pizza box');
+  }],
+
+  ['facts: Survivor only tells the edition week, never an older one', async () => {
+    const names = ['Ana', 'Beto', 'Chuy', 'Dani', 'Eli', 'Fer', 'Gus', 'Hugo', 'Ivan', 'Jose', 'Kike', 'Lalo', 'Mati', 'Nico', 'Omar'];
+    const outs = names.slice(0, 11).map(n => ({ name: n, week: 6 })).concat([{ name: 'Mati', week: 7 }, { name: 'Nico', week: 7 }]);
+    const surv = async wk => {
+      const d = make({ week: wk, names, survivorOut: outs.filter(o => o.week <= wk) });
+      d.strikes = {}; names.forEach(n => { d.strikes[n] = outs.some(o => o.name === n && o.week <= wk) ? 3 : 1; });
+      const c = await load(d);
+      return c.T.facts(c.M).filter(x => x.rule === 'survivor')[0] || null;
+    };
+    const w7 = await surv(7);
+    A.deep([w7.data.sub, w7.data.week, w7.data.count], ['week', 7, 2], 'week 7: two outs this week');
+    A.match(w7.texto, /Dos/, 'the text says two players left this week');
+    A.noMatch(w7.texto, /semana 6|once|11/i, 'and does not retell week 6');
+    const w6 = await surv(6);
+    A.deep([w6.data.sub, w6.data.week, w6.data.count], ['many', 6, 11], 'week 6: eleven outs');
+    const w8 = await surv(8);
+    A.ok(!w8 || !/semana 6|once|11/i.test(w8.texto), 'a week with no new outs does not mention week 6');
+    A.ok(!w8 || w8.data.sub === 'clean', 'and only falls back to the lone clean player');
   }],
 
   ['facts: La cifra de la semana is KinkyKing +60, and the facts read right', async () => {
@@ -242,7 +263,7 @@ A.run('index.html', [
     A.equal(r.picks.filter(p => prev.indexOf(p.rule) >= 0).length, 3, 'only as many repeats as it takes to reach 6');
     A.equal(r.cifra.rule, 'rebote', 'La cifra can still repeat when nothing else is as big');
     const none = c.T.pickFacts(c.M, [], false);
-    A.deep(none.picks.map(p => p.rule), ['rebote', 'racha', 'remontada', 'fotocopia', 'survivor', 'arriba'], 'with no history the 6 highest scores');
+    A.deep(none.picks.map(p => p.rule), ['rebote', 'racha', 'remontada', 'fotocopia', 'arriba', 'disco'], 'with no history the 6 highest scores (survivor is now the week 5 single out, score 60)');
   }],
 
   ['facts: nothing mentions the model or the random picker, and every text stays short', async () => {
