@@ -237,6 +237,22 @@ A.run('index.html', [
     A.ok(!w8 || w8.data.sub === 'clean', 'and only falls back to the lone clean player');
   }],
 
+  ['GoatCounter: async snippet, one view under /semana-N, query strings ignored, nothing breaks when it is blocked', async () => {
+    const html = fs.readFileSync(path.join(__dirname, '..', 'index.html'), 'utf8');
+    A.ok(html.includes('<script async id="gc-script" data-goatcounter="https://fourthandbeers.goatcounter.com/count" src="//gc.zgo.at/count.js"></script>'), 'standard async count.js');
+    A.ok(html.includes('window.goatcounter = {no_onload:true}'), 'its own automatic count is off, the page counts once with the edition path');
+    // Blocked or offline: the script never loads, the page still renders and throws nothing.
+    const blocked = await load(W5);
+    common(blocked, 'goatcounter blocked');
+    A.ok(blocked.doc.querySelector('.mast'), 'the page renders without count.js');
+    // count.js arrives after the render and its load event fires the one count, whatever the query string says.
+    const calls = [];
+    const c = await load(W5, { url: '?yo=Silverback&semana=3' });
+    c.win.goatcounter.count = v => calls.push(v);
+    c.doc.getElementById('gc-script').dispatchEvent(new c.win.Event('load'));
+    A.deep(calls, [{ path: '/semana-5' }], 'one view, grouped by edition, ?yo= and ?semana= ignored');
+  }],
+
   ['facts: La cifra de la semana is KinkyKing +60, and the facts read right', async () => {
     const c = await load(W5);
     A.equal(c.M.pk.cifra.rule, 'rebote');

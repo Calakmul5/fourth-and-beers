@@ -44,16 +44,17 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 - Copy: Spanish page text in the reglamento's voice. Plain verbs, dry understatement, no em dashes, no semicolons chaining clauses. Roast the picks and the teams, never people's personal lives. Jorge_B picks at random and only teases the die-hard fans. Fact sentences never mention the commissioner's model or Jorge_B's random picking, and run about 120 characters at most.
 - Penalties, per the reglamento: last place in the regular-season Pick'em pays the Super Bowl party pizzas for everyone, families included. The first Survivor elimination organizes the carne asada for all participants. Ties split the bill. Prize ties follow the golf rule.
 - Privacy: this repo is public. Only call signs, points, strikes, fan teams, the reglamento's prize amounts and published Tribune rows belong here. Never put emails, real names, payment details, workbook IDs or tokens in code, tests, docs or commit messages.
+- Visit counting: GoatCounter, site code `fourthandbeers` (cookie-less, no personal data), a standard async `count.js` at the end of `index.html` with `no_onload` so the page counts itself once per load with `goatcounter.count({path:"/semana-N"})`, N the data.json week, so views group by edition and query strings and hashes never count. It runs after the render, never blocks it and does nothing if the script is blocked. The commissioner excludes their own browsers by opening the page once with `#toggle-goatcounter` (GoatCounter's documented switch, stored in that browser's localStorage). Dashboard: fourthandbeers.goatcounter.com.
 - Yahoo is behind the commissioner's login. No scraping, no stored Yahoo credentials.
 - Weekly routine, after Monday Night Football: paste the Yahoo weekly performance table into PickEm_Board and the Group Picks table into Picks_Board, in any order. Check the Warnings table in the Tribune tab for Picks_Board lines.
 - Weekly Tribune batch, when asked: read the current data.json (its `winners` and `droppedWeek` are Yahoo's, never name another winner or dropped week) and the last four editions, then draft 1 Portada (headline and deck), 5 to 6 Columna paragraphs that form one story, 4 to 6 Clasificado rows and optional Dato and Edición rows, as a CSV file (Semana, Sección, Para, Título, Texto) ready to import. Last place is named in one row at most. Para is an exact Pick'em call sign, a comma separated list of them, or Todos. Same voice rules as above. Do not repeat what the fact engine already prints.
 
 ## Current versions
 
-- index.html v4.2.1 c2.5.0
+- index.html v4.3.0 c2.5.0
 - Publish.js v3.2.1 c1.9.0
 - gas/Code.js v1.1.1 c1.0.0
-- docs/LEADERBOARD_ARCHITECTURE.html v4.5.1 c4.5.1
+- docs/LEADERBOARD_ARCHITECTURE.html v4.6.0 c4.6.0
 
 ## Roadmap
 
