@@ -206,11 +206,6 @@
   "clasificados": [
    {
     "titulo": "Q.E.P.D.",
-    "para": "This is our year",
-    "texto": "Beer Master, Beeeeeerman en Survivor, se fue con los Eagles contra su Dallas. Su equipo ganó y lo enterró con todo y jersey verde."
-   },
-   {
-    "titulo": "Q.E.P.D.",
     "para": "Jorge_B",
     "texto": "Se fue con Houston, favorito por 10, y ganaron los Giants. Tres strikes y lo velamos de cuerpo presente."
    },
@@ -240,7 +235,7 @@
  "season": 2026,
  "week": 7,
  "weeks": 18,
- "updated": "2026-10-27T11:17:51.702Z",
+ "updated": "2026-10-27T12:14:59.905Z",
  "prizes": {
   "regular": [
    1050,
