@@ -67,6 +67,14 @@
   {
    "name": "Niners",
    "week": 6
+  },
+  {
+   "name": "This is our year",
+   "week": 7
+  },
+  {
+   "name": "Jorge_B",
+   "week": 7
   }
  ],
  "fans": {
@@ -158,86 +166,16 @@
   ]
  },
  "tribune": {
-  "portada": {
-   "titulo": "Los Rams llenan el panteón",
-   "texto": "Eran favoritos por 12.5, perdieron y en Survivor solo quedan cinco vivos.",
-   "para": ""
-  },
-  "columna": [
-   {
-    "titulo": "",
-    "para": "",
-    "texto": "Esta semana la Flaca se puso la camiseta de los Rams. Eran favoritos por 12.5 y perdieron. Nueve de la liga los traían en Survivor y se fueron con ellos."
-   },
-   {
-    "titulo": "",
-    "para": "Niners, King of The North",
-    "texto": "Niners y King of The North ni al velorio llegaron. No mandaron pick y Survivor los enterró igual. Ni modo, el que no la mete tampoco se salva."
-   },
-   {
-    "titulo": "",
-    "para": "Silverback",
-    "texto": "En la lista de difuntos viene su servidor, el Comish. Le di la vida a los Rams y me la cobraron. Jugué como nunca y me enterraron como siempre."
-   },
-   {
-    "titulo": "",
-    "para": "Niners, Rastaman",
-    "texto": "Mientras, en Pick'em, Niners ganó la semana con 64 recién enterrado. Rastaman quedó segundo con 54 y fue el único con el 14 en Washington. El lunes le entró completito y ni se quejó."
-   },
-   {
-    "titulo": "",
-    "para": "Cyber70",
-    "texto": "Del otro lado del panteón quedan cinco vivos y dos premios. Cyber70 es segundo en Pick'em y trae un solo strike. Los otros cuatro aprendieron: más vale underdog en mano que Rams volando."
-   },
-   {
-    "titulo": "",
-    "para": "",
-    "texto": "Nueve le fueron a los Rams / gritando \"¿y si sí?\" con fe. / Con doce y medio a favor... / ya valió. ¿Y ahora qué? / La Flaca, echada en el sillón, / con su chela contestó: / \"¿Y si sí? Pues sí, compadres: / el panteón ya se llenó.\""
-   }
-  ],
-  "clasificados": [
-   {
-    "titulo": "Q.E.P.D.",
-    "para": "SinCasco, Chitown’DemBoyz, Puto el que lo lea",
-    "texto": "A los Rams les metieron 14, 13 y 11 en Pick'em, y en Survivor la vida. Se la dieron toda y ni las gracias en la despedida."
-   },
-   {
-    "titulo": "Q.E.P.D.",
-    "para": "Abogado, Mean Machine",
-    "texto": "En Pick'em le fueron a Arizona y les dio la razón. En Survivor se fueron con los Rams y ahí se acabó la función."
-   },
-   {
-    "titulo": "Q.E.P.D.",
-    "para": "KinkyKing",
-    "texto": "Kinky, cinco veces fiel / a los Eagles, y puro fracaso. / La vez que les puso el cuerno / cubrieron. ¡Lo cargó el payaso!"
-   },
-   {
-    "titulo": "Q.E.P.D.",
-    "para": "King of The North",
-    "texto": "King of The North, muy confiado, / en Survivor ni picó. / \"Se me chispoteó\", le dijo a la Flaca, / y ella: \"Eso, eso, eso\", y se lo llevó."
-   },
-   {
-    "titulo": "Q.E.P.D.",
-    "para": "Steel Man",
-    "texto": "Steel Man, muy echado pa'lante, / juró que esta era la buena. / Hizo trece, y hasta la Flaca / se murió de pena ajena."
-   },
-   {
-    "titulo": "SE BUSCA",
-    "para": "This is our year",
-    "texto": "This is our year grita \"¿y si sí?\" / y sigue vivo, de colado. / La Flaca le manda un WhatsApp: / \"Tu año ya está apartado.\""
-   }
-  ],
+  "portada": null,
+  "columna": [],
+  "clasificados": [],
   "datos": [],
-  "edicion": {
-   "titulo": "Rumbo al Día de Muertos",
-   "texto": "La quiniela más grande del mundo. Aquí nadie descansa en paz.",
-   "tema": "muertos"
-  }
+  "edicion": null
  },
  "season": 2026,
- "week": 6,
+ "week": 7,
  "weeks": 18,
- "updated": "2026-10-20T16:11:17.075Z",
+ "updated": "2026-10-27T10:44:52.883Z",
  "prizes": {
   "regular": [
    1050,
@@ -262,9 +200,10 @@
     101,
     70,
     50,
-    44
+    44,
+    65
    ],
-   "total": 354,
+   "total": 419,
    "dropped": 44,
    "droppedWeek": 6
   },
@@ -276,39 +215,12 @@
     79,
     60,
     77,
-    35
-   ],
-   "total": 342,
-   "dropped": 35,
-   "droppedWeek": 6
-  },
-  {
-   "name": "Abogado",
-   "weeks": [
-    63,
-    52,
-    75,
-    57,
-    94,
-    27
-   ],
-   "total": 341,
-   "dropped": 27,
-   "droppedWeek": 6
-  },
-  {
-   "name": "Niners",
-   "weeks": [
-    60,
-    63,
-    51,
-    77,
-    74,
+    35,
     64
    ],
-   "total": 338,
-   "dropped": 51,
-   "droppedWeek": 3
+   "total": 406,
+   "dropped": 35,
+   "droppedWeek": 6
   },
   {
    "name": "King of The North",
@@ -318,11 +230,42 @@
     49,
     90,
     63,
-    50
+    50,
+    61
    ],
-   "total": 337,
+   "total": 398,
    "dropped": 49,
    "droppedWeek": 3
+  },
+  {
+   "name": "Niners",
+   "weeks": [
+    60,
+    63,
+    51,
+    77,
+    74,
+    64,
+    40
+   ],
+   "total": 389,
+   "dropped": 40,
+   "droppedWeek": 7
+  },
+  {
+   "name": "Abogado",
+   "weeks": [
+    63,
+    52,
+    75,
+    57,
+    94,
+    27,
+    46
+   ],
+   "total": 387,
+   "dropped": 27,
+   "droppedWeek": 6
   },
   {
    "name": "Osos de Grayslake",
@@ -332,38 +275,11 @@
     48,
     61,
     82,
-    35
+    35,
+    47
    ],
-   "total": 329,
+   "total": 376,
    "dropped": 35,
-   "droppedWeek": 6
-  },
-  {
-   "name": "Mean Machine",
-   "weeks": [
-    92,
-    40,
-    52,
-    70,
-    67,
-    19
-   ],
-   "total": 321,
-   "dropped": 19,
-   "droppedWeek": 6
-  },
-  {
-   "name": "Jorge_B",
-   "weeks": [
-    93,
-    39,
-    56,
-    69,
-    63,
-    34
-   ],
-   "total": 320,
-   "dropped": 34,
    "droppedWeek": 6
   },
   {
@@ -374,9 +290,10 @@
     60,
     77,
     56,
-    29
+    29,
+    42
    ],
-   "total": 316,
+   "total": 358,
    "dropped": 29,
    "droppedWeek": 6
   },
@@ -388,24 +305,26 @@
     50,
     50,
     63,
-    43
+    43,
+    41
    ],
-   "total": 315,
-   "dropped": 43,
-   "droppedWeek": 6
+   "total": 358,
+   "dropped": 41,
+   "droppedWeek": 7
   },
   {
-   "name": "This is our year",
+   "name": "Mean Machine",
    "weeks": [
-    57,
-    65,
-    65,
-    65,
-    56,
-    38
+    92,
+    40,
+    52,
+    70,
+    67,
+    19,
+    36
    ],
-   "total": 308,
-   "dropped": 38,
+   "total": 357,
+   "dropped": 19,
    "droppedWeek": 6
   },
   {
@@ -416,10 +335,56 @@
     54,
     56,
     71,
-    54
+    54,
+    26
    ],
-   "total": 303,
-   "dropped": 54,
+   "total": 357,
+   "dropped": 26,
+   "droppedWeek": 7
+  },
+  {
+   "name": "Jorge_B",
+   "weeks": [
+    93,
+    39,
+    56,
+    69,
+    63,
+    34,
+    17
+   ],
+   "total": 354,
+   "dropped": 17,
+   "droppedWeek": 7
+  },
+  {
+   "name": "This is our year",
+   "weeks": [
+    57,
+    65,
+    65,
+    65,
+    56,
+    38,
+    30
+   ],
+   "total": 346,
+   "dropped": 30,
+   "droppedWeek": 7
+  },
+  {
+   "name": "Conquistador",
+   "weeks": [
+    55,
+    46,
+    69,
+    41,
+    82,
+    27,
+    48
+   ],
+   "total": 341,
+   "dropped": 27,
    "droppedWeek": 6
   },
   {
@@ -430,39 +395,12 @@
     38,
     53,
     71,
-    48
-   ],
-   "total": 293,
-   "dropped": 35,
-   "droppedWeek": 2
-  },
-  {
-   "name": "Conquistador",
-   "weeks": [
-    55,
-    46,
-    69,
-    41,
-    82,
-    27
-   ],
-   "total": 293,
-   "dropped": 27,
-   "droppedWeek": 6
-  },
-  {
-   "name": "Juan1768",
-   "weeks": [
-    81,
-    42,
-    73,
-    34,
-    40,
+    48,
     46
    ],
-   "total": 282,
-   "dropped": 34,
-   "droppedWeek": 4
+   "total": 339,
+   "dropped": 35,
+   "droppedWeek": 2
   },
   {
    "name": "KinkyKing",
@@ -472,11 +410,42 @@
     52,
     23,
     83,
-    37
+    37,
+    54
    ],
-   "total": 282,
+   "total": 336,
    "dropped": 23,
    "droppedWeek": 4
+  },
+  {
+   "name": "Juan1768",
+   "weeks": [
+    81,
+    42,
+    73,
+    34,
+    40,
+    46,
+    35
+   ],
+   "total": 317,
+   "dropped": 34,
+   "droppedWeek": 4
+  },
+  {
+   "name": "Puto el que lo lea",
+   "weeks": [
+    47,
+    59,
+    32,
+    58,
+    66,
+    36,
+    49
+   ],
+   "total": 315,
+   "dropped": 32,
+   "droppedWeek": 3
   },
   {
    "name": "Manolito’s winning picks",
@@ -486,9 +455,10 @@
     54,
     51,
     52,
-    27
+    27,
+    36
    ],
-   "total": 278,
+   "total": 314,
    "dropped": 27,
    "droppedWeek": 6
   },
@@ -500,38 +470,11 @@
     73,
     36,
     44,
-    22
+    22,
+    45
    ],
-   "total": 268,
+   "total": 313,
    "dropped": 22,
-   "droppedWeek": 6
-  },
-  {
-   "name": "Puto el que lo lea",
-   "weeks": [
-    47,
-    59,
-    32,
-    58,
-    66,
-    36
-   ],
-   "total": 266,
-   "dropped": 32,
-   "droppedWeek": 3
-  },
-  {
-   "name": "Andrea’s Picks",
-   "weeks": [
-    61,
-    54,
-    39,
-    30,
-    73,
-    17
-   ],
-   "total": 257,
-   "dropped": 17,
    "droppedWeek": 6
   },
   {
@@ -542,9 +485,10 @@
     50,
     47,
     43,
-    31
+    31,
+    49
    ],
-   "total": 252,
+   "total": 301,
    "dropped": 31,
    "droppedWeek": 6
   },
@@ -556,10 +500,26 @@
     43,
     44,
     40,
-    13
+    13,
+    66
    ],
-   "total": 219,
+   "total": 285,
    "dropped": 13,
+   "droppedWeek": 6
+  },
+  {
+   "name": "Andrea’s Picks",
+   "weeks": [
+    61,
+    54,
+    39,
+    30,
+    73,
+    17,
+    27
+   ],
+   "total": 284,
+   "dropped": 17,
    "droppedWeek": 6
   }
  ],
@@ -581,6 +541,9 @@
   ],
   [
    "Niners"
+  ],
+  [
+   "Steel Man"
   ]
  ],
  "strikes": {
@@ -588,7 +551,7 @@
   "Rastaman": 3,
   "Conquistador": 3,
   "MVP21": 3,
-  "This is our year": 2,
+  "This is our year": 3,
   "King of The North": 3,
   "Niners": 3,
   "Abogado": 3,
@@ -601,7 +564,7 @@
   "Billy Beaner": 3,
   "Andrea’s Picks": 3,
   "X-Men Let’s go Boys": 3,
-  "Jorge_B": 2,
+  "Jorge_B": 3,
   "Manolito’s winning picks": 3,
   "Juan1768": 1,
   "SinCasco": 3,
@@ -9562,6 +9525,1366 @@
      [
       "SF",
       13
+     ]
+    ]
+   }
+  },
+  "7": {
+   "g": [
+    [
+     "CHI",
+     3,
+     "NE",
+     "F"
+    ],
+    [
+     "PIT",
+     3.5,
+     "NO",
+     "F"
+    ],
+    [
+     "SF",
+     3.5,
+     "ATL",
+     "U"
+    ],
+    [
+     "CLE",
+     1.5,
+     "TEN",
+     "F"
+    ],
+    [
+     "MIN",
+     6.5,
+     "IND",
+     "U"
+    ],
+    [
+     "NYJ",
+     4.5,
+     "MIA",
+     "U"
+    ],
+    [
+     "CAR",
+     3.5,
+     "TB",
+     "U"
+    ],
+    [
+     "BAL",
+     2.5,
+     "CIN",
+     "U"
+    ],
+    [
+     "HOU",
+     10,
+     "NYG",
+     "U"
+    ],
+    [
+     "DEN",
+     4.5,
+     "ARI",
+     "F"
+    ],
+    [
+     "DET",
+     3,
+     "GB",
+     "P"
+    ],
+    [
+     "LAR",
+     4.5,
+     "LV",
+     "F"
+    ],
+    [
+     "SEA",
+     2.5,
+     "KC",
+     "F"
+    ],
+    [
+     "DAL",
+     4.5,
+     "PHI",
+     "F"
+    ]
+   ],
+   "p": {
+    "Steel Man": [
+     [
+      "CHI",
+      14
+     ],
+     [
+      "PIT",
+      9
+     ],
+     [
+      "ATL",
+      8
+     ],
+     [
+      "CLE",
+      6
+     ],
+     [
+      "MIN",
+      5
+     ],
+     [
+      "MIA",
+      1
+     ],
+     [
+      "CAR",
+      4
+     ],
+     [
+      "CIN",
+      3
+     ],
+     [
+      "HOU",
+      2
+     ],
+     [
+      "DEN",
+      12
+     ],
+     [
+      "GB",
+      10
+     ],
+     [
+      "LV",
+      11
+     ],
+     [
+      "SEA",
+      13
+     ],
+     [
+      "PHI",
+      7
+     ]
+    ],
+    "Silverback": [
+     [
+      "CHI",
+      1
+     ],
+     [
+      "NO",
+      9
+     ],
+     [
+      "ATL",
+      13
+     ],
+     [
+      "CLE",
+      5
+     ],
+     [
+      "MIN",
+      7
+     ],
+     [
+      "MIA",
+      8
+     ],
+     [
+      "TB",
+      10
+     ],
+     [
+      "CIN",
+      14
+     ],
+     [
+      "HOU",
+      2
+     ],
+     [
+      "DEN",
+      3
+     ],
+     [
+      "DET",
+      6
+     ],
+     [
+      "LV",
+      12
+     ],
+     [
+      "SEA",
+      11
+     ],
+     [
+      "PHI",
+      4
+     ]
+    ],
+    "Cyber70": [
+     [
+      "CHI",
+      10
+     ],
+     [
+      "PIT",
+      9
+     ],
+     [
+      "SF",
+      12
+     ],
+     [
+      "CLE",
+      8
+     ],
+     [
+      "IND",
+      1
+     ],
+     [
+      "MIA",
+      3
+     ],
+     [
+      "TB",
+      2
+     ],
+     [
+      "CIN",
+      7
+     ],
+     [
+      "NYG",
+      5
+     ],
+     [
+      "DEN",
+      6
+     ],
+     [
+      "DET",
+      4
+     ],
+     [
+      "LV",
+      11
+     ],
+     [
+      "SEA",
+      13
+     ],
+     [
+      "PHI",
+      14
+     ]
+    ],
+    "King of The North": [
+     [
+      "CHI",
+      11
+     ],
+     [
+      "NO",
+      9
+     ],
+     [
+      "SF",
+      8
+     ],
+     [
+      "CLE",
+      14
+     ],
+     [
+      "IND",
+      2
+     ],
+     [
+      "NYJ",
+      6
+     ],
+     [
+      "CAR",
+      7
+     ],
+     [
+      "CIN",
+      13
+     ],
+     [
+      "NYG",
+      1
+     ],
+     [
+      "DEN",
+      5
+     ],
+     [
+      "DET",
+      10
+     ],
+     [
+      "LV",
+      4
+     ],
+     [
+      "SEA",
+      12
+     ],
+     [
+      "DAL",
+      3
+     ]
+    ],
+    "KinkyKing": [
+     [
+      "CHI",
+      2
+     ],
+     [
+      "PIT",
+      4
+     ],
+     [
+      "SF",
+      8
+     ],
+     [
+      "CLE",
+      13
+     ],
+     [
+      "MIN",
+      9
+     ],
+     [
+      "NYJ",
+      3
+     ],
+     [
+      "CAR",
+      7
+     ],
+     [
+      "CIN",
+      6
+     ],
+     [
+      "NYG",
+      10
+     ],
+     [
+      "DEN",
+      14
+     ],
+     [
+      "GB",
+      1
+     ],
+     [
+      "LV",
+      12
+     ],
+     [
+      "KC",
+      11
+     ],
+     [
+      "DAL",
+      5
+     ]
+    ],
+    "Puto el que lo lea": [
+     [
+      "CHI",
+      8
+     ],
+     [
+      "PIT",
+      4
+     ],
+     [
+      "SF",
+      14
+     ],
+     [
+      "CLE",
+      9
+     ],
+     [
+      "MIN",
+      3
+     ],
+     [
+      "MIA",
+      2
+     ],
+     [
+      "CAR",
+      5
+     ],
+     [
+      "BAL",
+      6
+     ],
+     [
+      "NYG",
+      1
+     ],
+     [
+      "DEN",
+      13
+     ],
+     [
+      "GB",
+      11
+     ],
+     [
+      "LV",
+      10
+     ],
+     [
+      "KC",
+      7
+     ],
+     [
+      "DAL",
+      12
+     ]
+    ],
+    "X-Men Let’s go Boys": [
+     [
+      "NE",
+      8
+     ],
+     [
+      "PIT",
+      9
+     ],
+     [
+      "SF",
+      14
+     ],
+     [
+      "CLE",
+      11
+     ],
+     [
+      "MIN",
+      7
+     ],
+     [
+      "MIA",
+      2
+     ],
+     [
+      "CAR",
+      12
+     ],
+     [
+      "CIN",
+      6
+     ],
+     [
+      "NYG",
+      3
+     ],
+     [
+      "DEN",
+      13
+     ],
+     [
+      "DET",
+      10
+     ],
+     [
+      "LV",
+      5
+     ],
+     [
+      "SEA",
+      1
+     ],
+     [
+      "DAL",
+      4
+     ]
+    ],
+    "Conquistador": [
+     [
+      "CHI",
+      11
+     ],
+     [
+      "NO",
+      2
+     ],
+     [
+      "SF",
+      9
+     ],
+     [
+      "CLE",
+      13
+     ],
+     [
+      "MIN",
+      3
+     ],
+     [
+      "NYJ",
+      14
+     ],
+     [
+      "CAR",
+      4
+     ],
+     [
+      "CIN",
+      5
+     ],
+     [
+      "HOU",
+      7
+     ],
+     [
+      "DEN",
+      6
+     ],
+     [
+      "DET",
+      8
+     ],
+     [
+      "LV",
+      10
+     ],
+     [
+      "SEA",
+      1
+     ],
+     [
+      "DAL",
+      12
+     ]
+    ],
+    "Osos de Grayslake": [
+     [
+      "CHI",
+      14
+     ],
+     [
+      "PIT",
+      13
+     ],
+     [
+      "SF",
+      12
+     ],
+     [
+      "CLE",
+      1
+     ],
+     [
+      "MIN",
+      11
+     ],
+     [
+      "NYJ",
+      2
+     ],
+     [
+      "CAR",
+      10
+     ],
+     [
+      "CIN",
+      3
+     ],
+     [
+      "NYG",
+      4
+     ],
+     [
+      "DEN",
+      5
+     ],
+     [
+      "DET",
+      6
+     ],
+     [
+      "LAR",
+      7
+     ],
+     [
+      "KC",
+      8
+     ],
+     [
+      "PHI",
+      9
+     ]
+    ],
+    "MVP21": [
+     [
+      "CHI",
+      7
+     ],
+     [
+      "PIT",
+      6
+     ],
+     [
+      "ATL",
+      4
+     ],
+     [
+      "CLE",
+      8
+     ],
+     [
+      "MIN",
+      9
+     ],
+     [
+      "NYJ",
+      12
+     ],
+     [
+      "CAR",
+      11
+     ],
+     [
+      "BAL",
+      14
+     ],
+     [
+      "HOU",
+      10
+     ],
+     [
+      "DEN",
+      3
+     ],
+     [
+      "DET",
+      2
+     ],
+     [
+      "LAR",
+      13
+     ],
+     [
+      "KC",
+      1
+     ],
+     [
+      "DAL",
+      5
+     ]
+    ],
+    "Abogado": [
+     [
+      "CHI",
+      8
+     ],
+     [
+      "NO",
+      4
+     ],
+     [
+      "SF",
+      6
+     ],
+     [
+      "CLE",
+      5
+     ],
+     [
+      "MIN",
+      14
+     ],
+     [
+      "NYJ",
+      10
+     ],
+     [
+      "CAR",
+      13
+     ],
+     [
+      "CIN",
+      1
+     ],
+     [
+      "NYG",
+      11
+     ],
+     [
+      "DEN",
+      12
+     ],
+     [
+      "DET",
+      9
+     ],
+     [
+      "LAR",
+      7
+     ],
+     [
+      "SEA",
+      2
+     ],
+     [
+      "PHI",
+      3
+     ]
+    ],
+    "SinCasco": [
+     [
+      "CHI",
+      9
+     ],
+     [
+      "PIT",
+      8
+     ],
+     [
+      "SF",
+      14
+     ],
+     [
+      "CLE",
+      7
+     ],
+     [
+      "MIN",
+      10
+     ],
+     [
+      "MIA",
+      1
+     ],
+     [
+      "CAR",
+      11
+     ],
+     [
+      "CIN",
+      2
+     ],
+     [
+      "HOU",
+      13
+     ],
+     [
+      "DEN",
+      12
+     ],
+     [
+      "GB",
+      3
+     ],
+     [
+      "LV",
+      4
+     ],
+     [
+      "KC",
+      5
+     ],
+     [
+      "DAL",
+      6
+     ]
+    ],
+    "Chitown’DemBoyz": [
+     [
+      "CHI",
+      10
+     ],
+     [
+      "PIT",
+      8
+     ],
+     [
+      "SF",
+      14
+     ],
+     [
+      "CLE",
+      6
+     ],
+     [
+      "MIN",
+      7
+     ],
+     [
+      "NYJ",
+      5
+     ],
+     [
+      "CAR",
+      4
+     ],
+     [
+      "BAL",
+      9
+     ],
+     [
+      "NYG",
+      3
+     ],
+     [
+      "DEN",
+      2
+     ],
+     [
+      "DET",
+      11
+     ],
+     [
+      "LV",
+      1
+     ],
+     [
+      "KC",
+      12
+     ],
+     [
+      "DAL",
+      13
+     ]
+    ],
+    "Billy Beaner": [
+     [
+      "CHI",
+      14
+     ],
+     [
+      "NO",
+      6
+     ],
+     [
+      "SF",
+      7
+     ],
+     [
+      "CLE",
+      13
+     ],
+     [
+      "MIN",
+      8
+     ],
+     [
+      "NYJ",
+      1
+     ],
+     [
+      "CAR",
+      12
+     ],
+     [
+      "BAL",
+      11
+     ],
+     [
+      "NYG",
+      2
+     ],
+     [
+      "DEN",
+      3
+     ],
+     [
+      "DET",
+      9
+     ],
+     [
+      "LAR",
+      5
+     ],
+     [
+      "KC",
+      10
+     ],
+     [
+      "DAL",
+      4
+     ]
+    ],
+    "Niners": [
+     null,
+     [
+      "NO",
+      6
+     ],
+     [
+      "SF",
+      13
+     ],
+     [
+      "TEN",
+      5
+     ],
+     [
+      "IND",
+      4
+     ],
+     [
+      "NYJ",
+      3
+     ],
+     [
+      "TB",
+      12
+     ],
+     [
+      "CIN",
+      14
+     ],
+     [
+      "HOU",
+      11
+     ],
+     [
+      "ARI",
+      10
+     ],
+     [
+      "DET",
+      9
+     ],
+     [
+      "LV",
+      7
+     ],
+     [
+      "SEA",
+      8
+     ],
+     [
+      "DAL",
+      2
+     ]
+    ],
+    "Mean Machine": [
+     [
+      "CHI",
+      6
+     ],
+     [
+      "NO",
+      7
+     ],
+     [
+      "SF",
+      4
+     ],
+     [
+      "CLE",
+      8
+     ],
+     [
+      "MIN",
+      1
+     ],
+     [
+      "NYJ",
+      11
+     ],
+     [
+      "CAR",
+      14
+     ],
+     [
+      "BAL",
+      12
+     ],
+     [
+      "HOU",
+      13
+     ],
+     [
+      "DEN",
+      9
+     ],
+     [
+      "DET",
+      5
+     ],
+     [
+      "LAR",
+      10
+     ],
+     [
+      "KC",
+      2
+     ],
+     [
+      "DAL",
+      3
+     ]
+    ],
+    "Manolito’s winning picks": [
+     [
+      "CHI",
+      11
+     ],
+     [
+      "PIT",
+      12
+     ],
+     [
+      "SF",
+      14
+     ],
+     [
+      "CLE",
+      0
+     ],
+     [
+      "MIN",
+      0
+     ],
+     [
+      "NYJ",
+      0
+     ],
+     [
+      "CAR",
+      10
+     ],
+     [
+      "CIN",
+      0
+     ],
+     [
+      "NYG",
+      0
+     ],
+     [
+      "DEN",
+      0
+     ],
+     [
+      "DET",
+      0
+     ],
+     [
+      "LV",
+      0
+     ],
+     [
+      "KC",
+      0
+     ],
+     [
+      "DAL",
+      13
+     ]
+    ],
+    "Juan1768": [
+     [
+      "CHI",
+      14
+     ],
+     [
+      "NO",
+      3
+     ],
+     [
+      "SF",
+      6
+     ],
+     [
+      "CLE",
+      4
+     ],
+     [
+      "MIN",
+      13
+     ],
+     [
+      "NYJ",
+      11
+     ],
+     [
+      "CAR",
+      8
+     ],
+     [
+      "CIN",
+      1
+     ],
+     [
+      "HOU",
+      2
+     ],
+     [
+      "DEN",
+      9
+     ],
+     [
+      "DET",
+      10
+     ],
+     [
+      "LV",
+      5
+     ],
+     [
+      "KC",
+      12
+     ],
+     [
+      "DAL",
+      7
+     ]
+    ],
+    "This is our year": [
+     [
+      "NE",
+      3
+     ],
+     [
+      "NO",
+      5
+     ],
+     [
+      "ATL",
+      13
+     ],
+     [
+      "TEN",
+      7
+     ],
+     [
+      "IND",
+      1
+     ],
+     [
+      "MIA",
+      4
+     ],
+     [
+      "TB",
+      10
+     ],
+     [
+      "BAL",
+      14
+     ],
+     [
+      "NYG",
+      2
+     ],
+     [
+      "ARI",
+      9
+     ],
+     [
+      "GB",
+      6
+     ],
+     [
+      "LV",
+      12
+     ],
+     [
+      "KC",
+      8
+     ],
+     [
+      "PHI",
+      11
+     ]
+    ],
+    "Andrea’s Picks": [
+     [
+      "CHI",
+      0
+     ],
+     [
+      "PIT",
+      0
+     ],
+     [
+      "SF",
+      12
+     ],
+     [
+      "CLE",
+      9
+     ],
+     [
+      "MIN",
+      10
+     ],
+     [
+      "NYJ",
+      4
+     ],
+     [
+      "CAR",
+      8
+     ],
+     [
+      "CIN",
+      7
+     ],
+     [
+      "HOU",
+      13
+     ],
+     [
+      "DEN",
+      11
+     ],
+     [
+      "DET",
+      2
+     ],
+     [
+      "LV",
+      6
+     ],
+     [
+      "KC",
+      5
+     ],
+     [
+      "PHI",
+      1
+     ]
+    ],
+    "Rastaman": [
+     [
+      "NE",
+      2
+     ],
+     [
+      "PIT",
+      7
+     ],
+     [
+      "SF",
+      13
+     ],
+     [
+      "TEN",
+      3
+     ],
+     [
+      "MIN",
+      6
+     ],
+     [
+      "NYJ",
+      5
+     ],
+     [
+      "CAR",
+      12
+     ],
+     [
+      "CIN",
+      4
+     ],
+     [
+      "NYG",
+      14
+     ],
+     [
+      "DEN",
+      1
+     ],
+     [
+      "DET",
+      10
+     ],
+     [
+      "LV",
+      11
+     ],
+     [
+      "KC",
+      8
+     ],
+     [
+      "PHI",
+      9
+     ]
+    ],
+    "Jorge_B": [
+     [
+      "CHI",
+      7
+     ],
+     [
+      "PIT",
+      4
+     ],
+     [
+      "ATL",
+      6
+     ],
+     [
+      "TEN",
+      10
+     ],
+     [
+      "MIN",
+      11
+     ],
+     [
+      "NYJ",
+      12
+     ],
+     [
+      "CAR",
+      1
+     ],
+     [
+      "BAL",
+      8
+     ],
+     [
+      "HOU",
+      9
+     ],
+     [
+      "ARI",
+      2
+     ],
+     [
+      "DET",
+      13
+     ],
+     [
+      "LV",
+      3
+     ],
+     null,
+     [
+      "PHI",
+      14
      ]
     ]
    }
