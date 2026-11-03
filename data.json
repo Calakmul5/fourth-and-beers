@@ -166,16 +166,82 @@
   ]
  },
  "tribune": {
-  "portada": null,
-  "columna": [],
-  "clasificados": [],
+  "portada": {
+   "titulo": "Los Bears coronan a King of The North",
+   "texto": "Era tercero. Le puso 11 a sus Bears contra Seattle, cubrieron y amaneció líder.",
+   "para": "King of The North"
+  },
+  "columna": [
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Los Bears eran underdogs por 3 contra Seattle y cubrieron. La liga se partió a la mitad, 11 y 11."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Los siete fans de los Bears le fueron a su equipo y cobraron 67. Ya llevan 249 netos en la temporada. Ni modo, la fe por fin da intereses."
+   },
+   {
+    "titulo": "",
+    "para": "Cyber70",
+    "texto": "En Dallas fue al revés. 18 de 22 se fueron con los Cowboys y ganó Arizona. Siete fans perdieron 71 y el único traidor, Cyber70, cobró 8."
+   },
+   {
+    "titulo": "",
+    "para": "King of The North",
+    "texto": "King of The North le puso 14 a los Raiders, 13 a Denver y 11 a sus Bears. Hizo 91, la mejor tarjeta de la semana. Venía 21 por detrás del líder y se le pasó por encima."
+   },
+   {
+    "titulo": "",
+    "para": "Silverback",
+    "texto": "El destronado es el Comish. Le di el 13 a Dallas y el 11 a los Falcons, los que me coronaron en la semana 3. Lo que el Falcon da, el Falcon quita."
+   },
+   {
+    "titulo": "",
+    "para": "SinCasco, Mean Machine",
+    "texto": "SinCasco y Mean Machine le metieron el 14 a los Cowboys. Se la dejaron ir completita y ni así cubrió. Chicago coronó a uno de casa y Dallas sigue buscando la corona."
+   }
+  ],
+  "clasificados": [
+   {
+    "titulo": "SE BUSCA",
+    "para": "Steel Man",
+    "texto": "Fan de los Steelers que le dio el 14 a los Bears. Ningún fan de Chicago se la puso tan alto."
+   },
+   {
+    "titulo": "SE VENDE",
+    "para": "KinkyKing",
+    "texto": "Asador poco usado, ya apartado para la carne asada. Kinky le dio su 14 a Seattle contra los Bears y no se le levantó."
+   },
+   {
+    "titulo": "SE TRASPASA",
+    "para": "Chitown’DemBoyz",
+    "texto": "Nombre de Chicago, corazón de Dallas. Le pagó el nombre con 11 en los Bears y le cobró el corazón con 6 en Dallas."
+   },
+   {
+    "titulo": "SE RENTA",
+    "para": "Osos de Grayslake",
+    "texto": "Le entró a Arizona y a Miami cuando casi nadie quiso. Hizo 84 y ya le respira en la nuca a Cyber70."
+   },
+   {
+    "titulo": "SE VENDE",
+    "para": "Billy Beaner",
+    "texto": "Le dio el 13 a los Bears y el 11 a los Falcons. Uno le entró completito y el otro nomás se asomó."
+   },
+   {
+    "titulo": "SE REGALA",
+    "para": "Conquistador",
+    "texto": "Boleta usada: 14 a Seattle y 9 a Dallas. Apostó como nunca y perdió como siempre, con los dos."
+   }
+  ],
   "datos": [],
   "edicion": null
  },
  "season": 2026,
  "week": 8,
  "weeks": 18,
- "updated": "2026-11-03T12:31:10.314Z",
+ "updated": "2026-11-03T20:10:17.739Z",
  "prizes": {
   "regular": [
    1050,
