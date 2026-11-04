@@ -228,6 +228,11 @@
     "titulo": "SE VENDE",
     "para": "Billy Beaner",
     "texto": "Le dio el 13 a los Bears y el 11 a los Falcons. Con uno cubrió y con el otro se quedó con las ganas."
+   },
+   {
+    "titulo": "SE REGALA",
+    "para": "Conquistador",
+    "texto": "Boleta en escalera: 14 a los Seahawks, 11 a los Eagles y 9 a los Cowboys. Perdió los tres, en orden y sin saltarse ninguno."
    }
   ],
   "datos": [],
@@ -236,7 +241,7 @@
  "season": 2026,
  "week": 8,
  "weeks": 18,
- "updated": "2026-11-04T02:22:01.828Z",
+ "updated": "2026-11-04T02:22:18.015Z",
  "prizes": {
   "regular": [
    1050,
