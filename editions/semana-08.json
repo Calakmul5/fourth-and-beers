@@ -207,32 +207,27 @@
    {
     "titulo": "SE BUSCA",
     "para": "Steel Man",
-    "texto": "Fan de los Steelers que le dio el 14 a los Bears. Ningún fan de Chicago se la puso tan alto."
+    "texto": "Fan de Pittsburgh con el 14 en los Bears, más alto que cualquier fan de Chicago. De acero, como su nombre, y nada aguado."
    },
    {
     "titulo": "SE VENDE",
     "para": "KinkyKing",
-    "texto": "Asador poco usado, ya apartado para la carne asada. Kinky le dio su 14 a Seattle contra los Bears y no se le levantó."
+    "texto": "Asador apartado para la carne asada. Kinky le dio el 14 a Seattle contra los Bears y le salió el chorizo crudo."
    },
    {
     "titulo": "SE TRASPASA",
     "para": "Chitown’DemBoyz",
-    "texto": "Nombre de Chicago, corazón de Dallas. Le pagó el nombre con 11 en los Bears y le cobró el corazón con 6 en Dallas."
+    "texto": "Camiseta de doble vista. Por delante dice Chicago y pagó 11, por detrás dice Dallas y costó 6."
    },
    {
     "titulo": "SE RENTA",
     "para": "Osos de Grayslake",
-    "texto": "Le entró a Arizona y a Miami cuando casi nadie quiso. Hizo 84 y ya le respira en la nuca a Cyber70."
+    "texto": "Se fue con Arizona y Miami cuando casi nadie quiso, y cobró. Ya va cuarto, respirándole en la nuca a Cyber70."
    },
    {
     "titulo": "SE VENDE",
     "para": "Billy Beaner",
-    "texto": "Le dio el 13 a los Bears y el 11 a los Falcons. Uno le entró completito y el otro nomás se asomó."
-   },
-   {
-    "titulo": "SE REGALA",
-    "para": "Conquistador",
-    "texto": "Boleta usada: 14 a Seattle y 9 a Dallas. Apostó como nunca y perdió como siempre, con los dos."
+    "texto": "Le dio el 13 a los Bears y el 11 a los Falcons. Con uno cubrió y con el otro se quedó con las ganas."
    }
   ],
   "datos": [],
@@ -241,7 +236,7 @@
  "season": 2026,
  "week": 8,
  "weeks": 18,
- "updated": "2026-11-03T20:10:17.739Z",
+ "updated": "2026-11-04T02:22:01.828Z",
  "prizes": {
   "regular": [
    1050,
