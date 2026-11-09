@@ -1,4 +1,4 @@
-﻿---
+---
 name: fact-auditor
 description: Independently recomputes which facts the Tribune should print from the CLAUDE.md fact rules, then compares them with the rendered page and flags budget, repetition and albur violations.
 model: sonnet
