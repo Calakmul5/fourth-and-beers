@@ -1,3 +1,4 @@
 node_modules/
 # the clasp project is bound to the participants workbook, its .clasp.json carries the workbook id
 gas/.clasp.json
+.qa/

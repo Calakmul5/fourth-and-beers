@@ -12,6 +12,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 - `docs/LEADERBOARD_ARCHITECTURE.html`: architecture doc. Same layout and diagram conventions as the model's `ARCHITECTURE.html` in `..\Model`.
 - `docs/mockups/tribune-dia.html`: the approved mockup of the Tribune. Reference for layout, type, colors and copy tone.
 - `test/`: Node tests. No live Google or GitHub access. `test/fixtures/week5.json` is the real week 5 data.json in the current schema, `week5-old.json` is the same week in the old schema, `week5-grouppicks.txt` is the real week 5 Yahoo Group Picks table (pipe separated, with the expected Winner row and Yahoo's +/- marks, for assertions only) and `test/picks_fixture.js` turns it into both paste shapes.
+- `.claude/agents/`: three project subagents (`page-qa`, `fact-auditor`, `spec-reviewer`), see Rules. They write only to `.qa/`, which is gitignored.
 - `..\Model`: the separate model repo. Read it for patterns (`deploy.bat`, `test.bat`, `test/`). Never change it from this repo.
 
 ## How it runs
@@ -39,6 +40,7 @@ Participants' newspaper for the 2026 Fourth and Beers league: 22 players, Yahoo 
 - Versioning: every file carries `v major.minor.bug c major.minor.bug`. v tracks functionality, c tracks content. `index.html` (footer), `Publish.js` (header comment) and the doc (masthead and footer) version independently. Bump on every change.
 - Deploy only with `deploy.bat` (it pushes `gas/` and stops if `gas/.clasp.json` is missing). Never run `clasp push`, `git push` or `git commit` by hand.
 - `test.bat` must pass before any deploy.
+- Project subagents in `.claude/agents/` (outputs go to `.qa/`, gitignored): before `deploy.bat`, call `spec-reviewer` on every change. Call `page-qa` when `index.html`, `assets/` or the head tags change. Call `fact-auditor` when a fact rule, its scoring or Tus picks changes. Fix or answer every finding before deploying.
 - When a tab, data.json field, flow function, trigger or page section is added, renamed or retired, update the architecture doc in the same change and bump its version.
 - Page: one self-contained HTML file, vanilla JS, no build step, mobile first. Newsprint, light only: `color-scheme: only light` plus explicit backgrounds so iOS dark mode cannot invert it. Every color is a token in the `:root` block and nowhere else. Every number and sentence is computed from data.json in the browser. The fact engine is deterministic rules, never a model call.
 - Copy: Spanish page text in the reglamento's voice. Plain verbs, dry understatement, no em dashes, no semicolons chaining clauses. Roast the picks and the teams, never people's personal lives. Jorge_B picks at random and only teases the die-hard fans. Fact sentences never mention the commissioner's model or Jorge_B's random picking, and run about 120 characters at most.
