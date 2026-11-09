@@ -15,8 +15,8 @@ Setup
 Cases
 1. The live `data.json`.
 2. The latest `editions/semana-NN.json`, through `?ed=N`.
-3. `test/fixtures/week5.json` as the data.
-4. A copy of that fixture with `edicion` set to a banner and `tema` `muertos`.
+3. `test/fixtures/week5-full.json` as the data.
+4. A copy of that fixture with `tribune.edicion` set to `{titulo, texto, tema: "muertos"}`.
 5. A playoffs fixture, if one exists under `test/fixtures/`. If none does, say so and skip it.
 6. `?yo=<one call sign from the data>` with the name panel open.
 
