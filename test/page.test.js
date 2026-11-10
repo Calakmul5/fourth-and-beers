@@ -80,7 +80,7 @@ const P5 = () => { const d = clone(W5); d.picks = PF.picks5().picks; return d; }
  */
 async function load(data, o) {
   o = o || {};
-  const errors = [], fetched = [];
+  const errors = [], fetched = [], rawFetched = [];
   const vc = new VirtualConsole();
   vc.on('jsdomError', e => errors.push(String(e && e.stack || e).split('\n')[0]));
   const reply = body => Promise.resolve({ ok: body != null, status: body != null ? 200 : 404,
@@ -89,7 +89,8 @@ async function load(data, o) {
     runScripts: 'dangerously', url: 'https://example.test/' + (o.url || ''), pretendToBeVisual: true, virtualConsole: vc,
     beforeParse(window) {
       window.addEventListener('error', e => errors.push(String(e.message)));
-      window.fetch = u => {
+      window.fetch = (u, init) => {
+        rawFetched.push({ url: String(u), cache: init && init.cache });
         u = String(u).replace(/\?t=\d+$/, '');
         fetched.push(u);
         if (o.failFetch) return Promise.reject(new Error('offline'));
@@ -109,7 +110,7 @@ async function load(data, o) {
   if (o.probe) { await new Promise(r => setTimeout(r, 150)); o.probe(dom.window, fetched); }
   for (let i = 0; i < 100 && !dom.window.__model && !errors.length; i++) await new Promise(r => setTimeout(r, 20));
   await new Promise(r => setTimeout(r, 20));
-  return { dom, doc, win: dom.window, errors, fetched, M: dom.window.__model, T: dom.window.__tribune };
+  return { dom, doc, win: dom.window, errors, fetched, rawFetched, M: dom.window.__model, T: dom.window.__tribune };
 }
 
 const text = (doc, sel) => (doc.querySelector(sel) || { textContent: '' }).textContent;
@@ -251,6 +252,149 @@ A.run('index.html', [
     c.win.goatcounter.count = v => calls.push(v);
     c.doc.getElementById('gc-script').dispatchEvent(new c.win.Event('load'));
     A.deep(calls, [{ path: '/semana-5' }], 'one view, grouped by edition, ?yo= and ?semana= ignored');
+  }],
+
+  ['GoatCounter: the seed counts nothing, ?ed=N counts that edition, a throwing count and a prerender are handled', async () => {
+    const calls = [];
+    // data.json fails and no edition exists: the embedded seed renders and must not count under its own week.
+    const seeded = await load(null, { failFetch: true });
+    A.deep(seeded.errors, []);
+    seeded.win.goatcounter.count = v => calls.push(v);
+    seeded.doc.getElementById('gc-script').dispatchEvent(new seeded.win.Event('load'));
+    A.deep(calls, [], 'a load that fell back to the seed counts nothing');
+    // ?ed=6 reads the frozen edition 6, so the view lands under /semana-6 even though data.json says week 5.
+    const ed = await load(W5, { url: '?ed=6', editions: { 6: week6(), 5: FULL }, index: { weeks: [5, 6] } });
+    A.equal(ed.M.EW, 6);
+    ed.win.goatcounter.count = v => calls.push(v);
+    ed.doc.getElementById('gc-script').dispatchEvent(new ed.win.Event('load'));
+    A.deep(calls, [{ path: '/semana-6' }], '?ed=6 counts /semana-6');
+    // count.js already ran before the render: counted at once, exactly once.
+    calls.length = 0;
+    ed.T.countView(6);
+    A.deep(calls, [{ path: '/semana-6' }], 'counts straight away when count.js is there');
+    // A count that throws never breaks the page.
+    ed.win.goatcounter.count = () => { throw new Error('boom'); };
+    ed.T.countView(6);
+    A.deep(ed.errors, []);
+    // A browser prerender counts once, when the page becomes visible.
+    calls.length = 0;
+    ed.win.goatcounter.count = v => calls.push(v);
+    let state = 'hidden';
+    Object.defineProperty(ed.doc, 'visibilityState', { configurable: true, get: () => state });
+    Object.defineProperty(ed.doc, 'prerendering', { configurable: true, get: () => state !== 'visible' });
+    ed.T.countView(6);
+    A.deep(calls, [], 'nothing while prerendering (Chrome reports hidden)');
+    state = 'visible';
+    ed.doc.dispatchEvent(new ed.win.Event('prerenderingchange'));
+    ed.doc.dispatchEvent(new ed.win.Event('visibilitychange'));
+    ed.doc.dispatchEvent(new ed.win.Event('visibilitychange'));
+    A.deep(calls, [{ path: '/semana-6' }], 'one count once it is shown');
+  }],
+
+  ['no-repeat: the older editions are replayed, each with the hold-out of the edition before it', async () => {
+    const w6 = week6(), w7 = clone(w6);
+    w7.week = 7;
+    w7.pickem.forEach(p => { p.weeks.push(45); });
+    w7.winners.push([w7.pickem[1].name]);
+    w7.picks['7'] = clone(w7.picks['5']);
+    const c = await load(w7, { editions: { 5: FULL, 6: w6 }, index: { weeks: [5, 6, 7] } });
+    A.deep(c.errors, []);
+    A.ok(c.fetched.indexOf('editions/semana-05.json') >= 0 && c.fetched.indexOf('editions/semana-06.json') >= 0, 'both archives are fetched');
+    A.equal(c.M.prevD.week, 6);
+    A.deep(c.M.history.map(d => d.week), [5], 'the older edition is the history');
+    // What week 6 really printed: its own selection with the hold-out of week 5.
+    const P5m = c.T.model(FULL), pr5 = c.T.printed(P5m);
+    const ran5 = c.T.pickFacts(P5m, [], pr5.used, pr5.rows).picks.map(f => f.rule);
+    const P6m = c.T.model(w6), pr6 = c.T.printed(P6m);
+    const ran6 = c.T.pickFacts(P6m, ran5, pr6.used, pr6.rows).picks.map(f => f.rule).sort();
+    A.deep(c.T.prevRules(c.M).sort(), ran6, 'last week held out what its page printed');
+    // Without the history it is the old, single step answer. A gap in the weeks resets the hold-out.
+    const once = c.T.pickFacts(P6m, [], pr6.used, pr6.rows).picks.map(f => f.rule).sort();
+    c.M.history = [];
+    A.deep(c.T.prevRules(c.M).sort(), once, 'no history means no hold-out of its own');
+    // Week 5 followed by a week 7 edition has a gap: the hold-out from week 5 does not carry over.
+    const skip = clone(w6); skip.week = 7;
+    const Ps = c.T.model(skip), prs = c.T.printed(Ps);
+    const onceSkip = c.T.pickFacts(Ps, [], prs.used, prs.rows).picks.map(f => f.rule).sort();
+    c.M.prevD = skip; c.M.history = [FULL];
+    A.deep(c.T.prevRules(c.M).sort(), onceSkip, 'a gap resets the hold-out');
+  }],
+
+  ['facts: no printed fact repeats a number in the Tus picks of any player it names, and the copy reads right', async () => {
+    for (const d of [FULL, week6()]) {
+      const c = await load(d);
+      const plan = c.T.plan(c.M);
+      plan.pk.picks.forEach(f => {
+        const h = c.T.huella(c.M, f);
+        h.nombres.forEach(n => {
+          const lines = c.T.tusPicks(c.M, n);
+          if (!lines) return;
+          const shown = {};
+          lines.forEach(l => c.T.numTokens((l.k + ' ' + l.t).replace(/últimas 3 semanas|tus 3 picks más altos|49ers/gi, ' '), c.M).forEach(x => { shown[x] = 1; }));
+          const text = c.T.huella(c.M, f).numeros;
+          A.deep(text.filter(x => shown[x]), [], f.rule + ' vs the Tus picks of ' + n);
+        });
+      });
+      plan.pk.picks.forEach(f => A.noMatch(f.texto, /[.!?] [a-záéíóúñ]/, f.rule + ': a sentence starts in capitals'));
+      c.M.players.forEach(p => (c.T.tusPicks(c.M, p.name) || []).forEach(l => {
+        A.noMatch(l.t, /[+−]1 puntos|\+0 puntos|−0 puntos/, 'Tus picks of ' + p.name + ' pluralizes points');
+      }));
+    }
+  }],
+
+  ['huella: spelled-out counts are numbers, and the check covers every player a fact names but not the panel labels', async () => {
+    const c = await load(FULL);
+    A.deep(c.T.wordNums('Tres semanas con la misma. Los siete fans y ocho picks, dos son compañía, 4 veces.'), ['3', '7', '8']);
+    // A fact whose template prints a spelled-out count carries it in its huella, and a Tribune row that says it too is a repeat.
+    const wf = { rule: 'x', sujetos: [], v: {}, tpls: [{ s: 'carrilla', t: 'Tres semanas seguidas con los 49ers.' }] };
+    A.deep(c.T.huella(c.M, wf).numeros, ['3'], 'tres semanas is a 3, the 49ers are not 49');
+    A.deep(c.T.numTokens('los 49ers ganan', c.M), [], 'the 49ers are not a number');
+    // The edition number is a real count when it is not a week reference: 5 hits in week 5 still counts.
+    A.deep(c.T.numTokens('acertó 5 juegos, hizo 23 en la semana 4 y 83 en la 5.', c.M), ['5', '23', '83'], 'only week references are context');
+    const strip = t => String(t).replace(/últimas 3 semanas|tus 3 picks más altos|49ers/gi, ' ');
+    const names = c.M.players.map(p => p.name).filter(n => c.T.tusPicks(c.M, n));
+    const a = names[0], b = names[1];
+    const shown = [];
+    c.T.tusPicks(c.M, b).forEach(l => c.T.numTokens(strip(l.k + ' ' + l.t), c.M).forEach(x => shown.push(x)));
+    const mk = (nombres, numeros) => ({ rule: 'x', sujetos: nombres, huella: { nombres, equipos: [], numeros } });
+    A.ok(shown.length > 0, 'the second player shows numbers');
+    A.match(c.T.tusReason(c.M, mk([a, b], [shown[0]])) || '', /^Tus picks de .* ya muestra/, 'the second named player counts, not only the first');
+    A.equal(c.T.tusReason(c.M, mk([a, b], ['99999'])), null, 'a number nobody shows');
+    // "últimas 3 semanas" alone is a label: a fact that prints 3 is only dropped for a 3 that is a result.
+    const has3 = n => c.T.tusPicks(c.M, n).some(l => c.T.numTokens(strip(l.k + ' ' + l.t), c.M).indexOf('3') >= 0);
+    const labelOnly = names.find(n => !has3(n) && c.T.tusPicks(c.M, n).some(l => /últimas 3 semanas|tus 3 picks más altos/.test(l.k + ' ' + l.t)));
+    A.ok(labelOnly, 'a player whose only 3 is a label exists in the fixture');
+    A.equal(c.T.tusReason(c.M, mk([labelOnly], ['3'])), null, 'the label 3 is not a result');
+    const real = names.find(has3);
+    if (real) A.match(c.T.tusReason(c.M, mk([real], ['3'])) || '', /ya muestra 3/, 'a real 3 still is');
+  }],
+
+  ['no-repeat: older editions come from the cache, only last week bypasses it, and nothing waits on a timer', async () => {
+    const w6 = week6(), w7 = clone(w6);
+    w7.week = 7; w7.pickem.forEach(p => { p.weeks.push(45); }); w7.winners.push([w7.pickem[1].name]); w7.picks['7'] = clone(w7.picks['5']);
+    const c = await load(w7, { editions: { 5: FULL, 6: w6 }, index: { weeks: [5, 6, 7] } });
+    const get = n => c.rawFetched.find(r => r.url.indexOf('semana-0' + n) >= 0);
+    A.equal(get(6).cache, 'no-store', "last week's edition is always fresh");
+    A.match(get(6).url, /\?t=\d+$/);
+    A.equal(get(5).cache, 'default', 'older editions never change, so the cache is fine');
+    A.noMatch(get(5).url, /\?t=/);
+  }],
+
+  ['names: a hash that is the GoatCounter switch never opens a reader, even for a player called that', async () => {
+    const d = clone(W5);
+    d.pickem[0].name = 'toggle-goatcounter';
+    const c = await load(d, { url: '#toggle-goatcounter' });
+    A.deep(c.errors, []);
+    A.equal(c.doc.getElementById('sh-name').textContent, '', 'no panel opened');
+    const other = d.pickem[1].name;
+    const c2 = await load(d, { url: '#' + encodeURIComponent(other) });
+    A.equal(c2.doc.getElementById('sh-name').textContent, other, 'other hashes still open a reader');
+  }],
+
+  ['copy: a filled number word that opens a sentence is capitalized', async () => {
+    const c = await load(FULL);
+    A.equal(c.T.fill('{n} se aferra a los {s} puntos. {cw} semanas con la misma.', { n: 'X', s: 65, cw: 'tres' }), 'X se aferra a los 65 puntos. Tres semanas con la misma.');
+    A.equal(c.T.fill('Uno. el Comish dos. y tres', {}), 'Uno. El Comish dos. Y tres');
   }],
 
   ['facts: La cifra de la semana is KinkyKing +60, and the facts read right', async () => {
@@ -1293,7 +1437,7 @@ A.run('index.html', [
         if (h && h.nombres.length === 1) {
           const lines = c.T.tusPicks(M, h.nombres[0]) || [];
           const nums = {};
-          lines.forEach(l => (l.k + ' ' + l.t).replace(/semanas? \d+/g, '').split(/\D+/).filter(Boolean).forEach(x => { nums[x] = 1; }));
+          lines.forEach(l => (l.k + ' ' + l.t).replace(/últimas 3 semanas|tus 3 picks más altos|49ers/gi, ' ').replace(/semanas? \d+/g, '').split(/\D+/).filter(Boolean).forEach(x => { nums[x] = 1; }));
           h.numeros.forEach(x => A.ok(!nums[x], 'week ' + k + ' ' + f.rule + ' prints ' + x + ' that ' + h.nombres[0] + ' sees in Tus picks'));
         }
       });

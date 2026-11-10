@@ -198,7 +198,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.3.0 c2.5.0
+      v4.4.0 c2.5.1
     </div>
   </div>
 </div>
@@ -321,9 +321,12 @@ function fill(t, v){
   var s = t.replace(/\{(\w+)\}/g,function(_,k){ return v[k]!=null ? v[k] : ""; });
   s = s.replace(/\bde el Comish/g,"del Comish").replace(/\ba el Comish/g,"al Comish");
   s = s.replace(/([.!?]\s+)el Comish/g,"$1El Comish");
+  // A filled number word ("tres semanas") can open a sentence.
+  s = s.replace(/([.!?]\s+)([a-záéíóúñ])/g,function(_,a,b){ return a+b.toUpperCase(); });
   if (s.indexOf("el Comish")===0) s = "E"+s.slice(1);
   return s;
 }
+T.fill = fill;
 function who(name){ return name===COMISH ? "el Comish" : name; }
 
 // ---------------------------------------------------------------------------
@@ -1209,6 +1212,7 @@ function fSurvivor(M){
 function tm(code){ return NFL[code] ? "los "+NFL[code] : code; }
 function cap(s){ return s.replace(/^./,function(c){return c.toUpperCase()}); }
 function sgn(n){ return (n<0 ? "−" : "+")+Math.abs(n); }
+function sgnPts(n){ return n===0 ? "0 puntos" : sgn(n)+" "+plural(Math.abs(n),"punto","puntos"); }
 function decided(r){ return !!(r && r.res && r.side); }
 function pickPts(r){ return r.won===true ? r.conf : r.won===false ? -r.conf : 0; }
 function fanTeam(M, name){ var p = M.byName[name]; return p && NFL[p.group] ? p.group : null; }
@@ -1694,7 +1698,7 @@ T.tusPicks = function(M, name){
     var f = recs.filter(function(r){ return r.team===ft; }), g = recs.filter(function(r){ return r.team!==ft && (r.g.fav===ft || r.g.dog===ft); });
     var net = function(l){ return sum(l.map(pickPts)); };
     if (f.length || g.length){
-      out.push({k:"Tu equipo", t:"Con "+tm(ft)+": "+(f.length ? hits(f)+" de "+f.length+", "+sgn(net(f))+" puntos." : "nunca.")+" Contra ellos: "+(g.length ? hits(g)+" de "+g.length+", "+sgn(net(g))+" puntos." : "nunca."), a:""});
+      out.push({k:"Tu equipo", t:"Con "+tm(ft)+": "+(f.length ? hits(f)+" de "+f.length+", "+sgnPts(net(f))+"." : "nunca.")+" Contra ellos: "+(g.length ? hits(g)+" de "+g.length+", "+sgnPts(net(g))+"." : "nunca."), a:""});
     }
   }
   return out;
@@ -1732,7 +1736,8 @@ function teamsIn(text){
   }
   return TEAM_RE.filter(function(t){ return t.abbr.test(text) || t.re.test(text); }).map(function(t){return t.code});
 }
-// Numbers as printed, whole tokens. "semana 4" and the edition number are context, not data.
+// Numbers as printed, whole tokens. A week reference ("semana 4", "la 5") is context, not data. The edition number
+// stays when it is a count (7 hits in week 7).
 // The digits inside a call sign (MVP21, Juan1768) are part of a name, so mentions are blanked first.
 function noNames(M, text){
   var s = String(text).replace(/[‘’`´]/g,"'"), at = 0, out = "";
@@ -1740,8 +1745,8 @@ function noNames(M, text){
   return out+s.slice(at);
 }
 function numTokens(text, M){
-  var s = noNames(M, text).replace(/\b(?:semanas?|ronda|rondas)\s+\d+/gi," ");
-  return (s.match(/\d+(?:[.,]\d+)*/g) || []).filter(function(x){ return x!==String(M.EW); });
+  var s = noNames(M, text).replace(/\b(?:semanas?|ronda|rondas|la)\s+\d+/gi," ").replace(/\b49ers\b/gi," ");
+  return s.match(/\d+(?:[.,]\d+)*/g) || [];
 }
 // The union over every template the fact could print, so a later style swap cannot bring a duplicate in.
 function huella(M, f){
@@ -1751,7 +1756,7 @@ function huella(M, f){
     var text = renderTpl(M, f, t);
     mentions(M.idx, text).forEach(function(m){ if (nombres.indexOf(m.name)<0) nombres.push(m.name); });
     teamsIn(text).forEach(function(c){ if (equipos.indexOf(c)<0) equipos.push(c); });
-    numTokens(text, M).forEach(function(x){ if (numeros.indexOf(x)<0) numeros.push(x); });
+    numTokens(text, M).concat(wordNums(text)).forEach(function(x){ if (numeros.indexOf(x)<0) numeros.push(x); });
   });
   return f.huella = {nombres:nombres, equipos:equipos, numeros:numeros};
 }
@@ -1763,23 +1768,37 @@ function dupReason(M, f, rows){
     var rn = mentions(M.idx, txt).map(function(m){return m.name}), rt = teamsIn(txt);
     var who2 = h.nombres.filter(function(n){return rn.indexOf(n)>=0}).concat(h.equipos.filter(function(c){return rt.indexOf(c)>=0}).map(function(c){ return tm(c); }));
     if (!who2.length) continue;
-    var rnum = numTokens(txt, M).concat((noNames(M, txt).match(/\d+(?:[.,]\d+)*/g) || []));
+    var rnum = numTokens(txt, M).concat((noNames(M, txt).match(/\d+(?:[.,]\d+)*/g) || []), wordNums(txt));
     var shared = h.numeros.filter(function(x){return rnum.indexOf(x)>=0});
     if (shared.length) return r.kind+(r.titulo ? ' "'+r.titulo+'"' : "")+": nombra a "+J(who2)+" y trae "+J(shared);
   }
   return null;
 }
 T.numTokens = numTokens; T.huella = huella;
-// A fact about one player may not print a number that player's Tus picks lines show.
+// A count spelled out before the noun it counts ("tres semanas", "siete picks", "los ocho fans") is a number too.
+function wordNums(text){
+  var out = [], re = /(^|[^A-Za-zÀ-ÿ])(dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez|once|doce|trece|catorce|quince|dieciséis|diecisiete|dieciocho|diecinueve|veinte)\s+(semanas|picks|fans|veces|juegos|jugadores|lugares|puntos|salieron)/gi, m;
+  while ((m = re.exec(String(text)))) out.push(String(NUMW.indexOf(m[2].toLowerCase())));
+  return out;
+}
+T.wordNums = wordNums;
+// A fact may not print a number that Tus picks shows for any player it names (olvido and polos name several).
+// The fixed labels of the panel ("últimas 3 semanas", "tus 3 picks más altos", the 49ers) are not results.
+T.tusReason = tusReason;
 function tusReason(M, f){
   var h = huella(M, f);
-  if (h.nombres.length!==1) return null;
-  var lines = T.tusPicks(M, h.nombres[0]);
-  if (!lines) return null;
-  var tn = {};
-  lines.forEach(function(l){ numTokens(l.k+" "+l.t, M).forEach(function(x){ tn[x] = 1; }); });
-  var hit = h.numeros.filter(function(x){return tn[x]});
-  return hit.length ? "Tus picks de "+h.nombres[0]+" ya muestra "+J(hit) : null;
+  for (var i=0;i<h.nombres.length;i++){
+    var lines = T.tusPicks(M, h.nombres[i]);
+    if (!lines) continue;
+    var tn = {};
+    lines.forEach(function(l){
+      var txt = (l.k+" "+l.t).replace(/últimas 3 semanas|tus 3 picks más altos|49ers/gi," ");
+      numTokens(txt, M).forEach(function(x){ tn[x] = 1; });
+    });
+    var hit = h.numeros.filter(function(x){return tn[x]});
+    if (hit.length) return "Tus picks de "+h.nombres[i]+" ya muestra "+J(hit);
+  }
+  return null;
 }
 
 var RESTRICTED = ["andrea's picks","juan1768"];
@@ -1861,12 +1880,20 @@ T.pickFacts = function(M, prevRules, spent, rows){
 // Tribune rows and picks). The archive is a copy of data.json, not of what the page printed, so a rule whose logic
 // changed since may differ slightly from what printed. No archive means nothing is held out. A rule that did not
 // exist last week (DESDE) cannot have run.
+// The older editions (M.history, oldest first) are replayed in order, each with the hold-out of the week before it,
+// so last week's rules are the ones its page would print under today's engine. A gap in the weeks resets the hold-out.
 T.prevRules = function(M){
   if (M.EW<2 || !M.prevD) return [];
-  var P = T.model(M.prevD), pr = T.printed(P);
-  return T.pickFacts(P, [], pr.used, pr.rows).picks.map(function(f){return f.rule}).filter(function(r){
-    return DESDE[r]!=null && DESDE[r]<=M.EW-1;
+  var chain = (M.history||[]).concat([M.prevD]), rules = [], last = null;
+  chain.forEach(function(d){
+    if (last!=null && Number(d.week)!==last+1) rules = [];
+    var P = T.model(d), pr = T.printed(P);
+    rules = T.pickFacts(P, rules, pr.used, pr.rows).picks.map(function(f){return f.rule}).filter(function(r){
+      return DESDE[r]!=null && DESDE[r]<=P.EW;
+    });
+    last = Number(d.week);
   });
+  return rules.filter(function(r){ return DESDE[r]<=M.EW-1; });
 };
 
 // ---------------------------------------------------------------------------
@@ -2010,6 +2037,7 @@ function render(D, opts){
   opts = opts || {};
   var M = T.model(D);
   M.prevD = opts.prevD || null;
+  M.history = opts.history || [];
   D = M.D;
   var N = M.N, WK = M.WK, PR = M.PR;
   var $ = function(id){ return document.getElementById(id); };
@@ -2309,7 +2337,7 @@ function render(D, opts){
   var start = "";
   try {
     var q = new URLSearchParams(location.search).get("yo");
-    if (q) start = q; else if (location.hash) start = decodeURIComponent(location.hash.slice(1));
+    if (q) start = q; else if (location.hash && location.hash!=="#toggle-goatcounter") start = decodeURIComponent(location.hash.slice(1));
   } catch(e){}
   var startP = null;
   M.players.forEach(function(p){ if (!startP && normName(p.name)===normName(start)) startP = p; });
@@ -2326,8 +2354,8 @@ function render(D, opts){
 // Loading: ?ed=N reads the frozen edition, anything else reads the live data.json
 // ---------------------------------------------------------------------------
 function seed(){ return JSON.parse(document.getElementById("seed").textContent); }
-function getJSON(url){
-  return fetch(url, {cache:"no-store"}).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); });
+function getJSON(url, cache){
+  return fetch(url, {cache:cache||"no-store"}).then(function(r){ if (!r.ok) throw new Error(r.status); return r.json(); });
 }
 function edParam(){
   try {
@@ -2336,11 +2364,11 @@ function edParam(){
   } catch(e){ return 0; }
 }
 function load(){
-  if (!window.fetch) return Promise.resolve({D:seed(), ed:0});
+  if (!window.fetch) return Promise.resolve({D:seed(), ed:0, seed:true});
   var ed = edParam(), t = "?t="+Date.now();
   var first = ed ? getJSON("editions/semana-"+pad2(ed)+".json"+t).then(function(d){ return {D:d, ed:ed}; }) : Promise.reject(new Error("no ed"));
   return first.catch(function(){ return getJSON("data.json"+t).then(function(d){ return {D:d, ed:0}; }); })
-    .catch(function(){ return {D:seed(), ed:0}; });
+    .catch(function(){ return {D:seed(), ed:0, seed:true}; });
 }
 function weeksIndex(){
   if (!window.fetch) return Promise.resolve([]);
@@ -2351,25 +2379,51 @@ window.__tribune = T;
 T.render = render;
 T.TZ = TZ;
 // Last week's archived edition, for the no-repeat check. A 404 or bad JSON means there is none.
-function prevEdition(D){
+// The older editions listed in the edition index come too, so the hold-out replays what each page would print under
+// today's engine. Finished weeks never change, so they use the browser cache. Nothing is given up on a timer, so every reader of an edition sees the same facts.
+function prevEdition(D, weeks){
   var w = D && Number(D.week);
-  if (!window.fetch || !(w>=2)) return Promise.resolve(null);
-  return getJSON("editions/semana-"+pad2(w-1)+".json?t="+Date.now()).then(function(d){ return d && typeof d === "object" && Array.isArray(d.pickem) ? d : null; }).catch(function(){ return null; });
+  if (!window.fetch || !(w>=2)) return Promise.resolve({prev:null, history:[]});
+  function one(k){
+    var old = k<w-1;
+    return getJSON("editions/semana-"+pad2(k)+".json"+(old ? "" : "?t="+Date.now()), old ? "default" : "no-store").then(function(d){ return d && typeof d === "object" && Array.isArray(d.pickem) ? d : null; }).catch(function(){ return null; });
+  }
+  var older = (weeks||[]).filter(function(k){ return Number(k)>=1 && Number(k)<w-1; }).map(Number).sort(function(a,b){return a-b});
+  return Promise.all([one(w-1), Promise.all(older.map(one))]).then(function(r){
+    return {prev:r[0], history:r[1].filter(Boolean)};
+  });
 }
 // One GoatCounter view per page load, under /semana-N so views group by edition (query strings and hashes never count).
 // The script is async and may be blocked: no_onload stops its own count, and nothing here throws without it.
 // Your own browser is excluded by opening the page once with #toggle-goatcounter.
+// A load that fell back to the embedded seed counts nothing (it would land under the seed's week). A prerendered or
+// hidden page waits until it is shown, as count.js does on its own onload path.
 function countView(week){
-  var path = "/semana-"+week;
-  function go(){ try { window.goatcounter.count({path:path}); } catch(e){} }
+  var path = "/semana-"+week, done = false;
+  function go(){
+    if (done) return;
+    try {
+      // Chrome prerenders report "hidden" with document.prerendering, older ones "prerender". Count when shown, as count.js does.
+      if (document.prerendering || document.visibilityState!=="visible"){
+        document.addEventListener("visibilitychange", go, {once:true});
+        document.addEventListener("prerenderingchange", go, {once:true});
+        return;
+      }
+      done = true; window.goatcounter.count({path:path});
+    } catch(e){}
+  }
   try {
     if (window.goatcounter && typeof window.goatcounter.count === "function") go();
     else { var s = document.getElementById("gc-script"); if (s) s.addEventListener("load", go); }
   } catch(e){}
 }
+T.countView = countView;
 // Render waits for the previous edition, which can only be asked for once the loaded week is known.
-Promise.all([load().then(function(l){ return prevEdition(l.D).then(function(p){ return {D:l.D, ed:l.ed, prevD:p}; }); }), weeksIndex()]).then(function(r){
-  try { window.__model = render(r[0].D, {ed:r[0].ed, weeks:r[1], prevD:r[0].prevD}); countView(window.__model.EW); }
+Promise.all([load(), weeksIndex()]).then(function(r){
+  return prevEdition(r[0].D, r[1]).then(function(p){ return {l:r[0], weeks:r[1], p:p}; });
+}).then(function(x){
+  var r = [{D:x.l.D, ed:x.l.ed, seed:x.l.seed, prevD:x.p.prev, history:x.p.history}, x.weeks];
+  try { window.__model = render(r[0].D, {ed:r[0].ed, weeks:r[1], prevD:r[0].prevD, history:r[0].history}); if (!r[0].seed) countView(window.__model.EW); }
   catch(e){ document.getElementById("p-head").textContent = "No se pudo leer la edición"; document.getElementById("p-deck").textContent = "Recarga la página."; throw e; }
 });
 })();
