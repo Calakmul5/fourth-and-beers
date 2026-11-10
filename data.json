@@ -239,12 +239,13 @@
    }
   ],
   "datos": [],
-  "edicion": null
+  "edicion": null,
+  "firma": null
  },
  "season": 2026,
  "week": 9,
  "weeks": 18,
- "updated": "2026-11-10T15:10:44.826Z",
+ "updated": "2026-11-10T17:59:46.047Z",
  "prizes": {
   "regular": [
    1050,
