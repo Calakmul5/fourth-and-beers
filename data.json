@@ -184,16 +184,67 @@
     "titulo": "",
     "para": "",
     "texto": "Le atiné al primero. Le atiné al segundo. Llegué al de los Rams con siete de siete y les puse el 12."
+   },
+   {
+    "titulo": "",
+    "para": "King of The North",
+    "texto": "Del otro lado estaba King of The North, con el 8 en Washington. Los Rams cubrieron los 5.5 y Washington ni se paró. Ahí la silla del patrón cambió de dueño."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Seguí con cinco más, trece aciertos al hilo. Ya me veía de sombrero y a caballo. Llegaron los Bears y me dejaron con el 13 en la mano."
+   },
+   {
+    "titulo": "",
+    "para": "Silverback",
+    "texto": "Cerré con el 15 en los Bills. El Comish le puso el 14 a los Vikings en el mismo juego. Yo sumé 15 y él bajó del segundo al sexto, de capataz a peón."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Todo Don que se respete tiene casa grande y casa chica en su hacienda. En la grande, la quiniela, voy primero por 18. En la chica ya estoy enmarcando el Survivor."
    }
   ],
-  "clasificados": [],
+  "clasificados": [
+   {
+    "titulo": "SE BUSCA",
+    "para": "MVP21",
+    "texto": "Otro que le crea a Tampa. MVP21 le dio el 12, más que nadie, y los Bucs se lo aguantaron."
+   },
+   {
+    "titulo": "SE VENDE",
+    "para": "Chitown’DemBoyz",
+    "texto": "Boleta de 100 puntos con un juego en blanco. Imagínense si la llena."
+   },
+   {
+    "titulo": "SE RENTA",
+    "para": "Niners",
+    "texto": "Elevador, solo baja: 77, 74, 64, 40, 39 y 28. Pa’ abajo todos los santos ayudan, sobre todo los de New Orleans."
+   },
+   {
+    "titulo": "SE REGALA",
+    "para": "SinCasco",
+    "texto": "Fe en los Cowboys, poco uso. SinCasco les dio el 15 y Dallas no cubrió ni los 6."
+   },
+   {
+    "titulo": "SE TRASPASA",
+    "para": "Mean Machine, Conquistador",
+    "texto": "Gemelos en el 17. Los dos traían 382, los dos hicieron 77 y los dos le dieron el 10 a Dallas."
+   },
+   {
+    "titulo": "SE BUSCA",
+    "para": "Billy Beaner, Manolito’s winning picks",
+    "texto": "Lugar 11 para dos. Billy Beaner venía bajando y Manolito’s winning picks se vino de atrás."
+   }
+  ],
   "datos": [],
   "edicion": null
  },
  "season": 2026,
  "week": 9,
  "weeks": 18,
- "updated": "2026-11-10T15:10:30.714Z",
+ "updated": "2026-11-10T15:10:44.826Z",
  "prizes": {
   "regular": [
    1050,
