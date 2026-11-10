@@ -163,11 +163,29 @@
   ],
   "Puto el que lo lea": [
    "Fisherman"
+  ],
+  "Cyber70": [
+   "Mr Chachón"
   ]
  },
  "tribune": {
-  "portada": null,
-  "columna": [],
+  "portada": {
+   "titulo": "Los Rams le dan el Don a Mr Chachón",
+   "texto": "Le puso el 12 a los Rams y quedó líder. Sigue vivo en Survivor y ya quiere las dos.",
+   "para": "Cyber70"
+  },
+  "columna": [
+   {
+    "titulo": "",
+    "para": "Cyber70",
+    "texto": "Hasta el domingo era Mr Chachón. Desde el lunes soy Don Chachón, y el Don no se compra, se gana con puntos. Lo que sigue es hacendado."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Le atiné al primero. Le atiné al segundo. Llegué al de los Rams con siete de siete y les puse el 12."
+   }
+  ],
   "clasificados": [],
   "datos": [],
   "edicion": null
@@ -175,7 +193,7 @@
  "season": 2026,
  "week": 9,
  "weeks": 18,
- "updated": "2026-11-10T13:52:03.258Z",
+ "updated": "2026-11-10T15:10:30.714Z",
  "prizes": {
   "regular": [
    1050,
