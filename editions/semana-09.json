@@ -240,12 +240,16 @@
   ],
   "datos": [],
   "edicion": null,
-  "firma": null
+  "firma": {
+   "para": "Cyber70",
+   "titulo": "",
+   "texto": ""
+  }
  },
  "season": 2026,
  "week": 9,
  "weeks": 18,
- "updated": "2026-11-10T17:59:46.047Z",
+ "updated": "2026-11-10T18:00:07.105Z",
  "prizes": {
   "regular": [
    1050,
