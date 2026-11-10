@@ -1,12 +1,12 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v3.2.1 c1.9.0
+// v3.3.0 c1.10.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
 //   2. Reads Survivor strikes from the model's Field tab.
 //   3. Reads the "Fan of" column from the participants list (call signs only, never emails).
 //   4. Reads the Tribune tab and publishes the rows checked for the current week:
-//      Portada, Columna (the paragraphs of the Portada story), Clasificado, Dato and Edición (special edition theme).
+//      Portada, Columna (the paragraphs of the Portada story), Clasificado, Dato, Edición (special edition theme) and Firma (the byline of the chosen Columna).
 //      Also reads the optional Apodo column of the participants list (nicknames, so the page can bold them).
 //   5. Keeps the Survivor elimination order (who went out, which week) by carrying it over from the last data.json.
 //   6. Builds data.json and commits it to the GitHub repo. GitHub Pages republishes the page by itself.
@@ -78,7 +78,7 @@ var PRIZES = {
 };
 
 // Values of the Sección dropdown in the Tribune tab.
-var SECTIONS = ['Portada', 'Columna', 'Clasificado', 'Dato', 'Edición'];
+var SECTIONS = ['Portada', 'Columna', 'Clasificado', 'Dato', 'Edición', 'Firma'];
 var TRIBUNE_HEADER = ['Semana', 'Sección', 'Para', 'Título', 'Texto', 'Publicar'];
 // Warnings: H = color legend, I = warning text, J = the week it was raised. Row 1 holds the headers.
 // G is a narrow blank separator between the Tribune rows (A:F) and the Warnings table.
@@ -617,7 +617,9 @@ function readApodos_(ss, pickemNames) {
 
 /**
  * Checked rows in Tribune for a week, in sheet order, with their sheet row number. Used by the publisher and by the warnings check.
- * Each row is {row, sec, secRaw, para, titulo, texto}, sec lowercased and without accents.
+ * Each row is {row, sec, secRaw, para, titulo, texto, group}, sec lowercased and without accents.
+ * group is the sheet row of the nearest Firma at or above the row in the same week, 0 when there is none (the default group).
+ * Unchecked rows are skipped, but an unchecked Firma still defines the group of the rows under it.
  */
 function tribuneRows_(sh, week) {
   var out = [];
@@ -627,12 +629,16 @@ function tribuneRows_(sh, week) {
   var head = values[0].map(plain_);
   var at = function (name, fallback) { var i = head.indexOf(name); return i >= 0 ? i : fallback; };
   var cW = at('semana', 0), cS = at('seccion', 1), cP = at('para', 2), cT = at('titulo', 3), cX = at('texto', 4), cK = at('publicar', 5);
+  var group = 0;
   for (var r = 1; r < values.length; r++) {
     var v = values[r];
     var ok = /^(true|x|s[ií]|yes)$/i.test(String(v[cK] || '').trim());
-    if (!ok || semanaNum_(v[cW]) !== week) continue;
-    out.push({ row: r + 1, sec: plain_(v[cS]), secRaw: String(v[cS] || '').trim(), para: String(v[cP] || '').trim(),
-      titulo: String(v[cT] || '').trim(), texto: String(v[cX] || '').trim() });
+    if (semanaNum_(v[cW]) !== week) continue;
+    var sec = plain_(v[cS]);
+    if (sec === 'firma') group = r + 1;
+    if (!ok) continue;
+    out.push({ row: r + 1, sec: sec, secRaw: String(v[cS] || '').trim(), para: String(v[cP] || '').trim(),
+      titulo: String(v[cT] || '').trim(), texto: String(v[cX] || '').trim(), group: group });
   }
   return out;
 }
@@ -642,9 +648,10 @@ function tribuneRows_(sh, week) {
  * Para is one or several Pick'em call signs separated by commas, or blank / Todos for everyone (published as '').
  * An unknown name is logged and published as typed. A missing tab gives an empty Tribune and the page uses its fallbacks.
  * Line breaks inside a cell are kept, the ends are trimmed. Edición: at most one per week, Para is the theme key.
+ * Firma: the byline of the chosen Columna, at most one per week, Para is a call sign or empty for a character.
  */
 function readTribune_(ss, week, pickemNames) {
-  var out = { portada: null, columna: [], clasificados: [], datos: [], edicion: null };
+  var out = { portada: null, columna: [], clasificados: [], datos: [], edicion: null, firma: null };
   var rows = tribuneRows_(findTab_(ss, CFG.tribuneTab), week);
   var byNorm = {};
   pickemNames.forEach(function (n) { byNorm[norm_(n)] = n; });
@@ -658,6 +665,12 @@ function readTribune_(ss, week, pickemNames) {
       return;
     }
     var para = resolvePara_(x.para, byNorm, row);
+    if (sec === 'firma') {
+      if (!titulo && !para) { Logger.log('Tribune row ' + row + ' is a checked Firma without Para or Título, skipping it.'); return; }
+      if (out.firma) { Logger.log('Tribune row ' + row + ': only one Firma per week, skipping this one.'); return; }
+      out.firma = { para: para, titulo: titulo, texto: texto };
+      return;
+    }
     if (sec === 'portada') {
       if (!titulo) { Logger.log('Tribune row ' + row + ' is a checked Portada without a Título, skipping it.'); return; }
       if (out.portada) { Logger.log('Tribune row ' + row + ': only one Portada per week, skipping this one.'); return; }
@@ -1049,6 +1062,7 @@ function reviewTribune_(ss, data, extra) {
   var names = data.pickem.map(function (p) { return p.name; });
   var idx = nameIndex(names, data.apodos);
   var last = lastPlace_(data.pickem);
+  var byNormAll = {}; names.forEach(function (n) { byNormAll[norm_(n)] = n; });
   var lastSet = {}; last.forEach(function (n) { lastSet[n] = true; });
   var label = last.join(' y ');
   var namesLast = function (x) {
@@ -1081,6 +1095,22 @@ function reviewTribune_(ss, data, extra) {
   ediciones.forEach(function (x) {
     if (THEMES_KNOWN.indexOf(plain_(x.para)) < 0) add('Tema desconocido "' + x.para + '" en la fila ' + x.row + '. Temas: ' + THEMES_KNOWN.join(', ') + '.', [x]);
   });
+
+  var firmas = rows.filter(function (x) { return x.sec === 'firma'; });
+  var blank = function (x) { return (!x.para || /^todos$/i.test(x.para)) && !x.titulo; };
+  var usable = firmas.filter(function (x) { return !blank(x); });
+  if (usable.length > 1) add('Hay ' + usable.length + ' filas de Firma marcadas. Solo cuenta la primera (fila ' + usable[0].row + ').', usable.slice(1));
+  firmas.forEach(function (x) {
+    if (blank(x)) add('Firma sin Para ni Título en la fila ' + x.row + '. No se publica.', [x]);
+    else if (x.para && !/^todos$/i.test(x.para) && !byNormAll[norm_(x.para)]) add('El Para "' + x.para + '" de la Firma (fila ' + x.row + ') no es un call sign exacto. Sale tal cual, como personaje, sin sello de posición.', [x]);
+    var own = columna.filter(function (c) { return c.group === x.row; });
+    if (!own.length) add('La Firma de la fila ' + x.row + ' no tiene Columna marcada.', [x]);
+  });
+  var orphan = columna.filter(function (c) { return c.group && !firmas.some(function (x) { return x.row === c.group; }); });
+  if (orphan.length) add('La Columna de las filas ' + rn(orphan) + ' cuelga de una Firma sin marcar. Sale con la firma por defecto.', orphan);
+  var groups = {};
+  columna.forEach(function (c) { groups[c.group] = true; });
+  if (Object.keys(groups).length > 1) add('La Columna marcada mezcla opciones de Firma distintas (filas ' + rn(columna) + '). Deja una sola.', columna);
 
   writeWarnings_(sh, warn, data.week);
   return warn.map(function (w) { return w.text; });

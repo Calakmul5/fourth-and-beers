@@ -206,7 +206,7 @@ A.run('Publish.js', [
 
   ['Tribune: only checked rows of the current week, grouped by Sección', () => {
     const t = build().d.tribune;
-    A.deep(Object.keys(t), ['portada', 'columna', 'clasificados', 'datos', 'edicion']);
+    A.deep(Object.keys(t), ['portada', 'columna', 'clasificados', 'datos', 'edicion', 'firma']);
     A.equal(t.edicion, null, 'no Edición row, no edición');
     A.deep(t.portada, { titulo: 'Del sótano a la azotea', texto: 'Sube nueve lugares.', para: 'Abogado' }, 'first Portada wins');
     A.deep(t.columna, [
@@ -246,7 +246,7 @@ A.run('Publish.js', [
     // Columns found by header name, so a reordered sheet still reads right.
     const swapped = [['Publicar', 'Texto', 'Semana', 'Sección', 'Título', 'Para'], ['TRUE', 'Hola.', '3', 'Columna', '', 'Silverback']];
     A.deep(build({ tribune: swapped }).d.tribune.columna, [{ titulo: '', para: 'Silverback', texto: 'Hola.' }]);
-    A.deep(build({ tribune: null }).d.tribune, { portada: null, columna: [], clasificados: [], datos: [], edicion: null }, 'no tab, empty tribune, no failure');
+    A.deep(build({ tribune: null }).d.tribune, { portada: null, columna: [], clasificados: [], datos: [], edicion: null, firma: null }, 'no tab, empty tribune, no failure');
   }],
 
   ['survivorOut carries forward, adds new outs, drops corrected ones', () => {
@@ -417,7 +417,7 @@ A.run('Publish.js', [
   ['publish works without a Tribune tab', () => {
     const { ctx, github } = setup({ tribune: null });
     ctx.publishLeaderboard();
-    A.deep(JSON.parse(github.state.file.text).tribune, { portada: null, columna: [], clasificados: [], datos: [], edicion: null });
+    A.deep(JSON.parse(github.state.file.text).tribune, { portada: null, columna: [], clasificados: [], datos: [], edicion: null, firma: null });
   }],
 
   ['missing script properties fail loudly', () => {
@@ -576,7 +576,7 @@ A.run('Publish.js', [
     A.ok(sh.log.checkboxes.indexOf('r2c6') >= 0, 'checkboxes start at F2');
     const v = sh.log.validations[0];
     A.equal(v.at, 'r2c2', 'dropdown starts at B2');
-    A.deep(JSON.parse(JSON.stringify(v.rule.list)), ['Portada', 'Columna', 'Clasificado', 'Dato', 'Edición'], 'exactly these five');
+    A.deep(JSON.parse(JSON.stringify(v.rule.list)), ['Portada', 'Columna', 'Clasificado', 'Dato', 'Edición', 'Firma'], 'exactly these six');
     A.equal(v.rule.dropdown, true);
     A.equal(sh.rows().length, 1, 'no rows seeded');
   }],
@@ -627,6 +627,80 @@ A.run('Publish.js', [
     A.equal(JSON.parse(github.state.file.text).tribune.edicion.titulo, 'Día de Muertos');
   }],
 
+  // ---- v3.3: Firma -------------------------------------------------------------
+  ['Firma: read once, grouped by the nearest Firma above, kept in the archive', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],                       // row 2
+      ['3', 'Firma', 'Abogado', 'El Licenciado', 'que opina', 'FALSE'],         // row 3, option A, not ticked
+      ['3', 'Columna', '', '', 'Opción A.', 'FALSE'],                           // row 4
+      ['3', 'Firma', 'Silverback', '', '', 'TRUE'],                             // row 5, option B
+      ['3', 'Columna', '', '', 'Opción B uno.', 'TRUE'],                        // row 6
+      ['3', 'Columna', '', '', 'Opción B dos.', 'TRUE'],                        // row 7
+      ['3', 'Firma', 'Jorge_B', 'Otra', '', 'TRUE'],                            // row 8, second checked Firma
+      ['2', 'Firma', 'Abogado', 'Semana vieja', '', 'TRUE']];
+    const ws = participants(null, { tribune: rows });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const d = JSON.parse(github.state.file.text);
+    A.deep(d.tribune.firma, { para: 'Silverback', titulo: '', texto: '' }, 'the first checked Firma of the week');
+    A.deep(d.tribune.columna.map(x => x.texto), ['Opción B uno.', 'Opción B dos.'], 'only checked rows publish');
+    A.deep(JSON.parse(github.state.files['editions/semana-03.json'].text).tribune.firma, { para: 'Silverback', titulo: '', texto: '' }, 'the archive keeps firma');
+    const t = warnTable(tab(ws, 'Tribune')).map(x => x.text);
+    A.ok(t.some(x => /^Hay 2 filas de Firma marcadas\./.test(x)), 'two ticked: ' + t.join(' | '));
+    A.ok(t.some(x => /^La Firma de la fila 8 no tiene Columna marcada\./.test(x)), 'ticked Firma with no Columna');
+    A.ok(!t.some(x => /mezcla/.test(x)), 'one group only');
+    const orph = [TRIBUNE_HEAD, ['3', 'Portada', '', 'T', 'B.', 'TRUE'], ['3', 'Firma', 'Abogado', '', '', 'FALSE'], ['3', 'Columna', '', '', 'Huérfana.', 'TRUE'],
+      ['3', 'Firma', 'Todos', '', '', 'TRUE'], ['3', 'Columna', '', '', 'Otra.', 'TRUE']];
+    const ws2 = participants(null, { tribune: orph });
+    setup({ participants: ws2 }).ctx.publishLeaderboard();
+    const t2 = warnTable(tab(ws2, 'Tribune')).map(x => x.text);
+    A.ok(t2.some(x => /^La Columna de las filas 4 cuelga de una Firma sin marcar\./.test(x)), 'Columna under an unticked Firma: ' + t2.join(' | '));
+    A.ok(t2.some(x => /^Firma sin Para ni Título en la fila 5\./.test(x)), 'Todos with no Título is blank');
+    A.ok(!t2.some(x => /filas de Firma marcadas/.test(x)), 'the blank one is not counted as a second Firma');
+  }],
+
+  ['Firma: a character Firma, empty Firma and a Para that is no Pick\'em', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],
+      ['3', 'Firma', '', 'La Gaceta', 'desde el palco', 'TRUE'],                // row 3
+      ['3', 'Columna', '', '', 'Uno.', 'TRUE']];
+    const a = build({ tribune: rows });
+    A.deep(a.d.tribune.firma, { para: '', titulo: 'La Gaceta', texto: 'desde el palco' });
+    const empty = build({ tribune: [TRIBUNE_HEAD, ['3', 'Firma', '', '', 'x', 'TRUE'], ['3', 'Columna', '', '', 'Uno.', 'TRUE']] });
+    A.equal(empty.d.tribune.firma, null, 'no Para and no Título: not published');
+    const ws = participants(null, { tribune: [TRIBUNE_HEAD,
+      ['3', 'Firma', '', '', '', 'TRUE'], ['3', 'Columna', '', '', 'Uno.', 'TRUE'],
+      ['3', 'Firma', 'Nadie Conocido', '', '', 'TRUE'], ['3', 'Columna', '', '', 'Dos.', 'TRUE']] });
+    const { ctx } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const t = warnTable(tab(ws, 'Tribune')).map(x => x.text);
+    A.ok(t.some(x => /^Firma sin Para ni Título en la fila 2\./.test(x)), t.join(' | '));
+    A.ok(t.some(x => /^El Para "Nadie Conocido" de la Firma \(fila 4\) no es un call sign/.test(x)), t.join(' | '));
+  }],
+
+  ['Firma: Columna rows from two groups warn, the default group counts, and Firma naming the last place counts as a row', () => {
+    const rows = [TRIBUNE_HEAD,
+      ['3', 'Portada', '', 'Titular', 'Bajada.', 'TRUE'],
+      ['3', 'Columna', '', '', 'Sin firma.', 'TRUE'],                           // row 3, default group
+      ['3', 'Firma', 'Steel Man', '', '', 'TRUE'],                              // row 4
+      ['3', 'Columna', '', '', 'Con firma.', 'TRUE']];                          // row 5
+    const ws = participants(null, { tribune: rows });
+    const { ctx } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    const t = warnTable(tab(ws, 'Tribune')).map(x => x.text);
+    A.ok(t.some(x => /^La Columna marcada mezcla opciones de Firma distintas \(filas 3, 5\)/.test(x)), t.join(' | '));
+    const last = ['3', 'Columna', '', '', 'Steel Man otra vez.', 'TRUE'];
+    const ws2 = participants(null, { tribune: [TRIBUNE_HEAD, ['3', 'Portada', '', 'T', 'B.', 'TRUE'], ['3', 'Firma', 'Steel Man', '', '', 'TRUE'], last] });
+    const c2 = setup({ participants: ws2 });
+    c2.ctx.publishLeaderboard();
+    const t2 = warnTable(tab(ws2, 'Tribune')).map(x => x.text);
+    A.ok(t2.some(x => /^Steel Man sale en 2 filas \(3, 4\)\. Mejor una sola\./.test(x)), 'the Firma is one of the rows: ' + t2.join(' | '));
+    const noFirma = [TRIBUNE_HEAD, ['3', 'Portada', '', 'T', 'B.', 'TRUE'], ['3', 'Columna', 'Steel Man', '', 'Steel Man.', 'TRUE'], ['3', 'Columna', '', '', 'Otra.', 'TRUE']];
+    const ws3 = participants(null, { tribune: noFirma });
+    setup({ participants: ws3 }).ctx.publishLeaderboard();
+    A.ok(!warnTable(tab(ws3, 'Tribune')).some(x => /Steel Man sale en/.test(x.text)), 'control: one row naming the last place is fine, so the Firma is what makes it two above');
+  }],
+
   ['Apodo: read per call sign, bad aliases dropped, emails never read, missing column is fine', () => {
     const fans = [['Call Sign PickEm', 'Fan of', 'Email', 'Apodo'],
       ['Silverback', 'PIT', 'a@example.test', 'el Comish, Silverback, el comish'],
@@ -658,7 +732,7 @@ A.run('Publish.js', [
     A.equal(sheet1.getName(), 'Participantes', 'Sheet1 is renamed');
     A.deep(tabNames(ws), ['Participantes', 'Picks_Board', 'PickEm_Board', 'Playoffs_Picks', 'Playoffs_Board', 'Tribune', 'Picks_Log'], 'renamed, plus the Picks and Playoffs tabs, in the agreed order');
     const v = tab(ws, 'Tribune').log.validations;
-    A.deep(JSON.parse(JSON.stringify(v[v.length - 1].rule.list)).slice(-1), ['Edición'], 'the dropdown is refreshed on the existing tab');
+    A.deep(JSON.parse(JSON.stringify(v[v.length - 1].rule.list)).slice(-2), ['Edición', 'Firma'], 'the dropdown is refreshed on the existing tab');
   }],
 
   ['setupTribuneTab inserts Apodo between G and H, shifting the table in H, and still reads the list by header', () => {

@@ -198,7 +198,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.4.0 c2.5.1
+      v4.5.0 c2.6.0
     </div>
   </div>
 </div>
@@ -380,7 +380,8 @@ T.normalize = function(D){
     columna: (t.columna||[]).filter(function(c){return c && c.texto}).map(function(c){ return {titulo:c.titulo||"", para:c.para||"", texto:c.texto}; }),
     clasificados: (t.clasificados||[]).filter(function(c){return c && c.titulo && c.texto}),
     datos: (t.datos||[]).filter(function(c){return c && c.titulo && c.texto}),
-    edicion: t.edicion && (t.edicion.titulo || t.edicion.texto) ? {titulo:t.edicion.titulo||"", texto:t.edicion.texto||"", tema:String(t.edicion.tema||"").trim().toLowerCase()} : null
+    edicion: t.edicion && (t.edicion.titulo || t.edicion.texto) ? {titulo:t.edicion.titulo||"", texto:t.edicion.texto||"", tema:String(t.edicion.tema||"").trim().toLowerCase()} : null,
+    firma: t.firma && (t.firma.para || t.firma.titulo) ? {para:String(t.firma.para||"").trim(), titulo:String(t.firma.titulo||"").trim(), texto:String(t.firma.texto||"").trim()} : null
   };
   d.apodos = d.apodos || {};
   d.picks = d.picks && typeof d.picks === "object" ? d.picks : {};
@@ -1937,6 +1938,7 @@ T.printed = function(M){
   if (pt.fromSheet) parts.push(tr.portada.para||"");
   else if (pt.data && pt.data.names && pt.data.names.some(function(n){return prot[n]})) used = true;
   tr.columna.forEach(function(c){ parts.push(c.titulo||"", c.texto, c.para||""); });
+  if (tr.firma) parts.push(tr.firma.titulo, tr.firma.texto, tr.firma.para);
   if (hits(parts)) used = true;
   function keep(x){
     if (!hits([x.titulo, x.texto, x.para||""])) return true;
@@ -1948,6 +1950,7 @@ T.printed = function(M){
   var rows = [];
   if (pt.fromSheet) rows.push({kind:"Portada", titulo:pt.titulo, texto:pt.texto, para:tr.portada.para||""});
   tr.columna.forEach(function(c){ rows.push({kind:"Columna", titulo:c.titulo||"", texto:c.texto, para:c.para||""}); });
+  if (tr.firma) rows.push({kind:"Firma", titulo:tr.firma.titulo, texto:tr.firma.texto, para:tr.firma.para});
   ads.forEach(function(a){ rows.push({kind:"Clasificado", titulo:a.titulo, texto:a.texto, para:a.para||""}); });
   datos.forEach(function(d){ rows.push({kind:"Dato", titulo:d.titulo, texto:d.texto, para:d.para||""}); });
   return {pt:pt, ads:ads, datos:datos, rows:rows, used:used, prot:prot};
@@ -1958,17 +1961,28 @@ T.plan = function(M){
   return {pt:p.pt, ads:p.ads, datos:p.datos, pk:pk, used:p.used || pk.picks.some(function(f){return (f.sujetos||[]).some(function(n){return prot[n]})}), protect:Object.keys(prot)};
 };
 
-T.byline = function(M){
-  var base = "Por el Comish";
-  var c = M.byName[COMISH];
-  if (!c) return base;
+// Byline. The Firma row (the chosen Columna's author) wins: a call sign gets the computed tagline for that player,
+// an empty Para is a character with a Título and an optional Texto. Texto always replaces the computed tagline.
+T.tagline = function(M, name){
+  var c = M.byName[name];
+  if (!c) return "";
   var worst = max(M.players.map(function(p){return p.rank}));
-  if (c.rank===1){
-    var prevLead = M.N>1 && M.ranksAt(M.N-1)[COMISH]===1;
-    return base+", que "+(prevLead ? "sigue líder" : "ya es líder")+" y no piensa disculparse";
+  var prev = M.N>1 ? M.ranksAt(M.N-1)[name] : null;
+  if (c.rank===1) return "que "+(prev===1 ? "sigue líder" : "ya es líder")+" y no piensa disculparse";
+  if (c.rank===worst && worst>1) return "que va en el sótano y lo reporta él mismo";
+  if (prev!=null && c.rank-prev>=3) return "que bajó al "+c.rank+"º lugar y lo cuenta él mismo";
+  if (prev!=null && prev-c.rank>=3) return "que subió al "+c.rank+"º lugar y no lo deja de contar";
+  return "";
+};
+T.byline = function(M){
+  var f = M.D.tribune.firma;
+  if (!f) { var t0 = T.tagline(M, COMISH); return "Por el Comish"+(t0 ? ", "+t0 : ""); }
+  if (f.para && M.byName[f.para]){
+    var nm = f.titulo || (f.para===COMISH ? "el Comish" : f.para);
+    var tag = f.texto || T.tagline(M, f.para);
+    return "Por "+nm+(tag ? ", "+tag : "");
   }
-  if (c.rank===worst && worst>1) return base+", que va en el sótano y lo reporta él mismo";
-  return base;
+  return "Por "+(f.titulo || f.para)+(f.texto ? ", "+f.texto : "");
 };
 
 // ---------------------------------------------------------------------------

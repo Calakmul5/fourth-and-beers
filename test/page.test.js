@@ -653,6 +653,41 @@ A.run('index.html', [
     common(c3, 'week 1'); common(c4, 'quiet');
   }],
 
+  ['byline: no firma keeps "Por el Comish"; Firma follows the chosen Columna, Texto replaces the tagline', async () => {
+    const names = ['Silverback', 'Abogado', 'Steel Man', 'Ana', 'Beto', 'Chuy', 'Dora', 'Eli'];
+    const W = [[80, 0, 0], [70, 0, 130 - 70], [60, 0, 60], [50, 0, 60], [40, 0, 60], [30, 0, 95], [20, 0, 0], [10, 0, 0]];
+    // ranks now: Abogado 1 (was 2), Chuy 2 (was 6), Steel Man 3, Ana 4, Beto 5, Silverback 6 (was 1), Dora 7, Eli 8
+    const mk = firma => {
+      const d = make({ week: 3, names, weeks: Object.fromEntries(names.map((n, i) => [n, W[i]])) });
+      d.tribune = { portada: null, columna: [], clasificados: [], datos: [], edicion: null, firma };
+      return d;
+    };
+    const by = async firma => text((await load(mk(firma))).doc, '#p-by');
+    A.equal(await by(undefined), 'Por el Comish, que bajó al 6º lugar y lo cuenta él mismo', 'no firma: today\'s behaviour, now with the drop line');
+    A.equal(await by(null), 'Por el Comish, que bajó al 6º lugar y lo cuenta él mismo');
+    A.equal(await by({ para: 'Silverback', titulo: '', texto: '' }), 'Por el Comish, que bajó al 6º lugar y lo cuenta él mismo', 'Silverback is el Comish');
+    A.equal(await by({ para: 'Abogado', titulo: '', texto: '' }), 'Por Abogado, que ya es líder y no piensa disculparse');
+    A.equal(await by({ para: 'Abogado', titulo: 'El Licenciado', texto: '' }), 'Por El Licenciado, que ya es líder y no piensa disculparse', 'Título replaces the call sign');
+    A.equal(await by({ para: 'Abogado', titulo: '', texto: 'que firma de memoria' }), 'Por Abogado, que firma de memoria', 'Texto replaces the tagline');
+    A.equal(await by({ para: 'Chuy', titulo: '', texto: '' }), 'Por Chuy, que subió al 2º lugar y no lo deja de contar');
+    A.equal(await by({ para: 'Eli', titulo: '', texto: '' }), 'Por Eli, que va en el sótano y lo reporta él mismo');
+    A.equal(await by({ para: 'Ana', titulo: '', texto: '' }), 'Por Ana', 'no tagline when nothing applies');
+    A.equal(await by({ para: '', titulo: 'La Gaceta', texto: '' }), 'Por La Gaceta', 'character');
+    A.equal(await by({ para: '', titulo: 'La Gaceta', texto: 'desde el palco' }), 'Por La Gaceta, desde el palco');
+  }],
+
+  ['byline: sigue líder when the player led last week too, and the Firma counts for the last-place budget', async () => {
+    const names = ['Silverback', 'Abogado', 'Ana', 'Beto'];
+    const weeks = Object.fromEntries(names.map((n, i) => [n, [90 - i * 10, 90 - i * 10, 90 - i * 10]]));
+    const d = make({ week: 3, names, weeks });
+    A.equal(text((await load(d)).doc, '#p-by'), 'Por el Comish, que sigue líder y no piensa disculparse');
+    const T = (await load(d)).T;
+    const M = T.model(T.normalize(Object.assign(clone(d), { tribune: { portada: null, columna: [], clasificados: [], datos: [], edicion: null, firma: { para: 'Beto', titulo: '', texto: '' } } })));
+    A.ok(T.printed(M).used, 'a Firma naming the last place uses the last-place budget');
+    const M2 = T.model(T.normalize(d));
+    A.ok(!T.printed(M2).used, 'and without it the budget is free');
+  }],
+
   ['story and clasificados show the Tribune rows, escaped, and hide when empty', async () => {
     const c = await load(W5);
     A.deep(all(c.doc, '#story p').map(p => p.textContent.replace(/■$/, '')), W5.tribune.columna.map(x => x.texto));
