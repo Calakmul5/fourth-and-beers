@@ -169,83 +169,17 @@
   ]
  },
  "tribune": {
-  "portada": {
-   "titulo": "Los Rams le dan el Don a Mr Chachón",
-   "texto": "Le puso el 12 a los Rams y quedó líder. Sigue vivo en Survivor y ya quiere las dos.",
-   "para": "Cyber70"
-  },
-  "columna": [
-   {
-    "titulo": "",
-    "para": "Cyber70",
-    "texto": "Hasta el domingo era Mr Chachón. Desde el lunes soy Don Chachón, y el Don no se compra, se gana con puntos. Lo que sigue es hacendado."
-   },
-   {
-    "titulo": "",
-    "para": "",
-    "texto": "Le atiné al primero. Le atiné al segundo. Llegué al de los Rams con siete de siete y les puse el 12."
-   },
-   {
-    "titulo": "",
-    "para": "King of The North",
-    "texto": "Del otro lado estaba King of The North, con el 8 en Washington. Los Rams cubrieron los 5.5 y Washington ni se paró. Ahí la silla del patrón cambió de dueño."
-   },
-   {
-    "titulo": "",
-    "para": "",
-    "texto": "Seguí con cinco más, trece aciertos al hilo. Ya me veía de sombrero y a caballo. Llegaron los Bears y me dejaron con el 13 en la mano."
-   },
-   {
-    "titulo": "",
-    "para": "Silverback",
-    "texto": "Cerré con el 15 en los Bills. El Comish le puso el 14 a los Vikings en el mismo juego. Yo sumé 15 y él bajó del segundo al sexto, de capataz a peón."
-   },
-   {
-    "titulo": "",
-    "para": "",
-    "texto": "Todo Don que se respete tiene casa grande y casa chica en su hacienda. En la grande, la quiniela, voy primero por 18. En la chica ya estoy enmarcando el Survivor."
-   }
-  ],
-  "clasificados": [
-   {
-    "titulo": "SE BUSCA",
-    "para": "MVP21",
-    "texto": "Otro que le crea a Tampa. MVP21 le dio el 12, más que nadie, y los Bucs se lo aguantaron."
-   },
-   {
-    "titulo": "SE VENDE",
-    "para": "Chitown’DemBoyz",
-    "texto": "Boleta de 100 puntos con un juego en blanco. Imagínense si la llena."
-   },
-   {
-    "titulo": "SE RENTA",
-    "para": "Niners",
-    "texto": "Elevador, solo baja: 77, 74, 64, 40, 39 y 28. Pa’ abajo todos los santos ayudan, sobre todo los de New Orleans."
-   },
-   {
-    "titulo": "SE REGALA",
-    "para": "SinCasco",
-    "texto": "Fe en los Cowboys, poco uso. SinCasco les dio el 15 y Dallas no cubrió ni los 6."
-   },
-   {
-    "titulo": "SE TRASPASA",
-    "para": "Mean Machine, Conquistador",
-    "texto": "Gemelos en el 17. Los dos traían 382, los dos hicieron 77 y los dos le dieron el 10 a Dallas."
-   },
-   {
-    "titulo": "SE BUSCA",
-    "para": "Billy Beaner, Manolito’s winning picks",
-    "texto": "Lugar 11 para dos. Billy Beaner venía bajando y Manolito’s winning picks se vino de atrás."
-   }
-  ],
+  "portada": null,
+  "columna": [],
+  "clasificados": [],
   "datos": [],
   "edicion": null,
   "firma": null
  },
  "season": 2026,
- "week": 9,
+ "week": 10,
  "weeks": 18,
- "updated": "2026-11-10T18:00:56.947Z",
+ "updated": "2026-11-17T15:26:42.046Z",
  "prizes": {
   "regular": [
    1050,
@@ -273,10 +207,29 @@
     35,
     64,
     60,
-    107
+    107,
+    80
    ],
-   "total": 573,
+   "total": 653,
    "dropped": 35,
+   "droppedWeek": 6
+  },
+  {
+   "name": "Abogado",
+   "weeks": [
+    63,
+    52,
+    75,
+    57,
+    94,
+    27,
+    46,
+    72,
+    84,
+    66
+   ],
+   "total": 609,
+   "dropped": 27,
    "droppedWeek": 6
   },
   {
@@ -290,28 +243,12 @@
     50,
     61,
     91,
-    66
+    66,
+    52
    ],
-   "total": 555,
+   "total": 607,
    "dropped": 49,
    "droppedWeek": 3
-  },
-  {
-   "name": "Abogado",
-   "weeks": [
-    63,
-    52,
-    75,
-    57,
-    94,
-    27,
-    46,
-    72,
-    84
-   ],
-   "total": 543,
-   "dropped": 27,
-   "droppedWeek": 6
   },
   {
    "name": "Osos de Grayslake",
@@ -324,27 +261,11 @@
     35,
     47,
     84,
-    82
+    82,
+    59
    ],
-   "total": 542,
+   "total": 601,
    "dropped": 35,
-   "droppedWeek": 6
-  },
-  {
-   "name": "Chitown’DemBoyz",
-   "weeks": [
-    60,
-    63,
-    60,
-    77,
-    56,
-    29,
-    42,
-    64,
-    100
-   ],
-   "total": 522,
-   "dropped": 29,
    "droppedWeek": 6
   },
   {
@@ -358,62 +279,48 @@
     44,
     65,
     55,
-    38
+    38,
+    75
    ],
-   "total": 518,
+   "total": 593,
    "dropped": 38,
    "droppedWeek": 9
   },
   {
-   "name": "Rastaman",
+   "name": "Chitown’DemBoyz",
    "weeks": [
-    64,
-    58,
-    54,
-    56,
-    71,
-    54,
-    26,
-    53,
-    82
-   ],
-   "total": 492,
-   "dropped": 26,
-   "droppedWeek": 7
-  },
-  {
-   "name": "KinkyKing",
-   "weeks": [
-    51,
-    59,
-    52,
-    23,
-    83,
-    37,
-    54,
     60,
-    93
-   ],
-   "total": 489,
-   "dropped": 23,
-   "droppedWeek": 4
-  },
-  {
-   "name": "Jorge_B",
-   "weeks": [
-    93,
-    39,
-    56,
-    69,
     63,
-    34,
-    17,
     60,
-    72
+    77,
+    56,
+    29,
+    42,
+    64,
+    100,
+    69
    ],
-   "total": 486,
-   "dropped": 17,
-   "droppedWeek": 7
+   "total": 591,
+   "dropped": 29,
+   "droppedWeek": 6
+  },
+  {
+   "name": "Juan1768",
+   "weeks": [
+    81,
+    42,
+    73,
+    34,
+    40,
+    46,
+    35,
+    60,
+    89,
+    101
+   ],
+   "total": 567,
+   "dropped": 34,
+   "droppedWeek": 4
   },
   {
    "name": "MVP21",
@@ -426,9 +333,10 @@
     48,
     46,
     30,
-    101
+    101,
+    81
    ],
-   "total": 475,
+   "total": 556,
    "dropped": 30,
    "droppedWeek": 8
   },
@@ -443,96 +351,12 @@
     27,
     36,
     64,
-    94
+    94,
+    82
    ],
-   "total": 472,
+   "total": 554,
    "dropped": 27,
    "droppedWeek": 6
-  },
-  {
-   "name": "Billy Beaner",
-   "weeks": [
-    78,
-    74,
-    50,
-    50,
-    63,
-    43,
-    41,
-    66,
-    48
-   ],
-   "total": 472,
-   "dropped": 41,
-   "droppedWeek": 7
-  },
-  {
-   "name": "Niners",
-   "weeks": [
-    60,
-    63,
-    51,
-    77,
-    74,
-    64,
-    40,
-    39,
-    28
-   ],
-   "total": 468,
-   "dropped": 28,
-   "droppedWeek": 9
-  },
-  {
-   "name": "Juan1768",
-   "weeks": [
-    81,
-    42,
-    73,
-    34,
-    40,
-    46,
-    35,
-    60,
-    89
-   ],
-   "total": 466,
-   "dropped": 34,
-   "droppedWeek": 4
-  },
-  {
-   "name": "Puto el que lo lea",
-   "weeks": [
-    47,
-    59,
-    32,
-    58,
-    66,
-    36,
-    49,
-    63,
-    87
-   ],
-   "total": 465,
-   "dropped": 32,
-   "droppedWeek": 3
-  },
-  {
-   "name": "This is our year",
-   "weeks": [
-    57,
-    65,
-    65,
-    65,
-    56,
-    38,
-    30,
-    72,
-    43
-   ],
-   "total": 461,
-   "dropped": 30,
-   "droppedWeek": 7
   },
   {
    "name": "Mean Machine",
@@ -545,10 +369,173 @@
     19,
     36,
     25,
-    77
+    77,
+    86
    ],
-   "total": 459,
+   "total": 545,
    "dropped": 19,
+   "droppedWeek": 6
+  },
+  {
+   "name": "KinkyKing",
+   "weeks": [
+    51,
+    59,
+    52,
+    23,
+    83,
+    37,
+    54,
+    60,
+    93,
+    47
+   ],
+   "total": 536,
+   "dropped": 23,
+   "droppedWeek": 4
+  },
+  {
+   "name": "Billy Beaner",
+   "weeks": [
+    78,
+    74,
+    50,
+    50,
+    63,
+    43,
+    41,
+    66,
+    48,
+    62
+   ],
+   "total": 534,
+   "dropped": 41,
+   "droppedWeek": 7
+  },
+  {
+   "name": "SinCasco",
+   "weeks": [
+    65,
+    50,
+    73,
+    36,
+    44,
+    22,
+    45,
+    56,
+    86,
+    76
+   ],
+   "total": 531,
+   "dropped": 22,
+   "droppedWeek": 6
+  },
+  {
+   "name": "Niners",
+   "weeks": [
+    60,
+    63,
+    51,
+    77,
+    74,
+    64,
+    40,
+    39,
+    28,
+    63
+   ],
+   "total": 531,
+   "dropped": 28,
+   "droppedWeek": 9
+  },
+  {
+   "name": "Rastaman",
+   "weeks": [
+    64,
+    58,
+    54,
+    56,
+    71,
+    54,
+    26,
+    53,
+    82,
+    32
+   ],
+   "total": 524,
+   "dropped": 26,
+   "droppedWeek": 7
+  },
+  {
+   "name": "This is our year",
+   "weeks": [
+    57,
+    65,
+    65,
+    65,
+    56,
+    38,
+    30,
+    72,
+    43,
+    62
+   ],
+   "total": 523,
+   "dropped": 30,
+   "droppedWeek": 7
+  },
+  {
+   "name": "Jorge_B",
+   "weeks": [
+    93,
+    39,
+    56,
+    69,
+    63,
+    34,
+    17,
+    60,
+    72,
+    30
+   ],
+   "total": 516,
+   "dropped": 17,
+   "droppedWeek": 7
+  },
+  {
+   "name": "Puto el que lo lea",
+   "weeks": [
+    47,
+    59,
+    32,
+    58,
+    66,
+    36,
+    49,
+    63,
+    87,
+    50
+   ],
+   "total": 515,
+   "dropped": 32,
+   "droppedWeek": 3
+  },
+  {
+   "name": "X-Men Let’s go Boys",
+   "weeks": [
+    71,
+    41,
+    50,
+    47,
+    43,
+    31,
+    49,
+    64,
+    77,
+    71
+   ],
+   "total": 513,
+   "dropped": 31,
    "droppedWeek": 6
   },
   {
@@ -562,61 +549,11 @@
     27,
     48,
     41,
-    77
+    77,
+    47
    ],
-   "total": 459,
+   "total": 506,
    "dropped": 27,
-   "droppedWeek": 6
-  },
-  {
-   "name": "SinCasco",
-   "weeks": [
-    65,
-    50,
-    73,
-    36,
-    44,
-    22,
-    45,
-    56,
-    86
-   ],
-   "total": 455,
-   "dropped": 22,
-   "droppedWeek": 6
-  },
-  {
-   "name": "X-Men Let’s go Boys",
-   "weeks": [
-    71,
-    41,
-    50,
-    47,
-    43,
-    31,
-    49,
-    64,
-    77
-   ],
-   "total": 442,
-   "dropped": 31,
-   "droppedWeek": 6
-  },
-  {
-   "name": "Steel Man",
-   "weeks": [
-    45,
-    47,
-    43,
-    44,
-    40,
-    13,
-    66,
-    68,
-    72
-   ],
-   "total": 425,
-   "dropped": 13,
    "droppedWeek": 6
   },
   {
@@ -630,10 +567,29 @@
     17,
     27,
     50,
-    88
+    88,
+    78
    ],
-   "total": 422,
+   "total": 500,
    "dropped": 17,
+   "droppedWeek": 6
+  },
+  {
+   "name": "Steel Man",
+   "weeks": [
+    45,
+    47,
+    43,
+    44,
+    40,
+    13,
+    66,
+    68,
+    72,
+    42
+   ],
+   "total": 467,
+   "dropped": 13,
    "droppedWeek": 6
   }
  ],
@@ -664,6 +620,9 @@
   ],
   [
    "Cyber70"
+  ],
+  [
+   "Juan1768"
   ]
  ],
  "strikes": {
