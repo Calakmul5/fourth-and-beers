@@ -169,17 +169,25 @@
   ]
  },
  "tribune": {
-  "portada": null,
+  "portada": {
+   "titulo": "La nueva generación viene por nosotros",
+   "texto": "",
+   "para": "Juan1768, Andrea’s Picks"
+  },
   "columna": [],
   "clasificados": [],
   "datos": [],
   "edicion": null,
-  "firma": null
+  "firma": {
+   "para": "Steel Man",
+   "titulo": "",
+   "texto": ""
+  }
  },
  "season": 2026,
  "week": 10,
  "weeks": 18,
- "updated": "2026-11-17T17:31:15.860Z",
+ "updated": "2026-11-17T17:35:53.068Z",
  "prizes": {
   "regular": [
    1050,
