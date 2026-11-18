@@ -198,11 +198,6 @@
    {
     "titulo": "",
     "para": "",
-    "texto": "No bajé al sótano, me jubilé. Mi Afore es el 8 que cobré con los Cargadores. No alcanza ni pa’ las pizzas."
-   },
-   {
-    "titulo": "",
-    "para": "",
     "texto": "El jueves vuelvo a llenar mi boleta con pura experiencia. Total, el final ya me lo sé: la nueva generación viene por nosotros."
    }
   ],
@@ -249,7 +244,7 @@
  "season": 2026,
  "week": 10,
  "weeks": 18,
- "updated": "2026-11-18T03:04:08.576Z",
+ "updated": "2026-11-18T03:05:42.416Z",
  "prizes": {
   "regular": [
    1050,
