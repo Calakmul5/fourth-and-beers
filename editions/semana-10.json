@@ -171,11 +171,73 @@
  "tribune": {
   "portada": {
    "titulo": "La nueva generación viene por nosotros",
-   "texto": "",
+   "texto": "Juan1768 quedó a 4 puntos de la perfecta y Andrea’s Picks fue segunda con 91.",
    "para": "Juan1768, Andrea’s Picks"
   },
-  "columna": [],
-  "clasificados": [],
+  "columna": [
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Les cuento. El lunes ni vi el juego, mi boleta ya venía muerta desde el domingo. El martes me enteré de que ya había relevo generacional."
+   },
+   {
+    "titulo": "",
+    "para": "Juan1768",
+    "texto": "Juan1768 llegó al lunes a un juego de lo que nadie ha hecho aquí, la perfecta. Le falló el 4 en los Cuervos. Lo que a nosotros nos pasa diario, a él le pasó una vez."
+   },
+   {
+    "titulo": "",
+    "para": "Andrea’s Picks",
+    "texto": "Andrea’s Picks le dio el 13 a los Cargadores y quedó segunda con 91. Yo también le fui a los Cargadores. Ella con el 13 salió del sótano, yo con el 8 entré."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Lo mío fue pura experiencia: 13 a Texanos, 11 a Potros y 9 a mis Acereros. Perdí los tres. La experiencia es eso, saber exactamente cómo se pierde."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "No bajé al sótano, me jubilé. Mi Afore es el 8 que cobré con los Cargadores. No alcanza ni pa’ las pizzas."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "El jueves vuelvo a llenar mi boleta con pura experiencia. Total, el final ya me lo sé: la nueva generación viene por nosotros."
+   }
+  ],
+  "clasificados": [
+   {
+    "titulo": "SE VENDE",
+    "para": "Rastaman",
+    "texto": "Salvavidas sin estrenar, del 14 que le dio a los Titanes. El que con Titanes se acuesta, hundido amanece."
+   },
+   {
+    "titulo": "SE BUSCA",
+    "para": "King of The North",
+    "texto": "Potro que cubra, para King of The North y su 13. Ganaron por dos y les faltó la puntita."
+   },
+   {
+    "titulo": "SE TRASPASA",
+    "para": "SinCasco",
+    "texto": "Nido de Cuervos, poco uso. SinCasco les dio el 11 y en su propia casa los Cargadores los voltearon."
+   },
+   {
+    "titulo": "SE BUSCA",
+    "para": "Abogado, Osos de Grayslake",
+    "texto": "Gigante de talla completa. Abogado y Osos de Grayslake le metieron el 14 y les salió chiquito."
+   },
+   {
+    "titulo": "SE REGALA",
+    "para": "Conquistador",
+    "texto": "Espejitos, de los que trajo el domingo. Conquistador fue por oro y regresó con 5 de 14."
+   },
+   {
+    "titulo": "SE VENDE",
+    "para": "MVP21",
+    "texto": "Colchones, tambores, refrigeradores, o algo de fierro viejo de Pittsburgh. MVP21 le dio el 7 a sus Acereros y les metieron 38."
+   }
+  ],
   "datos": [],
   "edicion": null,
   "firma": {
@@ -187,7 +249,7 @@
  "season": 2026,
  "week": 10,
  "weeks": 18,
- "updated": "2026-11-17T17:35:53.068Z",
+ "updated": "2026-11-18T03:04:08.576Z",
  "prizes": {
   "regular": [
    1050,
