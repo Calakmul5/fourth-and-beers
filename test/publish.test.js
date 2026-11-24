@@ -950,9 +950,18 @@ A.run('Publish.js', [
     A.match(all, /Steel Man sale en 2 filas \(2, 3\)/, 'an apodo and a Para both count');
     A.match(all, /Hay Columna sin fila de Portada \(filas 2\)\./);
     A.match(all, /Hay 2 filas de Edición\. Solo cuenta la primera \(fila 4\)\./);
-    A.match(all, /Tema desconocido "navidad" en la fila 4\. Temas: muertos\./);
+    A.match(all, /Tema desconocido "navidad" en la fila 4\. Temas: muertos, gracias\./);
     A.ok([2, 3, 4, 5].every(r => sh.bg(r, 1)), 'every row involved is tinted');
-    A.equal(ctx.THEMES_KNOWN.join(), 'muertos');
+    A.equal(ctx.THEMES_KNOWN.join(), 'muertos,gracias');
+  }],
+
+  ['Revisión: a gracias Edición row publishes its tema and raises no unknown-theme warning', () => {
+    const rows = [TRIBUNE_HEAD, ['3', 'Edición', 'gracias', 'Edición de Acción de Gracias', 'Hay mucho que agradecer.', 'TRUE']];
+    const ws = participants(null, { tribune: rows });
+    const { ctx, github } = setup({ participants: ws });
+    ctx.publishLeaderboard();
+    A.deep(JSON.parse(github.state.files['data.json'].text).tribune.edicion, { titulo: 'Edición de Acción de Gracias', texto: 'Hay mucho que agradecer.', tema: 'gracias' });
+    A.noMatch(warnTable(tab(ws, 'Tribune')).map(x => x.text).join(' '), /Tema desconocido/);
   }],
 
   ['Revisión: the golf rule protects every player tied for last, and a missing Tribune tab is fine', () => {

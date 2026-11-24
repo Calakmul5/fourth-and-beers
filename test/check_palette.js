@@ -38,7 +38,7 @@ A.run('Palette', [
     const t = tokens();
     A.deep(
       ['paper', 'paper2', 'ink', 'ink2', 'muted', 'rule', 'hair', 'red'].map(k => t[k]),
-      ['#F3EEE3', '#E9E2D3', '#161514', '#3B3834', '#6B655C', '#161514', '#B9B0A0', '#A3191F'], 'the approved tokens');
+      ['#ECEEF0', '#E2E5E8', '#151617', '#3A3C3E', '#5E6266', '#151617', '#B6BBC0', '#A3191F'], 'the approved tokens');
     A.equal(t.up, '#2E7D4F', 'climber green');
     A.equal(t.down, '#C2610C', 'drop burnt orange');
     ['blush', 'stone', 'marigold'].forEach(k => A.ok(t[k], '--' + k));
@@ -83,5 +83,20 @@ A.run('Palette', [
     A.ok(themes.length >= 1, 'a theme block exists');
     themes.forEach(b => A.ok(/^html\[data-tema="[a-z]+"\]\{(--[a-z0-9-]+:var\(--[a-z0-9-]+\);?)+\}$/.test(b), 'theme block only remaps tokens: ' + b));
     A.ok(!/data-tema="muertos"\]\{[^}]*--red/.test(HTML), 'the red (chart and prize color) is not overridden');
+  }],
+  ['the neutral tokens are cool gray, never warm (blue at least red)', () => {
+    const t = tokens();
+    ['paper', 'paper2', 'ink', 'ink2', 'muted', 'rule', 'hair', 'stone'].forEach(k => { const c = rgb(t[k]); A.ok(c[2] >= c[0], '--' + k + ' ' + t[k] + ' is not warm'); });
+    A.equal(t.stone, '#B9BEC3');
+    A.ok(contrast(t.marigold, t.paper) >= 4.5 && contrast(t.red, t.paper) >= 4.5 && contrast(t.muted, t.paper) >= 4.5, 'text tokens on the new paper');
+    A.ok(contrast(t.up, t.paper) >= 3 && contrast(t.down, t.paper) >= 3, 'chart tokens on the new paper');
+    ['cranberry', 'pumpkin', 'harvest', 'bark'].forEach((k, i) => A.equal(t[k], ['#8E1B2E', '#B4530F', '#8A6A10', '#5A3A22'][i], 'Cosecha clásica ' + k));
+  }],
+  ['gracias: cranberry passes 4.5:1 as text, the pumpkin, harvest and bark pass 3:1 as decoration', () => {
+    const t = tokens();
+    ['pumpkin', 'cranberry', 'harvest', 'bark'].forEach(k => A.ok(t[k], '--' + k));
+    A.ok(contrast(t.cranberry, t.paper) >= 4.5, '--cranberry on --paper is ' + contrast(t.cranberry, t.paper).toFixed(2) + ':1, needs 4.5');
+    ['pumpkin', 'harvest', 'bark'].forEach(k => A.ok(contrast(t[k], t.paper) >= 4.2, '--' + k + ' on --paper is ' + contrast(t[k], t.paper).toFixed(2) + ':1, needs 4.2'));
+    A.ok(/html\[data-tema="gracias"\]\{--accent:var\(--cranberry\)\}/.test(HTML), 'the gracias block remaps the accent');
   }],
 ]);

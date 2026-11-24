@@ -46,6 +46,7 @@ A.run('Link preview', [
     A.equal(urls['og:image'], urls['og:image:secure_url'], 'secure_url matches og:image');
     A.equal(urls['og:image'], urls['twitter:image'], 'twitter:image matches og:image');
     A.ok(/\?v=\d+$/.test(urls['og:image']), 'og:image carries a ?v= cache buster');
+    A.ok(/\?v=2$/.test(urls['og:image']), 'og:image is at ?v=2, the gray card');
   }],
   ['tags and the card',() => {
     

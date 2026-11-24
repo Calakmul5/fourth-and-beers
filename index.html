@@ -16,8 +16,8 @@
 <meta property="og:title" content="Fourth and Beers Tribune">
 <meta property="og:description" content="La quiniela más grande del mundo. Información que nadie pidió.">
 <meta property="og:url" content="https://calakmul5.github.io/fourth-and-beers/">
-<meta property="og:image" content="https://calakmul5.github.io/fourth-and-beers/assets/og-card.png?v=1">
-<meta property="og:image:secure_url" content="https://calakmul5.github.io/fourth-and-beers/assets/og-card.png?v=1">
+<meta property="og:image" content="https://calakmul5.github.io/fourth-and-beers/assets/og-card.png?v=2">
+<meta property="og:image:secure_url" content="https://calakmul5.github.io/fourth-and-beers/assets/og-card.png?v=2">
 <meta property="og:image:type" content="image/png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -25,16 +25,17 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Fourth and Beers Tribune">
 <meta name="twitter:description" content="La quiniela más grande del mundo. Información que nadie pidió.">
-<meta name="twitter:image" content="https://calakmul5.github.io/fourth-and-beers/assets/og-card.png?v=1">
+<meta name="twitter:image" content="https://calakmul5.github.io/fourth-and-beers/assets/og-card.png?v=2">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=UnifrakturMaguntia&family=Playfair+Display:wght@700;800;900&family=Source+Serif+4:ital,wght@0,400;0,700;1,400;1,700&family=Libre+Franklin:wght@600;700;800;900&display=swap">
 <style>
 :root{
   color-scheme:only light;
-  --paper:#F3EEE3;--paper2:#E9E2D3;--ink:#161514;--ink2:#3B3834;--muted:#6B655C;--rule:#161514;--hair:#B9B0A0;
-  --red:#A3191F;--up:#2E7D4F;--down:#C2610C;--blush:#E7B9B2;--stone:#BDB5A6;
+  --paper:#ECEEF0;--paper2:#E2E5E8;--ink:#151617;--ink2:#3A3C3E;--muted:#5E6266;--rule:#151617;--hair:#B6BBC0;
+  --red:#A3191F;--up:#2E7D4F;--down:#C2610C;--blush:#E7B9B2;--stone:#B9BEC3;
   --accent:var(--red);--marigold:#935D00;
+  --cranberry:#8E1B2E;--pumpkin:#B4530F;--harvest:#8A6A10;--bark:#5A3A22;
   --head:"Playfair Display",Georgia,serif;--body:"Source Serif 4",Georgia,serif;--sans:"Libre Franklin",Arial,sans-serif;--black:"UnifrakturMaguntia","Old English Text MT",serif;
 }
 *{box-sizing:border-box}
@@ -71,8 +72,20 @@ b.nombre{font-weight:700;color:var(--ink)}
 b.nombre.tuyo{color:var(--red);text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px}
 .edicion{margin:4px 0;padding:5px 8px;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule);text-align:center;font:800 11.5px var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--accent)}
 .edicion[hidden],.papel[hidden]{display:none}
-.papel{height:16px;margin:6px 0 2px;background:linear-gradient(135deg,var(--paper) 25%,transparent 25%) 0 100%/14px 7px repeat-x,linear-gradient(225deg,var(--paper) 25%,transparent 25%) 0 100%/14px 7px repeat-x,repeating-linear-gradient(90deg,var(--marigold) 0 28px,var(--red) 28px 56px,var(--ink2) 56px 84px)}
+.papel{height:16px;margin:6px 0 2px}
+html[data-tema="muertos"] .papel{background:linear-gradient(135deg,var(--paper) 25%,transparent 25%) 0 100%/14px 7px repeat-x,linear-gradient(225deg,var(--paper) 25%,transparent 25%) 0 100%/14px 7px repeat-x,repeating-linear-gradient(90deg,var(--marigold) 0 28px,var(--red) 28px 56px,var(--ink2) 56px 84px)}
 html[data-tema="muertos"]{--accent:var(--marigold)}
+html[data-tema="gracias"]{--accent:var(--cranberry)}
+/* gracias: trim on the newspaper, no layout change. Colors only through tokens, the leaf SVG carries none. */
+html[data-tema="gracias"] .papel{position:relative;height:18px}
+html[data-tema="gracias"] .papel::before{content:"";position:absolute;left:0;right:0;top:0;height:2px;background:var(--bark)}
+html[data-tema="gracias"] .papel::after{content:"";position:absolute;left:0;right:0;top:2px;bottom:0;background:repeating-linear-gradient(90deg,var(--pumpkin) 0 24px,var(--cranberry) 24px 48px,var(--harvest) 48px 72px);-webkit-mask:conic-gradient(at 50% 100%,black 36deg,transparent 0 324deg,black 0) 0 0/24px 16px repeat-x;mask:conic-gradient(at 50% 100%,black 36deg,transparent 0 324deg,black 0) 0 0/24px 16px repeat-x}
+html[data-tema="gracias"] .sec::before,html[data-tema="gracias"] .sec::after,html[data-tema="gracias"] .story .end::before{content:"";display:inline-block;width:12px;height:12px;vertical-align:-1px;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 1C5 5 3 12 5 18c1 2 4 4 7 5 3-1 6-3 7-5 2-6 0-13-7-17zM11.4 7h1.2v14h-1.2z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill-rule='evenodd' d='M12 1C5 5 3 12 5 18c1 2 4 4 7 5 3-1 6-3 7-5 2-6 0-13-7-17zM11.4 7h1.2v14h-1.2z'/%3E%3C/svg%3E") center/contain no-repeat}
+html[data-tema="gracias"] .sec::before{margin-right:9px;background:var(--pumpkin);transform:scaleX(-1)}
+html[data-tema="gracias"] .sec::after{margin-left:9px;background:var(--harvest)}
+html[data-tema="gracias"] .story .end{font-size:0;margin-left:6px}
+html[data-tema="gracias"] .story .end::before{background:var(--cranberry)}
+html[data-tema="gracias"] #clasificados{border-top:3px double var(--harvest);margin-top:-3px}
 .ads{columns:2;column-gap:14px;column-rule:1px solid var(--hair)}
 .ad{break-inside:avoid;font:13px/1.38 var(--body);padding:0 0 8px;margin-bottom:8px;border-bottom:1px solid var(--hair)}
 .ad strong{display:block;font:900 15px var(--sans);letter-spacing:.06em}
@@ -198,7 +211,7 @@ html[data-tema="muertos"]{--accent:var(--marigold)}
     <div id="eds" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.5.0 c2.6.0
+      v4.6.0 c2.7.0
     </div>
   </div>
 </div>
@@ -250,7 +263,7 @@ var NUMW = ["cero","uno","dos","tres","cuatro","cinco","seis","siete","ocho","nu
 var T = {};   // pure functions, also exposed for the tests as window.__tribune
 
 // Themes of the special editions. A theme is a key here plus an html[data-tema="..."] block in the CSS.
-var THEMES = {muertos: true};
+var THEMES = {muertos: true, gracias: true};
 
 // ---------------------------------------------------------------------------
 // Small helpers

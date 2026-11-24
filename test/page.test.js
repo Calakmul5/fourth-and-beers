@@ -877,7 +877,7 @@ A.run('index.html', [
     A.match(HTML, /<meta name="viewport" content="width=device-width, initial-scale=1/);
     A.match(HTML, /html,body\{background:var\(--paper\) !important/, 'explicit backgrounds so iOS cannot invert');
     ['UnifrakturMaguntia', 'Playfair+Display', 'Source+Serif+4', 'Libre+Franklin'].forEach(f => A.ok(HTML.indexOf(f) > 0, f));
-    ['--paper:#F3EEE3', '--paper2:#E9E2D3', '--ink:#161514', '--ink2:#3B3834', '--muted:#6B655C', '--rule:#161514', '--hair:#B9B0A0', '--red:#A3191F', '--up:#2E7D4F', '--down:#C2610C', '--accent:var(--red)', '--marigold:#935D00'].forEach(t => A.ok(HTML.indexOf(t) > 0, t));
+    ['--paper:#ECEEF0', '--paper2:#E2E5E8', '--ink:#151617', '--ink2:#3A3C3E', '--muted:#5E6266', '--rule:#151617', '--hair:#B6BBC0', '--red:#A3191F', '--up:#2E7D4F', '--down:#C2610C', '--accent:var(--red)', '--marigold:#935D00'].forEach(t => A.ok(HTML.indexOf(t) > 0, t));
     A.noMatch(HTML, /overflow-x:\s*scroll/, 'no horizontal page scroll');
     const c = await load(W5);
     A.deep(c.errors, []);
@@ -1122,6 +1122,36 @@ A.run('index.html', [
     A.equal(plain.doc.querySelector('#edicion').hidden, true);
     A.equal(plain.doc.querySelector('#papel').hidden, true);
     common(c, 'muertos');
+  }],
+
+  ['edición: gracias theme, strip, leaves, no calaveritas, and muertos and plain stay as they were', async () => {
+    const mk = async (tema) => { const d = clone(W5); if (tema) d.tribune.edicion = { titulo: 'Edición de Acción de Gracias', texto: '', tema }; return load(d); };
+    const g = await mk('gracias');
+    A.equal(g.doc.documentElement.getAttribute('data-tema'), 'gracias');
+    A.equal(g.doc.querySelector('#papel').hidden, false, 'the garland strip is shown');
+    A.equal(g.doc.querySelector('#edicion').hidden, false);
+    A.equal(g.M.pk.picks.filter(f => f.estilo === 'calaverita').length, 0, 'gracias never prints calaveritas');
+    A.deep(g.errors, []);
+    common(g, 'gracias');
+    // The leaf ornaments hang on .sec and the story end mark, the garland on #papel, all only under data-tema="gracias".
+    A.match(HTML, /html\[data-tema="gracias"\]\{--accent:var\(--cranberry\)\}/, 'the theme remaps the accent');
+    A.match(HTML, /html\[data-tema="gracias"\] \.papel::after\{[^}]*-webkit-mask:conic-gradient[^}]*mask:conic-gradient/, 'the garland pennants');
+    const leafRule = HTML.split(String.fromCharCode(10)).find(l => l.indexOf('html[data-tema="gracias"] .sec::before,html[data-tema="gracias"] .sec::after,html[data-tema="gracias"] .story .end::before{') === 0) || '';
+    A.ok(leafRule.indexOf('-webkit-mask:url("data:image/svg+xml') > 0 && leafRule.indexOf(';mask:url("data:image/svg+xml') > 0, 'the leaf mask on .sec and .end, with -webkit-mask');
+    A.ok(!/#[0-9a-fA-F]{3,8}|fill=|rgb/.test(leafRule.replace(/%3C/g, '')), 'the leaf SVG carries no color');
+    A.match(HTML, /html\[data-tema="gracias"\] \.story \.end::before\{background:var\(--cranberry\)\}/, 'cranberry end mark');
+    A.match(HTML, /html\[data-tema="gracias"\] \.sec::before\{[^}]*var\(--pumpkin\)/);
+    A.match(HTML, /html\[data-tema="gracias"\] \.sec::after\{[^}]*var\(--harvest\)/);
+    A.match(HTML, /html\[data-tema="gracias"\] #clasificados\{border-top:3px double var\(--harvest\)/, 'harvest double rule');
+    A.ok(g.doc.querySelectorAll('.sec').length >= 2 && g.doc.querySelectorAll('.story .end').length === 1, 'the elements the leaves hang on exist');
+    // muertos keeps its papel picado and its accent, a normal edition has no theme and a hidden strip.
+    const m = await mk('muertos');
+    A.equal(m.doc.documentElement.getAttribute('data-tema'), 'muertos');
+    A.equal(m.doc.querySelector('#papel').hidden, false);
+    A.match(HTML, /html\[data-tema="muertos"\] \.papel\{background:linear-gradient\(135deg,var\(--paper\) 25%[^}]*var\(--marigold\) 0 28px,var\(--red\) 28px 56px,var\(--ink2\) 56px 84px\)\}/, 'papel picado unchanged');
+    const p = await mk(null);
+    A.equal(p.doc.documentElement.getAttribute('data-tema'), null);
+    A.equal(p.doc.querySelector('#papel').hidden, true);
   }],
 
   ['edición: an unknown tema is ignored, a banner without Texto keeps the tagline', async () => {

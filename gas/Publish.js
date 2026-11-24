@@ -1,5 +1,5 @@
 // Fourth & Beers 2026 - publish the Tribune data to GitHub Pages
-// v3.3.0 c1.10.0
+// v3.4.0 c1.10.0
 //
 // What it does
 //   1. Reads the Yahoo Pick'em leaderboard pasted into the PickEm_Board tab of the participants workbook.
@@ -91,7 +91,7 @@ var WARN_KEEP_WEEKS = 3;     // warnings from the 3 weeks before the current one
 var WARN_COLORS = ['#f4cccc', '#fff2cc', '#d9ead3', '#cfe2f3', '#d9d2e9', '#fce5cd'];
 var APODO_AFTER = 7;          // the Apodo column is inserted after column G of the participants list
 // Themes the page knows. Add one here and in index.html (THEMES and its CSS block).
-var THEMES_KNOWN = ['muertos'];
+var THEMES_KNOWN = ['muertos', 'gracias'];
 
 // Survivor call sign -> Pick'em call sign. Only the names that differ. Update if Yahoo names change.
 var SURVIVOR_TO_PICKEM = {
