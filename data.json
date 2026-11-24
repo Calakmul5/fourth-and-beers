@@ -184,9 +184,55 @@
     "titulo": "",
     "para": "",
     "texto": "El domingo le di el 13 a Tampa y me salió pirata, como los del tianguis. Le di el 12 a los Titanes y se hundieron. Mis dos números grandes, a la basura."
+   },
+   {
+    "titulo": "",
+    "para": "MVP21, King of The North",
+    "texto": "Mientras, 19 de 22 se iban con los Jaguares. Yo me fui con los Gigantes y les di el 8. Nomás MVP21 y King of The North me acompañaron."
+   },
+   {
+    "titulo": "",
+    "para": "MVP21",
+    "texto": "A las Panteras las cargó casi toda la liga. MVP21 y yo nos fuimos con Baltimore. A las Panteras, los Cuervos las agarraron dormidas."
+   },
+   {
+    "titulo": "",
+    "para": "Cyber70",
+    "texto": "Acerté ocho al hilo y cerré con 65, tres más que el segundo. El elevador que nomás bajaba ya sube, del 11 al 9. Cyber70 sigue arriba, aunque le dio su 13 a los Osos."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "No perdí el 13 y el 12, los doné a la cena de Acción de Gracias. En el país de los ciegos, el tuerto se lleva los 50. Y el pavo me lo trajeron los Gigantes."
    }
   ],
-  "clasificados": [],
+  "clasificados": [
+   {
+    "titulo": "SE BUSCA",
+    "para": "Billy Beaner",
+    "texto": "Boleta extraviada el domingo al mediodía. Llenó 6 de 13 y antes del pavo ya se había hecho camote."
+   },
+   {
+    "titulo": "SE RENTA",
+    "para": "Osos de Grayslake",
+    "texto": "Cueva para hibernar, con todo y el 13 que le dio a sus Osos. Amor viejo ni te olvido ni te dejo, aunque no cubras."
+   },
+   {
+    "titulo": "SE BUSCA",
+    "para": "Chitown’DemBoyz",
+    "texto": "Escalera para el segundo piso. Ya está a 16 del segundo lugar y se le sigue arrimando."
+   },
+   {
+    "titulo": "SE TRASPASA",
+    "para": "Abogado, Puto el que lo lea",
+    "texto": "Abogado y Fisherman pusieron igualitos del 13 al 10. Dios los cría y ellos se juntan, los dos en 26."
+   },
+   {
+    "titulo": "SE VENDE",
+    "para": "KinkyKing",
+    "texto": "Pavo sin estrenar. Kinky no lo va a ocupar, este Thanksgiving va practicando la carne asada."
+   }
+  ],
   "datos": [],
   "edicion": {
    "titulo": "Edición de Acción de Gracias",
@@ -202,7 +248,7 @@
  "season": 2026,
  "week": 11,
  "weeks": 18,
- "updated": "2026-11-24T19:31:52.857Z",
+ "updated": "2026-11-24T19:32:05.442Z",
  "prizes": {
   "regular": [
    1050,
