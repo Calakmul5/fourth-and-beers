@@ -209,9 +209,10 @@ html[data-tema="gracias"] #clasificados{border-top:3px double var(--harvest);mar
 
   <div class="foot">
     <div id="eds" hidden></div>
+    <div><a id="liga" href="s/">Liga de esta semana</a></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.6.0 c2.7.0
+      v4.7.0 c2.7.0
     </div>
   </div>
 </div>
@@ -2084,6 +2085,7 @@ function render(D, opts){
     b.hidden = false;
   }
   $("yahoo").href = YAHOO_URL;
+  $("liga").href = "s/"+pad2(D.week)+"/";
   var W = function(t){ return wrapNames(M.idx, t); };
   var plan = T.plan(M);
   M.plan = plan;

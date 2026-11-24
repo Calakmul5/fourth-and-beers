@@ -1165,6 +1165,16 @@ A.run('index.html', [
     A.deep(c.errors, []);
   }],
 
+  ['footer: "Liga de esta semana" links to that week\'s share page, also for ?ed=N', async () => {
+    const c = await load(W5);
+    const a = c.doc.querySelector('#liga');
+    A.equal(a.textContent, 'Liga de esta semana');
+    A.equal(a.getAttribute('href'), 's/05/');
+    const old = clone(W5); old.week = 4; old.pickem.forEach(p => { p.weeks = p.weeks.slice(0, 4); });
+    const e = await load(W5, { url: '?ed=4', editions: { 4: old }, index: { weeks: [4, 5] } });
+    A.equal(e.doc.querySelector('#liga').getAttribute('href'), 's/04/');
+  }],
+
   ['edición: ?ed=N applies that edition\'s theme while the current edition stays plain', async () => {
     const old = clone(W5); old.week = 4; old.pickem.forEach(p => { p.weeks = p.weeks.slice(0, 4); });
     old.tribune.edicion = { titulo: 'Muertos', texto: '', tema: 'muertos' };

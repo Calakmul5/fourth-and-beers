@@ -1,10 +1,10 @@
-# Runs the whole suite (same as test.bat). Skips pushes that only touch data.json or editions/,
-# which is every publish the Apps Script makes.
+# Runs the whole suite (same as test.bat). Skips pushes that only touch data.json, editions/, s/ or assets/og/,
+# which is every publish the Apps Script makes and every share page the og-week workflow writes.
 name: tests
 on:
   push:
     branches: [main]
-    paths: ['gas/**', 'test/**', 'index.html', 'assets/**', 'docs/**', 'package*.json', 'CLAUDE.md', '.github/**']
+    paths: ['gas/**', 'test/**', 'index.html', 'assets/**', '!assets/og/**', 'docs/**', 'package*.json', 'CLAUDE.md', '.github/**']
   pull_request:
 permissions:
   contents: read

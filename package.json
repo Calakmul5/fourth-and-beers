@@ -5,10 +5,12 @@
   "description": "Tests for the Fourth and Beers leaderboard page and publisher",
   "scripts": {
     "test": "node test/run_all.js",
-    "og-card": "node tools/make_og_card.js"
+    "og-card": "node tools/make_og_card.js",
+    "og-week": "node tools/make_og_week.js"
   },
   "devDependencies": {
     "@fontsource/libre-franklin": "^5.3.0",
+    "@fontsource/playfair-display": "^5.3.0",
     "@fontsource/source-serif-4": "^5.3.1",
     "@fontsource/unifrakturmaguntia": "^5.3.0",
     "jsdom": "^26.0.0",

@@ -1,0 +1,64 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<!-- og-week.html v1.0.0 c1.0.0. Template for assets/og/semana-NN.png (1200x630), rendered by tools/make_og_week.js.
+     No colors are written here: make_og_week.js injects the :root tokens of index.html, so the card cannot drift from the page.
+     Fonts come from @fontsource in node_modules, no network. Everything dynamic goes in through textContent. -->
+<style>
+@font-face{font-family:"UnifrakturMaguntia";src:url(../node_modules/@fontsource/unifrakturmaguntia/files/unifrakturmaguntia-latin-400-normal.woff2)}
+@font-face{font-family:"Playfair Display";font-weight:900;src:url(../node_modules/@fontsource/playfair-display/files/playfair-display-latin-900-normal.woff2)}
+@font-face{font-family:"Source Serif 4";font-style:italic;font-weight:400;src:url(../node_modules/@fontsource/source-serif-4/files/source-serif-4-latin-400-italic.woff2)}
+@font-face{font-family:"Libre Franklin";font-weight:800;src:url(../node_modules/@fontsource/libre-franklin/files/libre-franklin-latin-800-normal.woff2)}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--paper);color:var(--ink);overflow:hidden}
+#card{position:relative;width:1200px;height:630px;background:var(--paper);border:2px solid var(--ink);padding:26px 56px 0}
+#card::after{content:"";position:absolute;inset:8px;border:1px solid var(--ink);pointer-events:none}
+.mast{font:400 54px/1 var(--black);text-align:center;color:var(--ink)}
+.rules{border-top:4px solid var(--rule);border-bottom:1px solid var(--rule);height:7px;margin:12px 0 0}
+#papel{display:none;height:22px;margin:8px 0 0;position:relative}
+.tema-muertos #papel{display:block;background:linear-gradient(135deg,var(--paper) 25%,transparent 25%) 0 100%/18px 9px repeat-x,linear-gradient(225deg,var(--paper) 25%,transparent 25%) 0 100%/18px 9px repeat-x,repeating-linear-gradient(90deg,var(--marigold) 0 36px,var(--red) 36px 72px,var(--ink2) 72px 108px)}
+.tema-gracias #papel{display:block;height:24px}
+.tema-gracias #papel::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--bark)}
+.tema-gracias #papel::after{content:"";position:absolute;left:0;right:0;top:3px;bottom:0;background:repeating-linear-gradient(90deg,var(--pumpkin) 0 32px,var(--cranberry) 32px 64px,var(--harvest) 64px 96px);-webkit-mask:conic-gradient(at 50% 100%,black 36deg,transparent 0 324deg,black 0) 0 0/32px 21px repeat-x;mask:conic-gradient(at 50% 100%,black 36deg,transparent 0 324deg,black 0) 0 0/32px 21px repeat-x}
+.tema-muertos{--accent:var(--marigold)}
+.tema-gracias{--accent:var(--cranberry)}
+.kick{margin-top:14px;font:800 24px var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--accent)}
+.kick span{color:var(--ink2)}
+#head{margin-top:8px;font:900 96px/0.98 var(--head);letter-spacing:-.01em;overflow-wrap:anywhere;color:var(--ink)}
+#deck{margin-top:14px;font:italic 400 34px/1.28 var(--body);color:var(--ink2);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;max-width:1000px}
+#sello{position:absolute;right:44px;bottom:34px;width:96px;height:96px}
+#sello .a{fill:var(--ink)}#sello .b{fill:var(--red)}
+#sello text{fill:var(--paper);font-family:var(--black);font-size:23px}
+</style></head>
+<body>
+<div id="card">
+  <div class="mast">Fourth and Beers Tribune</div>
+  <div class="rules"></div>
+  <div id="papel"></div>
+  <div class="kick"><b id="semana"></b><span id="ed"></span></div>
+  <div id="head"></div>
+  <div id="deck"></div>
+  <svg id="sello" viewBox="0 0 64 64" aria-hidden="true"><circle class="a" cx="32" cy="32" r="32"/><circle class="b" cx="32" cy="32" r="27"/><text x="32" y="40" text-anchor="middle">F&amp;B</text></svg>
+</div>
+<script>
+// render({week, titulo, texto, tema, edicion}): fills the card, shrinks the headline to at most 3 lines.
+window.render = function (d) {
+  var card = document.getElementById('card');
+  card.className = d.tema ? 'tema-' + d.tema : '';
+  document.getElementById('semana').textContent = 'Semana ' + d.week;
+  document.getElementById('ed').textContent = d.edicion ? ' · ' + d.edicion : '';
+  var head = document.getElementById('head'), deck = document.getElementById('deck');
+  head.textContent = d.titulo;
+  deck.textContent = d.texto || '';
+  deck.style.display = d.texto ? '' : 'none';
+  var size = 96;
+  head.style.fontSize = size + 'px';
+  function lines() { return Math.round(head.getBoundingClientRect().height / parseFloat(getComputedStyle(head).lineHeight)); }
+  function fits() {
+    var bottom = d.texto ? deck.getBoundingClientRect().bottom : head.getBoundingClientRect().bottom;
+    return lines() <= 3 && bottom <= 590;
+  }
+  while (!fits() && size > 40) { size -= 2; head.style.fontSize = size + 'px'; }
+  return { size: size, lines: lines() };
+};
+</script>
+</body></html>

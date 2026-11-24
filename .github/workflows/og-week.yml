@@ -1,0 +1,101 @@
+# og-week v1.0.0 c1.0.0
+# Builds the weekly share page (s/NN/index.html) and its card (assets/og/semana-NN.png) so WhatsApp shows that
+# week's Portada. Runs after every Publish (an editions commit) and by hand. A week is redrawn only when its source
+# hash changed, so a run with nothing new commits nothing. The commit touches only s/** and assets/og/**, never
+# editions/**, so it cannot trigger this workflow again, and tests.yml skips assets/og/**.
+# A push made with GITHUB_TOKEN does not start the legacy Pages build, so the last step asks for one through the API.
+name: og-week
+on:
+  push:
+    branches: [main]
+    paths: ['editions/semana-*.json']
+  workflow_dispatch:
+    inputs:
+      week:
+        description: 'Week to redraw (blank = every archived week)'
+        required: false
+        default: ''
+permissions:
+  contents: write
+  pages: write
+concurrency:
+  group: og-week
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Find the stale weeks
+        id: stale
+        env:
+          WEEK: ${{ github.event.inputs.week }}
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            if [ -n "$WEEK" ]; then
+              case "$WEEK" in (*[!0-9]*|"") echo "week must be a number"; exit 1;; esac
+              [ "${#WEEK}" -le 2 ] && [ "$WEEK" -ge 1 ] || { echo "week must be 1 to 99"; exit 1; }
+              echo "args=$WEEK --force" >> "$GITHUB_OUTPUT"
+              echo "list=$WEEK" >> "$GITHUB_OUTPUT"
+            else
+              echo "args=--force" >> "$GITHUB_OUTPUT"
+              echo "list=all" >> "$GITHUB_OUTPUT"
+            fi
+          else
+            list="$(node tools/make_og_week.js --list-stale)"
+            echo "args=" >> "$GITHUB_OUTPUT"
+            echo "list=$list" >> "$GITHUB_OUTPUT"
+            echo "Stale weeks: ${list:-none}"
+          fi
+      - name: Install dependencies and the pinned Chromium
+        if: steps.stale.outputs.list != ''
+        run: |
+          npm ci --no-audit --no-fund
+          npx playwright install --with-deps chromium
+      - name: Render
+        if: steps.stale.outputs.list != ''
+        run: node tools/make_og_week.js ${{ steps.stale.outputs.args }}
+      - name: Commit
+        id: commit
+        if: steps.stale.outputs.list != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add s assets/og
+          if git diff --cached --quiet; then
+            echo "Nothing changed."
+            echo "pushed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "Share pages: ${{ steps.stale.outputs.list }}"
+          ok=false
+          for i in 1 2 3 4; do
+            if git pull --rebase origin main && git push origin HEAD:main; then ok=true; break; fi
+            echo "push failed, retry $i"; git rebase --abort 2>/dev/null || true; sleep 5
+          done
+          if [ "$ok" != "true" ]; then echo "::error::Could not push the share pages"; exit 1; fi
+          echo "pushed=true" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+      - name: Ask Pages for a build and wait for it
+        if: steps.commit.outputs.pushed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api -X POST "repos/${{ github.repository }}/pages/builds" || { echo "::warning::Pages build request failed"; exit 0; }
+          for i in $(seq 1 30); do
+            read -r s c <<< "$(gh api "repos/${{ github.repository }}/pages/builds/latest" --jq '[.status, .commit] | @tsv')"
+            echo "Pages build: $s $c"
+            if [ "$c" = "${{ steps.commit.outputs.sha }}" ]; then
+              [ "$s" = "built" ] && exit 0
+              [ "$s" = "errored" ] && { echo "::warning::Pages build errored"; exit 0; }
+            fi
+            sleep 10
+          done
+          echo "::warning::Pages build still running after 5 minutes"

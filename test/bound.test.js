@@ -179,7 +179,10 @@ A.run('Publicar button (bound project)', [
 
   ['workflows: tests.yml runs the suite, a publish does not start it, and nothing pushes to Apps Script from GitHub', () => {
     const dir = path.join(ROOT, '.github', 'workflows');
-    A.deep(fs.readdirSync(dir), ['tests.yml'], 'tests.yml is the only workflow');
+    A.deep(fs.readdirSync(dir), ['og-week.yml', 'tests.yml'], 'tests.yml and og-week.yml are the only workflows');
+    const og = fs.readFileSync(path.join(dir, 'og-week.yml'), 'utf8').replace(/#.*$/gm, '');
+    A.ok(!/secrets\.|clasp/.test(og), 'og-week uses no secret and no clasp');
+    A.ok(!/[A-Za-z0-9_-]{40,}/.test(og), 'og-week holds no id or token');
     const t = fs.readFileSync(path.join(dir, 'tests.yml'), 'utf8');
     A.match(t, /node test\/run_all\.js/);
     A.ok(!/data\.json|editions/.test(t.replace(/#.*$/gm, '')), 'a publish (data.json, editions/) does not start the tests');
