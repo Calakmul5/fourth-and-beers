@@ -144,6 +144,9 @@ html[data-tema="gracias"] #clasificados{border-top:3px double var(--harvest);mar
 .foot{margin-top:18px;padding-top:8px;border-top:1px solid var(--rule);font:12px var(--sans);color:var(--ink2);text-align:center;line-height:1.7}
 .foot a{display:inline-block;min-width:44px;min-height:44px;line-height:44px;font-weight:700}
 .foot .ver{font:600 11px var(--sans);color:var(--muted);margin-top:4px}
+.foot a svg{width:14px;height:14px;vertical-align:-2px;margin-right:6px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.aviso{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:50;background:var(--ink);color:var(--paper);border:1px solid var(--paper);padding:10px 16px;font:700 12px var(--sans);letter-spacing:.1em;text-transform:uppercase;white-space:nowrap}
+.aviso[hidden]{display:none}
 .sheet{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center}
 .sheet[hidden]{display:none}
 .scrim{position:absolute;inset:0;background:var(--ink);opacity:.55}
@@ -209,10 +212,11 @@ html[data-tema="gracias"] #clasificados{border-top:3px double var(--harvest);mar
 
   <div class="foot">
     <div id="eds" hidden></div>
-    <div><a id="liga" href="s/">Liga de esta semana</a></div>
+    <div><a id="liga" href="https://calakmul5.github.io/fourth-and-beers/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3M7.5 7.5 12 3l4.5 4.5M5 11v9h14v-9"/></svg>Compartir la liga de esta semana</a></div>
+    <div id="aviso" class="aviso" role="status" aria-live="polite" hidden></div>
     <div>La tabla completa vive en <a id="yahoo" href="https://football.fantasysports.yahoo.com/pickem" rel="noopener">Yahoo</a>.</div>
     <div class="ver">
-      v4.7.0 c2.7.0
+      v4.8.0 c2.8.0
     </div>
   </div>
 </div>
@@ -2085,7 +2089,6 @@ function render(D, opts){
     b.hidden = false;
   }
   $("yahoo").href = YAHOO_URL;
-  $("liga").href = "s/"+pad2(D.week)+"/";
   var W = function(t){ return wrapNames(M.idx, t); };
   var plan = T.plan(M);
   M.plan = plan;
@@ -2100,6 +2103,7 @@ function render(D, opts){
   // ---- Portada: headline, deck, byline, then the Columna rows as the story
   var pt = plan.pt;
   $("p-head").textContent = pt.titulo;
+  setupShare(D.week, pt.fromSheet ? pt.titulo : "Fourth and Beers Tribune");
   $("p-deck").innerHTML = pt.fromSheet ? W(pt.texto) : esc(pt.texto);
   $("p-by").textContent = T.byline(M);
   var col = D.tribune.columna;
@@ -2402,6 +2406,37 @@ function load(){
 function weeksIndex(){
   if (!window.fetch) return Promise.resolve([]);
   return getJSON("editions/index.json?t="+Date.now()).then(function(j){ return Array.isArray(j.weeks) ? j.weeks : []; }).catch(function(){ return []; });
+}
+
+// Share action of the footer link. The href is the absolute weekly URL (long press copies it). A tap shares it (title and
+// url only, so WhatsApp builds the preview from the URL), or copies it, or navigates when neither works.
+// Personal links never leak: the URL is always the plain s/NN/ one, for the edition being shown.
+var SHARE_BASE = "https://calakmul5.github.io/fourth-and-beers/s/";
+var avisoTimer = 0;
+function aviso(msg){
+  var a = document.getElementById("aviso");
+  a.textContent = msg; a.hidden = false;
+  clearTimeout(avisoTimer);
+  avisoTimer = setTimeout(function(){ a.hidden = true; }, 2000);
+}
+function setupShare(week, title){
+  var url = SHARE_BASE+pad2(week)+"/", a = document.getElementById("liga");
+  a.href = url;
+  a.onclick = function(e){
+    if (e.ctrlKey || e.metaKey || e.shiftKey || e.altKey || e.button) return;
+    e.preventDefault();
+    function nav(){ location.href = url; }
+    function copy(){
+      var c = navigator.clipboard;
+      if (!c || !c.writeText) return nav();
+      var p; try { p = c.writeText(url); } catch(x){ return nav(); }
+      Promise.resolve(p).then(function(){ aviso("Liga copiada"); }, nav);
+    }
+    if (navigator.share){
+      var s; try { s = navigator.share({title:title, url:url}); } catch(x){ return copy(); }
+      Promise.resolve(s).catch(function(err){ if (!(err && err.name==="AbortError")) copy(); });
+    } else copy();
+  };
 }
 
 window.__tribune = T;

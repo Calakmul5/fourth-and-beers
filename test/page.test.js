@@ -1165,14 +1165,123 @@ A.run('index.html', [
     A.deep(c.errors, []);
   }],
 
-  ['footer: "Liga de esta semana" links to that week\'s share page, also for ?ed=N', async () => {
-    const c = await load(W5);
-    const a = c.doc.querySelector('#liga');
-    A.equal(a.textContent, 'Liga de esta semana');
-    A.equal(a.getAttribute('href'), 's/05/');
+  ['footer: the share link has the absolute weekly href and shares it (title and url only), also for ?ed=N and personal links', async () => {
+    const L = require('../tools/share_lib');
+    const click = c => { const ev = new c.win.MouseEvent('click', { bubbles: true, cancelable: true }); c.doc.querySelector('#liga').dispatchEvent(ev); return ev; };
+    const setNav = (c, props) => Object.keys(props).forEach(k => Object.defineProperty(c.win.navigator, k, { value: props[k], configurable: true }));
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const d = clone(W5); d.tribune.portada = { titulo: 'Titular de prueba', texto: 'Bajada.', para: '' };
+    const URL5 = L.pageUrl(5);
+    A.equal(URL5, 'https://calakmul5.github.io/fourth-and-beers/s/05/');
+
+    // the markup: absolute href, new label, an inline icon that takes the text color
+    let c = await load(d);
+    let a = c.doc.querySelector('#liga');
+    A.equal(a.getAttribute('href'), URL5, 'long press copies the absolute weekly URL');
+    A.equal(a.textContent.trim(), 'Compartir la liga de esta semana');
+    A.ok(a.querySelector('svg[aria-hidden="true"] path'), 'inline share icon');
+    A.noMatch(a.innerHTML, /stroke=|fill=|#[0-9a-f]{3,6}/i, 'the icon carries no color of its own');
+    A.match(HTML, /\.foot a svg\{[^}]*stroke:currentColor/, 'the icon takes the link color');
+
+    // navigator.share: title is the Portada headline, url the weekly URL, no text field, the tap does not navigate
+    const calls = [];
+    setNav(c, { share: o => { calls.push(o); return Promise.resolve(); } });
+    let ev = click(c);
+    A.equal(ev.defaultPrevented, true, 'the tap is not a navigation');
+    await wait(30);
+    A.deep(calls, [{ title: 'Titular de prueba', url: URL5 }], 'share gets exactly title and url');
+    A.equal(c.doc.querySelector('#aviso').hidden, true, 'no notice when the share sheet worked');
+
+    // cancelling the sheet (AbortError) is silent: no copy, no notice, no navigation
+    const copied = [];
+    setNav(c, { share: () => Promise.reject(Object.assign(new Error('cancel'), { name: 'AbortError' })), clipboard: { writeText: u => { copied.push(u); return Promise.resolve(); } } });
+    click(c); await wait(30);
+    A.deep(copied, [], 'AbortError does not copy');
+    A.equal(c.doc.querySelector('#aviso').hidden, true, 'AbortError shows no notice');
+    A.deep(c.errors, [], 'AbortError does not navigate');
+
+    // another share failure falls back to the clipboard
+    setNav(c, { share: () => Promise.reject(new Error('boom')) });
+    click(c); await wait(30);
+    A.deep(copied, [URL5], 'a failed share copies the URL');
+    A.equal(c.doc.querySelector('#aviso').hidden, false);
+
+    // no share: clipboard, with the "Liga copiada" notice for about 2 seconds
+    c = await load(d);
+    const copied2 = [];
+    setNav(c, { clipboard: { writeText: u => { copied2.push(u); return Promise.resolve(); } } });
+    click(c); await wait(30);
+    A.deep(copied2, [URL5]);
+    A.equal(text(c.doc, '#aviso'), 'Liga copiada');
+    A.equal(c.doc.querySelector('#aviso').hidden, false, 'the notice shows');
+    A.equal(c.doc.querySelector('#aviso').getAttribute('role'), 'status');
+    A.match(HTML, /\.aviso\{[^}]*background:var\(--ink\);color:var\(--paper\)/, 'newsprint notice on tokens');
+    await wait(2100);
+    A.equal(c.doc.querySelector('#aviso').hidden, true, 'the notice goes away after 2 seconds');
+
+    // neither share nor clipboard: normal navigation to the URL (jsdom reports the attempt)
+    c = await load(d);
+    ev = click(c); await wait(30);
+    A.equal(ev.defaultPrevented, true);
+    A.ok(c.errors.some(e => /navigation/i.test(e)), 'falls back to navigating: ' + c.errors.join('|'));
+
+    // ?ed=N shares that week, a personal link shares the plain weekly URL
     const old = clone(W5); old.week = 4; old.pickem.forEach(p => { p.weeks = p.weeks.slice(0, 4); });
-    const e = await load(W5, { url: '?ed=4', editions: { 4: old }, index: { weeks: [4, 5] } });
-    A.equal(e.doc.querySelector('#liga').getAttribute('href'), 's/04/');
+    old.tribune.portada = { titulo: 'Titular viejo', texto: '', para: '' };
+    c = await load(W5, { url: '?ed=4', editions: { 4: old }, index: { weeks: [4, 5] } });
+    A.equal(c.doc.querySelector('#liga').getAttribute('href'), L.pageUrl(4));
+    const sh4 = [];
+    setNav(c, { share: o => { sh4.push(o); return Promise.resolve(); } });
+    click(c); await wait(30);
+    A.deep(sh4, [{ title: 'Titular viejo', url: L.pageUrl(4) }], '?ed=4 shares week 4 with its headline');
+    c = await load(d, { url: '?yo=Cyber70#Cyber70' });
+    const sh = [];
+    setNav(c, { share: o => { sh.push(o); return Promise.resolve(); } });
+    click(c); await wait(30);
+    A.equal(sh[0].url, URL5, 'the personal link shares the plain weekly URL');
+    A.noMatch(sh[0].url, /yo=|#/, 'no personal bits in the shared URL');
+
+    // Ctrl, Cmd or Shift clicks keep their normal meaning (new tab), they are not a share
+    c = await load(d);
+    const mod = new c.win.MouseEvent('click', { bubbles: true, cancelable: true, ctrlKey: true });
+    const shM = [];
+    setNav(c, { share: o => { shM.push(o); return Promise.resolve(); } });
+    c.doc.querySelector('#liga').dispatchEvent(mod); await wait(30);
+    A.equal(mod.defaultPrevented, false, 'a ctrl-click is left alone');
+    A.deep(shM, [], 'and does not share');
+
+    // a clipboard that rejects or throws, and a share that throws, end in navigation or a copy
+    c = await load(d);
+    setNav(c, { clipboard: { writeText: () => Promise.reject(new Error('denied')) } });
+    click(c); await wait(30);
+    A.ok(c.errors.some(e => /navigation/i.test(e)), 'a rejected clipboard navigates');
+    c = await load(d);
+    setNav(c, { clipboard: { writeText: () => { throw new Error('sync'); } } });
+    click(c); await wait(30);
+    A.ok(c.errors.some(e => /navigation/i.test(e)), 'a throwing clipboard navigates');
+    c = await load(d);
+    const copied3 = [];
+    setNav(c, { share: () => { throw new Error('sync'); }, clipboard: { writeText: u => { copied3.push(u); return Promise.resolve(); } } });
+    click(c); await wait(30);
+    A.deep(copied3, [URL5], 'a share that throws copies the URL');
+
+    // a second tap restarts the 2 second notice
+    c = await load(d);
+    setNav(c, { clipboard: { writeText: () => Promise.resolve() } });
+    click(c); await wait(1500); click(c); await wait(1000);
+    A.equal(c.doc.querySelector('#aviso').hidden, false, 'the second tap restarted the timer');
+    await wait(1200);
+    A.equal(c.doc.querySelector('#aviso').hidden, true);
+    A.match(HTML, /\.aviso\{[^}]*env\(safe-area-inset-bottom\)/, 'the notice clears the iPhone home indicator');
+    A.equal(c.doc.querySelector('#liga').getAttribute('href') !== 'https://calakmul5.github.io/fourth-and-beers/s/', true, 'the markup fallback is not a 404');
+
+    // no Portada row: the share title is the default masthead name
+    const bare = clone(W5); bare.tribune.portada = null;
+    c = await load(bare);
+    const shb = [];
+    setNav(c, { share: o => { shb.push(o); return Promise.resolve(); } });
+    click(c); await wait(30);
+    A.equal(shb[0].title, 'Fourth and Beers Tribune');
   }],
 
   ['edición: ?ed=N applies that edition\'s theme while the current edition stays plain', async () => {
