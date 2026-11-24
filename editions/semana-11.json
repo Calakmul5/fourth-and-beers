@@ -169,17 +169,40 @@
   ]
  },
  "tribune": {
-  "portada": null,
-  "columna": [],
+  "portada": {
+   "titulo": "El pavo de Niners lo trajeron los Gigantes",
+   "texto": "Solo 3 de 22 le fueron a los Gigantes. Niners perdió su 13 y su 12, y ganó igual.",
+   "para": "Niners"
+  },
+  "columna": [
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "Les cuento mi Thanksgiving adelantado. El jueves se me pasó el primer juego. Era el del 1, tampoco hagan drama."
+   },
+   {
+    "titulo": "",
+    "para": "",
+    "texto": "El domingo le di el 13 a Tampa y me salió pirata, como los del tianguis. Le di el 12 a los Titanes y se hundieron. Mis dos números grandes, a la basura."
+   }
+  ],
   "clasificados": [],
   "datos": [],
-  "edicion": null,
-  "firma": null
+  "edicion": {
+   "titulo": "Edición de Acción de Gracias",
+   "texto": "Se sirve en tres tiempos. El que no llena su boleta, no cena.",
+   "tema": "gracias"
+  },
+  "firma": {
+   "para": "Niners",
+   "titulo": "",
+   "texto": ""
+  }
  },
  "season": 2026,
  "week": 11,
  "weeks": 18,
- "updated": "2026-11-24T13:14:07.893Z",
+ "updated": "2026-11-24T19:31:52.857Z",
  "prizes": {
   "regular": [
    1050,
